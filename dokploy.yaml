@@ -1,0 +1,164 @@
+# Dokploy Configuration for Exam Portal
+# This file configures deployment settings for Dokploy platform
+
+name: exam-portal
+type: docker-compose
+
+# Environment variables (will be injected from Dokploy UI)
+env:
+  - SECRET_KEY
+  - DB_USER
+  - DB_PASSWORD
+  - REDIS_PASSWORD
+  - ALLOWED_HOSTS
+  - DJANGO_SUPERUSER_PASSWORD
+  - EMAIL_HOST
+  - EMAIL_HOST_USER
+  - EMAIL_HOST_PASSWORD
+  - DEFAULT_FROM_EMAIL
+  - SENTRY_DSN
+  - AWS_ACCESS_KEY_ID
+  - AWS_SECRET_ACCESS_KEY
+  - AWS_STORAGE_BUCKET_NAME
+  - BACKUP_S3_BUCKET
+
+# Build configuration
+build:
+  context: .
+  dockerfile: Dockerfile
+  args:
+    - BUILDKIT_INLINE_CACHE=1
+
+# Deployment configuration
+deploy:
+  replicas: 1
+  update_config:
+    parallelism: 1
+    delay: 10s
+    failure_action: rollback
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+  resources:
+    limits:
+      cpus: '2'
+      memory: 2048M
+    reservations:
+      cpus: '0.5'
+      memory: 512M
+
+# Health checks
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost/health/"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+# Volumes
+volumes:
+  - type: volume
+    source: postgres_data
+    target: /var/lib/postgresql/data
+  - type: volume
+    source: redis_data
+    target: /data
+  - type: volume
+    source: static_files
+    target: /app/staticfiles
+  - type: volume
+    source: media_files
+    target: /app/media
+  - type: volume
+    source: logs
+    target: /app/logs
+  - type: volume
+    source: backups
+    target: /backups
+
+# Networks
+networks:
+  - exam_network
+
+# Ports
+ports:
+  - "80:80"
+  - "443:443"
+
+# Labels for Traefik (if using)
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.exam-portal.rule=Host(`yourdomain.com`)"
+  - "traefik.http.routers.exam-portal.entrypoints=websecure"
+  - "traefik.http.routers.exam-portal.tls.certresolver=letsencrypt"
+  - "traefik.http.services.exam-portal.loadbalancer.server.port=80"
+  - "traefik.http.middlewares.exam-portal-headers.headers.stsSeconds=31536000"
+  - "traefik.http.middlewares.exam-portal-headers.headers.stsIncludeSubdomains=true"
+  - "traefik.http.middlewares.exam-portal-headers.headers.stsPreload=true"
+  - "traefik.http.middlewares.exam-portal-headers.headers.forceSTSHeader=true"
+  - "traefik.http.middlewares.exam-portal-headers.headers.contentTypeNosniff=true"
+  - "traefik.http.middlewares.exam-portal-headers.headers.browserXssFilter=true"
+  - "traefik.http.middlewares.exam-portal-headers.headers.frameDeny=true"
+  - "traefik.http.routers.exam-portal.middlewares=exam-portal-headers"
+
+# Backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: 30  # Keep backups for 30 days
+  destinations:
+    - type: local
+      path: /backups
+    - type: s3
+      bucket: ${BACKUP_S3_BUCKET}
+      region: ap-south-1
+
+# Monitoring
+monitoring:
+  enabled: true
+  endpoints:
+    - /health/
+    - /readiness/
+    - /metrics/
+  alerts:
+    - type: email
+      to: ${ADMIN_EMAIL}
+      on:
+        - deployment_failed
+        - health_check_failed
+        - high_cpu_usage
+        - high_memory_usage
+        - disk_space_low
+
+# Auto-scaling (if supported by your KVM VPS)
+autoscaling:
+  enabled: false
+  min_replicas: 1
+  max_replicas: 3
+  metrics:
+    - type: cpu
+      target: 70
+    - type: memory
+      target: 80
+
+# SSL/TLS Configuration
+ssl:
+  enabled: true
+  provider: letsencrypt
+  email: ${ADMIN_EMAIL}
+  domains:
+    - yourdomain.com
+    - www.yourdomain.com
+
+# Database migrations
+pre_deploy:
+  - python manage.py migrate --noinput
+  - python manage.py collectstatic --noinput
+  - python manage.py createcachetable
+
+# Post-deployment hooks
+post_deploy:
+  - python manage.py check --deploy
+  - supervisorctl restart all

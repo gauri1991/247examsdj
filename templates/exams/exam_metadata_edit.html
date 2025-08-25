@@ -1,0 +1,374 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Edit Metadata - {{ exam.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .date-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .fee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    .metadata-section {
+        background: white;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1.5rem;
+    }
+    .section-header {
+        background: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .section-content {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Edit Exam Metadata</h1>
+                <p class="mt-1 text-sm text-gray-500">
+                    Manage dates, eligibility, fees and other details for "{{ exam.name }}"
+                </p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'exam-detail' exam.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Back to Exam
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" class="space-y-8">
+        {% csrf_token %}
+        
+        <!-- Important Dates Section -->
+        <div class="metadata-section">
+            <div class="section-header">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Important Dates
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Set key dates for the examination process</p>
+            </div>
+            <div class="section-content">
+                <div class="date-grid">
+                    <div>
+                        <label for="notification_date" class="block text-sm font-medium text-gray-700 mb-1">Notification Date</label>
+                        <input type="date" name="notification_date" id="notification_date" 
+                               value="{{ metadata.notification_date|date:'Y-m-d' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="form_start_date" class="block text-sm font-medium text-gray-700 mb-1">Application Start</label>
+                        <input type="datetime-local" name="form_start_date" id="form_start_date" 
+                               value="{{ metadata.form_start_date|date:'Y-m-d\TH:i' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="form_end_date" class="block text-sm font-medium text-gray-700 mb-1">Application End</label>
+                        <input type="datetime-local" name="form_end_date" id="form_end_date" 
+                               value="{{ metadata.form_end_date|date:'Y-m-d\TH:i' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="form_extended_date" class="block text-sm font-medium text-gray-700 mb-1">Extended Date (if any)</label>
+                        <input type="datetime-local" name="form_extended_date" id="form_extended_date" 
+                               value="{{ metadata.form_extended_date|date:'Y-m-d\TH:i' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="fee_payment_last_date" class="block text-sm font-medium text-gray-700 mb-1">Fee Payment Last Date</label>
+                        <input type="datetime-local" name="fee_payment_last_date" id="fee_payment_last_date" 
+                               value="{{ metadata.fee_payment_last_date|date:'Y-m-d\TH:i' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="correction_window_start" class="block text-sm font-medium text-gray-700 mb-1">Correction Window Start</label>
+                        <input type="datetime-local" name="correction_window_start" id="correction_window_start" 
+                               value="{{ metadata.correction_window_start|date:'Y-m-d\TH:i' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="correction_window_end" class="block text-sm font-medium text-gray-700 mb-1">Correction Window End</label>
+                        <input type="datetime-local" name="correction_window_end" id="correction_window_end" 
+                               value="{{ metadata.correction_window_end|date:'Y-m-d\TH:i' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="admit_card_date" class="block text-sm font-medium text-gray-700 mb-1">Admit Card Release</label>
+                        <input type="date" name="admit_card_date" id="admit_card_date" 
+                               value="{{ metadata.admit_card_date|date:'Y-m-d' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="exam_start_date" class="block text-sm font-medium text-gray-700 mb-1">Exam Start Date</label>
+                        <input type="date" name="exam_start_date" id="exam_start_date" 
+                               value="{{ metadata.exam_start_date|date:'Y-m-d' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="exam_end_date" class="block text-sm font-medium text-gray-700 mb-1">Exam End Date</label>
+                        <input type="date" name="exam_end_date" id="exam_end_date" 
+                               value="{{ metadata.exam_end_date|date:'Y-m-d' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="result_date" class="block text-sm font-medium text-gray-700 mb-1">Result Date</label>
+                        <input type="date" name="result_date" id="result_date" 
+                               value="{{ metadata.result_date|date:'Y-m-d' }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eligibility Section -->
+        <div class="metadata-section">
+            <div class="section-header">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Eligibility Criteria
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Define who can apply for this exam</p>
+            </div>
+            <div class="section-content">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="min_age" class="block text-sm font-medium text-gray-700 mb-1">Minimum Age</label>
+                        <input type="number" name="min_age" id="min_age" 
+                               value="{{ metadata.min_age }}" min="16" max="100"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="e.g., 21">
+                    </div>
+                    
+                    <div>
+                        <label for="max_age" class="block text-sm font-medium text-gray-700 mb-1">Maximum Age</label>
+                        <input type="number" name="max_age" id="max_age" 
+                               value="{{ metadata.max_age }}" min="18" max="100"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="e.g., 32">
+                    </div>
+                    
+                    <div class="sm:col-span-2">
+                        <label for="eligibility_criteria" class="block text-sm font-medium text-gray-700 mb-1">Detailed Eligibility</label>
+                        <textarea name="eligibility_criteria" id="eligibility_criteria" rows="6"
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none"
+                                  placeholder="Detailed eligibility criteria...">{{ metadata.eligibility_criteria }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Structure Section -->
+        <div class="metadata-section">
+            <div class="section-header">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                    Fee Structure
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Set application fees for different categories</p>
+            </div>
+            <div class="section-content">
+                <div class="fee-grid">
+                    <div>
+                        <label for="fee_general" class="block text-sm font-medium text-gray-700 mb-1">General Category</label>
+                        <input type="number" name="fee_general" id="fee_general" 
+                               value="{{ metadata.fee_structure.general }}" min="0" step="0.01"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="1000">
+                    </div>
+                    
+                    <div>
+                        <label for="fee_obc" class="block text-sm font-medium text-gray-700 mb-1">OBC Category</label>
+                        <input type="number" name="fee_obc" id="fee_obc" 
+                               value="{{ metadata.fee_structure.obc }}" min="0" step="0.01"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="750">
+                    </div>
+                    
+                    <div>
+                        <label for="fee_sc_st" class="block text-sm font-medium text-gray-700 mb-1">SC/ST Category</label>
+                        <input type="number" name="fee_sc_st" id="fee_sc_st" 
+                               value="{{ metadata.fee_structure.sc_st }}" min="0" step="0.01"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="500">
+                    </div>
+                    
+                    <div>
+                        <label for="fee_female" class="block text-sm font-medium text-gray-700 mb-1">Female Candidates</label>
+                        <input type="number" name="fee_female" id="fee_female" 
+                               value="{{ metadata.fee_structure.female }}" min="0" step="0.01"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="500">
+                    </div>
+                    
+                    <div>
+                        <label for="fee_pwd" class="block text-sm font-medium text-gray-700 mb-1">PwD Category</label>
+                        <input type="number" name="fee_pwd" id="fee_pwd" 
+                               value="{{ metadata.fee_structure.pwd }}" min="0" step="0.01"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Links Section -->
+        <div class="metadata-section">
+            <div class="section-header">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                    </svg>
+                    Important Links
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Official links related to this exam</p>
+            </div>
+            <div class="section-content">
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label for="official_notification_url" class="block text-sm font-medium text-gray-700 mb-1">Official Notification</label>
+                        <input type="url" name="official_notification_url" id="official_notification_url" 
+                               value="{{ metadata.official_notification_url }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="https://example.com/notification.pdf">
+                    </div>
+                    
+                    <div>
+                        <label for="syllabus_url" class="block text-sm font-medium text-gray-700 mb-1">Syllabus URL</label>
+                        <input type="url" name="syllabus_url" id="syllabus_url" 
+                               value="{{ metadata.syllabus_url }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="https://example.com/syllabus.pdf">
+                    </div>
+                    
+                    <div>
+                        <label for="apply_online_url" class="block text-sm font-medium text-gray-700 mb-1">Apply Online URL</label>
+                        <input type="url" name="apply_online_url" id="apply_online_url" 
+                               value="{{ metadata.apply_online_url }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="https://example.com/apply">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tags Section -->
+        <div class="metadata-section">
+            <div class="section-header">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                    Tags & Categories
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Add tags for better organization and searchability</p>
+            </div>
+            <div class="section-content">
+                <div>
+                    <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                    <input type="text" name="tags" id="tags" 
+                           value="{{ metadata.tags|join:', ' }}"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="engineering, competitive, prelims, mains">
+                    <p class="mt-1 text-sm text-gray-500">Separate tags with commas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <a href="{% url 'exam-detail' exam.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Cancel
+            </a>
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Save Metadata
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add date validation
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFields = {
+        'form_start_date': 'form_end_date',
+        'form_end_date': 'form_extended_date',
+        'correction_window_start': 'correction_window_end',
+        'exam_start_date': 'exam_end_date'
+    };
+    
+    Object.entries(dateFields).forEach(([startField, endField]) => {
+        const startInput = document.getElementById(startField);
+        const endInput = document.getElementById(endField);
+        
+        if (startInput && endInput) {
+            startInput.addEventListener('change', function() {
+                endInput.min = this.value;
+            });
+            
+            endInput.addEventListener('change', function() {
+                if (startInput.value && this.value < startInput.value) {
+                    alert(`${endField.replace(/_/g, ' ')} cannot be earlier than ${startField.replace(/_/g, ' ')}`);
+                    this.value = '';
+                }
+            });
+        }
+    });
+});
+
+// Age validation
+document.getElementById('min_age').addEventListener('change', function() {
+    const maxAge = document.getElementById('max_age');
+    if (maxAge.value && parseInt(this.value) >= parseInt(maxAge.value)) {
+        alert('Minimum age must be less than maximum age');
+        this.value = '';
+    }
+});
+
+document.getElementById('max_age').addEventListener('change', function() {
+    const minAge = document.getElementById('min_age');
+    if (minAge.value && parseInt(this.value) <= parseInt(minAge.value)) {
+        alert('Maximum age must be greater than minimum age');
+        this.value = '';
+    }
+});
+</script>
+{% endblock %}

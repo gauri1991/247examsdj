@@ -1,0 +1,531 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Convert All Questions - {{ document.filename }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-4">
+                            <li>
+                                <a href="{% url 'pdf_extractor:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700 breadcrumb-link">{{ document.filename }}</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-4 text-sm text-gray-500">Convert All Questions</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h1 class="mt-2 text-2xl font-bold text-gray-900">Convert All Questions to Question Bank</h1>
+                    <p class="text-gray-600">{{ questions.count }} questions ready for batch conversion</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'pdf_extractor:extracted_questions' document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        ← Back to Questions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Question Summary -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8 question-summary-card relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full opacity-20"></div>
+            
+            <div class="flex items-center mb-6">
+                <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-900">Questions Summary</h2>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                <div class="text-center stats-card">
+                    <div class="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-600 mb-1">{{ questions.count }}</div>
+                    <div class="text-sm font-medium text-gray-600">Total Questions</div>
+                </div>
+                <div class="text-center stats-card">
+                    <div class="w-16 h-16 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-green-600 mb-1">{{ confidence_counts.high }}</div>
+                    <div class="text-sm font-medium text-gray-600">High Confidence</div>
+                </div>
+                <div class="text-center stats-card">
+                    <div class="w-16 h-16 mx-auto mb-3 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-yellow-600 mb-1">{{ confidence_counts.medium }}</div>
+                    <div class="text-sm font-medium text-gray-600">Medium Confidence</div>
+                </div>
+                <div class="text-center stats-card">
+                    <div class="w-16 h-16 mx-auto mb-3 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-bold text-red-600 mb-1">{{ confidence_counts.low }}</div>
+                    <div class="text-sm font-medium text-gray-600">Low Confidence</div>
+                </div>
+            </div>
+
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Questions by Type:</span>
+                </div>
+                {% for type, count in questions_by_type.items %}
+                <div class="flex justify-between pl-4">
+                    <span class="text-gray-600">{{ type|title }}:</span>
+                    <span class="font-medium">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Conversion Form -->
+        <form method="post" class="bg-white rounded-xl shadow-lg border border-gray-200 p-8 conversion-form-card relative overflow-hidden">
+            {% csrf_token %}
+            
+            <!-- Decorative background element -->
+            <div class="absolute top-0 left-0 -mt-4 -ml-4 w-20 h-20 bg-gradient-to-br from-green-50 to-emerald-100 rounded-full opacity-20"></div>
+            
+            <div class="flex items-center mb-6">
+                <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-900">Conversion Options</h2>
+            </div>
+            
+            <!-- Question Bank Selection -->
+            <div class="mb-6 form-section">
+                {{ form.question_bank.label_tag }}
+                {{ form.question_bank }}
+                {% if form.question_bank.help_text %}
+                    <p class="text-sm text-gray-600 mt-1">{{ form.question_bank.help_text }}</p>
+                {% endif %}
+                {% if form.question_bank.errors %}
+                    <div class="text-red-600 text-sm mt-1">{{ form.question_bank.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Create New Bank Option -->
+            <div class="mb-4 form-section">
+                <label class="flex items-center">
+                    {{ form.create_new_bank }}
+                    <span class="ml-2 text-gray-700">{{ form.create_new_bank.label }}</span>
+                </label>
+                {% if form.create_new_bank.help_text %}
+                    <p class="text-sm text-gray-600 mt-1 ml-6">{{ form.create_new_bank.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- New Bank Fields -->
+            <div id="newBankFields" class="hidden space-y-4 ml-6 mb-6 form-section">
+                <div>
+                    {{ form.new_bank_name.label_tag }}
+                    {{ form.new_bank_name }}
+                    {% if form.new_bank_name.errors %}
+                        <div class="text-red-600 text-sm mt-1">{{ form.new_bank_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div>
+                    {{ form.new_bank_category.label_tag }}
+                    {{ form.new_bank_category }}
+                    {% if form.new_bank_category.help_text %}
+                        <p class="text-sm text-gray-600 mt-1">{{ form.new_bank_category.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Filtering Options -->
+            <div class="border-t pt-4 mb-6 form-section">
+                <h3 class="font-medium mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                    Filter Questions to Convert
+                </h3>
+                
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        {{ form.skip_converted }}
+                        <span class="ml-2 text-gray-700">{{ form.skip_converted.label }}</span>
+                    </label>
+                    {% if form.skip_converted.help_text %}
+                        <p class="text-sm text-gray-600 mt-1 ml-6">{{ form.skip_converted.help_text }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        {{ form.skip_rejected }}
+                        <span class="ml-2 text-gray-700">{{ form.skip_rejected.label }}</span>
+                    </label>
+                </div>
+
+                <div>
+                    {{ form.minimum_confidence.label_tag }}
+                    <div class="flex items-center gap-2">
+                        {{ form.minimum_confidence }}
+                        <span class="text-sm text-gray-600">%</span>
+                    </div>
+                    {% if form.minimum_confidence.help_text %}
+                        <p class="text-sm text-gray-600 mt-1">{{ form.minimum_confidence.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="border-t pt-4 mb-6 form-section">
+                <h3 class="font-medium mb-3 flex items-center">
+                    <svg class="w-5 h-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Preview Questions
+                </h3>
+                <div class="max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50 preview-container">
+                    {% for question in questions|slice:":5" %}
+                    <div class="mb-3 pb-3 {% if not forloop.last %}border-b{% endif %} question-preview-item">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-sm font-medium text-gray-700">Q{{ forloop.counter }}:</span>
+                            <span class="text-xs px-2 py-1 rounded-full badge 
+                                {% if question.confidence_level == 'high' %}bg-green-100 text-green-700
+                                {% elif question.confidence_level == 'medium' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ question.confidence_percentage }}%
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-800">{{ question.question_text|truncatewords:20 }}</p>
+                        <div class="flex gap-4 mt-1 text-xs text-gray-500">
+                            <span>Type: {{ question.get_question_type_display }}</span>
+                            <span>Page: {{ question.page_number }}</span>
+                            {% if question.is_converted %}
+                                <span class="text-green-600">✓ Already converted</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if questions.count > 5 %}
+                        <p class="text-sm text-gray-500 text-center mt-2">
+                            ... and {{ questions.count|add:"-5" }} more questions
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center">
+                <a href="{% url 'pdf_extractor:document_detail' document.id %}" 
+                   class="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition action-button">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition action-button">
+                    Convert Questions
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const createNewBankCheckbox = document.getElementById('{{ form.create_new_bank.id_for_label }}');
+    const newBankFields = document.getElementById('newBankFields');
+    const questionBankSelect = document.getElementById('{{ form.question_bank.id_for_label }}');
+    
+    // Toggle new bank fields
+    createNewBankCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            newBankFields.classList.remove('hidden');
+            questionBankSelect.disabled = true;
+            questionBankSelect.required = false;
+        } else {
+            newBankFields.classList.add('hidden');
+            questionBankSelect.disabled = false;
+            questionBankSelect.required = true;
+        }
+    });
+    
+    // Initial state
+    if (createNewBankCheckbox.checked) {
+        newBankFields.classList.remove('hidden');
+        questionBankSelect.disabled = true;
+    }
+});
+</script>
+
+<style>
+/* Enhanced Input Styling - Match metadata edit page */
+.enhanced-input, .enhanced-select, .enhanced-textarea {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background: #fafafa !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+}
+
+.enhanced-input:hover, .enhanced-select:hover, .enhanced-textarea:hover {
+    border-color: #d1d5db !important;
+    background: #f9fafb !important;
+}
+
+.enhanced-input:focus, .enhanced-select:focus, .enhanced-textarea:focus {
+    border-color: #3b82f6 !important;
+    background: white !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    transform: translateY(-1px);
+    outline: none !important;
+}
+
+/* Apply enhanced styling to form inputs */
+input[type="text"], input[type="number"], select, textarea {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background: #fafafa !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+}
+
+input[type="text"]:hover, input[type="number"]:hover, select:hover, textarea:hover {
+    border-color: #d1d5db !important;
+    background: #f9fafb !important;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    border-color: #3b82f6 !important;
+    background: white !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    transform: translateY(-1px);
+    outline: none !important;
+}
+
+/* Button enhancements */
+button {
+    transition: all 0.2s ease !important;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+/* Label styling */
+label {
+    font-weight: 500 !important;
+    color: #374151 !important;
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Enhanced Card hover effects */
+.question-summary-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.question-summary-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.conversion-form-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.conversion-form-card:hover {
+    transform: translateY(-3px) scale(1.005);
+    box-shadow: 0 15px 35px -8px rgba(0, 0, 0, 0.1), 0 6px 12px -3px rgba(0, 0, 0, 0.06);
+    background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);
+}
+
+/* Statistics cards enhancements */
+.stats-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stats-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* Badge enhancements */
+.badge {
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Form section improvements */
+.form-section {
+    border-radius: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border: 1px solid #e5e7eb;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.form-section:hover {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-color: #d1d5db;
+}
+
+/* Enhanced buttons */
+.action-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.action-button:hover::before {
+    left: 100%;
+}
+
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.3);
+}
+
+/* Breadcrumb enhancements */
+.breadcrumb-link {
+    transition: all 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: #3b82f6 !important;
+    transform: translateX(2px);
+}
+
+/* Preview container styling */
+.preview-container {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.preview-container:hover {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-color: #d1d5db;
+}
+
+/* Question preview item styling */
+.question-preview-item {
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.question-preview-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Success state styling */
+.success-card {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid #10b981;
+    animation: successPulse 2s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* Loading states */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Advanced interactive effects */
+.stats-card .w-16 {
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover .w-16 {
+    transform: rotate(10deg) scale(1.1);
+}
+
+/* Decorative element enhancements */
+.question-summary-card .absolute,
+.conversion-form-card .absolute {
+    transition: all 0.3s ease;
+}
+
+.question-summary-card:hover .absolute,
+.conversion-form-card:hover .absolute {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 0.3;
+}
+</style>
+{% endblock %}

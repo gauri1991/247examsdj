@@ -1,0 +1,1115 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Topic & Category Editor{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css">
+<style>
+    body {
+        background: #f5f7fa;
+    }
+    
+    .editor-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .main-container {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 25px;
+        min-height: calc(100vh - 250px);
+    }
+    
+    .subjects-panel {
+        background: white;
+        border-radius: 10px;
+        padding: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    
+    .panel-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .panel-title {
+        font-weight: 600;
+        font-size: 1.1em;
+        color: #2d3748;
+    }
+    
+    .search-container {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .subjects-list {
+        max-height: calc(100vh - 400px);
+        overflow-y: auto;
+        padding: 10px;
+    }
+    
+    .subject-card {
+        background: #f8f9fa;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .subject-card:hover {
+        transform: translateX(5px);
+        border-color: #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .subject-card.active {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        border-color: #667eea;
+    }
+    
+    .subject-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    
+    .subject-name {
+        font-weight: 600;
+        font-size: 1.05em;
+        color: #2d3748;
+    }
+    
+    .subject-code {
+        background: #667eea;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    
+    .subject-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.9em;
+        color: #718096;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .topics-panel {
+        background: white;
+        border-radius: 10px;
+        padding: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    
+    .topics-toolbar {
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        border: none;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5a67d8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-success {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #38a169;
+    }
+    
+    .btn-danger {
+        background: #f56565;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #e53e3e;
+    }
+    
+    .btn-outline {
+        background: white;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-outline:hover {
+        background: #f7fafc;
+    }
+    
+    .topics-content {
+        padding: 20px;
+        max-height: calc(100vh - 350px);
+        overflow-y: auto;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #a0aec0;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        margin-bottom: 20px;
+        color: #cbd5e0;
+    }
+    
+    .tree-container {
+        min-height: 400px;
+    }
+    
+    /* Custom jstree styling */
+    .jstree-default .jstree-clicked {
+        background: #667eea !important;
+        box-shadow: none !important;
+    }
+    
+    .jstree-default .jstree-hovered {
+        background: #f7fafc !important;
+    }
+    
+    .topic-node {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 0;
+    }
+    
+    .topic-badges {
+        display: inline-flex;
+        gap: 5px;
+        margin-left: 10px;
+    }
+    
+    .badge {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .badge-type {
+        background: #e6f2ff;
+        color: #2563eb;
+    }
+    
+    .badge-difficulty-easy {
+        background: #d4f4dd;
+        color: #22863a;
+    }
+    
+    .badge-difficulty-medium {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .badge-difficulty-hard {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .badge-hours {
+        background: #f0f4f8;
+        color: #4a5568;
+    }
+    
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 20px;
+    }
+    
+    .modal-header .close {
+        color: white;
+        opacity: 0.8;
+    }
+    
+    .modal-body {
+        padding: 25px;
+    }
+    
+    .form-group label {
+        font-weight: 500;
+        color: #4a5568;
+        margin-bottom: 8px;
+    }
+    
+    .form-control {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    select.form-control {
+        height: 42px;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
+    }
+    
+    .subject-actions {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #4a5568;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-icon:hover {
+        background: #f7fafc;
+        transform: translateY(-1px);
+    }
+    
+    .btn-icon.edit {
+        color: #667eea;
+    }
+    
+    .btn-icon.delete {
+        color: #f56565;
+    }
+    
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 14px;
+        color: #718096;
+    }
+    
+    .breadcrumb-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .breadcrumb-item.active {
+        color: #2d3748;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="editor-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fas fa-sitemap"></i> Knowledge Taxonomy Editor
+                </h1>
+                <p class="mb-0" style="opacity: 0.9;">Manage subjects, topics, and their hierarchical relationships</p>
+            </div>
+            <div class="action-buttons">
+                <button class="btn btn-outline" style="background: white; color: #667eea;" onclick="location.reload()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <!-- Subjects Panel -->
+        <div class="subjects-panel">
+            <div class="panel-header">
+                <span class="panel-title">Subjects / Categories</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddSubjectModal()">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="subjectSearch" 
+                       placeholder="Search subjects..." onkeyup="filterSubjects()">
+            </div>
+            
+            <div class="subjects-list" id="subjectsList">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Topics Panel -->
+        <div class="topics-panel">
+            <div id="topicsContainer">
+                <div class="empty-state">
+                    <i class="fas fa-folder-tree"></i>
+                    <h3>Select a Subject</h3>
+                    <p>Choose a subject from the left panel to view and manage its topics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Subject Modal -->
+<div class="modal fade" id="subjectModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="subjectModalTitle">Add Subject</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="subjectForm">
+                    <input type="hidden" id="subjectId">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label>Subject Name *</label>
+                                <input type="text" class="form-control" id="subjectName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Code *</label>
+                                <input type="text" class="form-control" id="subjectCode" required 
+                                       style="text-transform: uppercase;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea class="form-control" id="subjectDescription" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select class="form-control" id="subjectCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="science">Science</option>
+                                    <option value="mathematics">Mathematics</option>
+                                    <option value="language">Language</option>
+                                    <option value="social_science">Social Science</option>
+                                    <option value="engineering">Engineering</option>
+                                    <option value="medical">Medical</option>
+                                    <option value="commerce">Commerce</option>
+                                    <option value="arts">Arts</option>
+                                    <option value="computer_science">Computer Science</option>
+                                    <option value="general_knowledge">General Knowledge</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Level *</label>
+                                <select class="form-control" id="subjectLevel" required>
+                                    <option value="">Select Level</option>
+                                    <option value="elementary">Elementary</option>
+                                    <option value="middle">Middle School</option>
+                                    <option value="high_school">High School</option>
+                                    <option value="undergraduate">Undergraduate</option>
+                                    <option value="postgraduate">Postgraduate</option>
+                                    <option value="competitive">Competitive Exams</option>
+                                    <option value="professional">Professional</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Icon (Emoji)</label>
+                                <input type="text" class="form-control" id="subjectIcon" placeholder="📚">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Color Code</label>
+                                <input type="color" class="form-control" id="subjectColor" value="#667eea">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSubject()">
+                    <i class="fas fa-save"></i> Save Subject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Topic Modal -->
+<div class="modal fade" id="topicModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="topicModalTitle">Add Topic</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="topicForm">
+                    <input type="hidden" id="topicId">
+                    <input type="hidden" id="topicSubjectId">
+                    <input type="hidden" id="topicParentId">
+                    
+                    <div class="form-group">
+                        <label>Topic Title *</label>
+                        <input type="text" class="form-control" id="topicTitle" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea class="form-control" id="topicDescription" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Topic Type *</label>
+                                <select class="form-control" id="topicType" required>
+                                    <option value="unit">Unit</option>
+                                    <option value="chapter">Chapter</option>
+                                    <option value="topic" selected>Topic</option>
+                                    <option value="subtopic">Subtopic</option>
+                                    <option value="concept">Concept</option>
+                                    <option value="skill">Skill</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Difficulty *</label>
+                                <select class="form-control" id="topicDifficulty" required>
+                                    <option value="beginner">Beginner</option>
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                    <option value="expert">Expert</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Priority *</label>
+                                <select class="form-control" id="topicPriority" required>
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Estimated Hours</label>
+                                <input type="number" class="form-control" id="topicHours" 
+                                       min="0" step="0.5" value="5">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Order</label>
+                                <input type="number" class="form-control" id="topicOrder" 
+                                       min="0" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTopic()">
+                    <i class="fas fa-save"></i> Save Topic
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<script>
+let currentSubject = null;
+let subjects = [];
+let topicsTree = null;
+
+// Initialize on page load
+$(document).ready(function() {
+    loadSubjects();
+});
+
+function loadSubjects() {
+    $.ajax({
+        url: '/knowledge/api/subjects/',
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                subjects = response.subjects;
+                renderSubjects();
+            }
+        },
+        error: function() {
+            console.error('Failed to load subjects');
+        }
+    });
+}
+
+function renderSubjects() {
+    const container = $('#subjectsList');
+    container.empty();
+    
+    subjects.forEach(subject => {
+        const card = $(`
+            <div class="subject-card" data-id="${subject.id}" onclick="selectSubject('${subject.id}')">
+                <div class="subject-title-row">
+                    <span class="subject-name">${subject.icon || '📚'} ${subject.name}</span>
+                    <div class="subject-actions">
+                        <button class="btn-icon edit" onclick="editSubject(event, '${subject.id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="deleteSubject(event, '${subject.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <span class="subject-code">${subject.code}</span>
+                <div class="subject-stats">
+                    <span class="stat-item">
+                        <i class="fas fa-layer-group"></i> ${subject.topic_count} topics
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-tag"></i> ${subject.category}
+                    </span>
+                </div>
+            </div>
+        `);
+        container.append(card);
+    });
+}
+
+function filterSubjects() {
+    const searchTerm = $('#subjectSearch').val().toLowerCase();
+    $('.subject-card').each(function() {
+        const name = $(this).find('.subject-name').text().toLowerCase();
+        const code = $(this).find('.subject-code').text().toLowerCase();
+        
+        if (name.includes(searchTerm) || code.includes(searchTerm)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+}
+
+function selectSubject(subjectId) {
+    currentSubject = subjects.find(s => s.id === subjectId);
+    
+    // Update active state
+    $('.subject-card').removeClass('active');
+    $(`.subject-card[data-id="${subjectId}"]`).addClass('active');
+    
+    // Load topics for this subject
+    loadTopics(subjectId);
+}
+
+function loadTopics(subjectId) {
+    $('#topicsContainer').html(`
+        <div class="text-center p-5">
+            <div class="loading-spinner"></div>
+            <p class="mt-3">Loading topics...</p>
+        </div>
+    `);
+    
+    $.ajax({
+        url: `/knowledge/api/subjects/${subjectId}/topics/`,
+        method: 'GET',
+        success: function(response) {
+            if (response.success) {
+                renderTopicsTree(response);
+            }
+        },
+        error: function() {
+            $('#topicsContainer').html(`
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Error Loading Topics</h3>
+                    <p>Failed to load topics for this subject</p>
+                </div>
+            `);
+        }
+    });
+}
+
+function renderTopicsTree(data) {
+    const html = `
+        <div class="panel-header">
+            <span class="panel-title">${currentSubject.name} - Topics</span>
+            <button class="btn btn-primary btn-sm" onclick="openAddTopicModal(null)">
+                <i class="fas fa-plus"></i> Add Root Topic
+            </button>
+        </div>
+        <div class="breadcrumb">
+            <span class="breadcrumb-item">
+                <i class="fas fa-book"></i> ${currentSubject.name}
+            </span>
+            <span class="breadcrumb-item active">
+                ${data.total_topics} topics
+            </span>
+        </div>
+        <div class="topics-toolbar">
+            <button class="btn btn-outline btn-sm" onclick="expandAll()">
+                <i class="fas fa-expand"></i> Expand All
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="collapseAll()">
+                <i class="fas fa-compress"></i> Collapse All
+            </button>
+        </div>
+        <div class="topics-content">
+            <div id="topicsTree" class="tree-container"></div>
+        </div>
+    `;
+    
+    $('#topicsContainer').html(html);
+    
+    // Build tree data
+    const treeData = buildTreeData(data.topics);
+    
+    // Initialize jsTree
+    $('#topicsTree').jstree({
+        'core': {
+            'data': treeData,
+            'themes': {
+                'responsive': true,
+                'variant': 'large'
+            },
+            'check_callback': true
+        },
+        'types': {
+            'default': {
+                'icon': 'fas fa-folder'
+            },
+            'unit': {
+                'icon': 'fas fa-book'
+            },
+            'chapter': {
+                'icon': 'fas fa-bookmark'
+            },
+            'topic': {
+                'icon': 'fas fa-file-alt'
+            },
+            'subtopic': {
+                'icon': 'fas fa-paperclip'
+            },
+            'concept': {
+                'icon': 'fas fa-lightbulb'
+            }
+        },
+        'plugins': ['types', 'contextmenu'],
+        'contextmenu': {
+            'items': function(node) {
+                return {
+                    'add': {
+                        'label': 'Add Child Topic',
+                        'icon': 'fas fa-plus',
+                        'action': function() {
+                            openAddTopicModal(node.id);
+                        }
+                    },
+                    'edit': {
+                        'label': 'Edit',
+                        'icon': 'fas fa-edit',
+                        'action': function() {
+                            editTopic(node.id);
+                        }
+                    },
+                    'delete': {
+                        'label': 'Delete',
+                        'icon': 'fas fa-trash',
+                        'action': function() {
+                            deleteTopic(node.id);
+                        }
+                    }
+                };
+            }
+        }
+    });
+    
+    topicsTree = $('#topicsTree').jstree(true);
+}
+
+function buildTreeData(topics) {
+    const treeData = [];
+    const topicMap = {};
+    
+    // First pass: create all nodes
+    topics.forEach(topic => {
+        const node = {
+            id: topic.id,
+            text: `${topic.title} 
+                <span class="topic-badges">
+                    <span class="badge badge-type">${topic.topic_type}</span>
+                    <span class="badge badge-difficulty-${topic.difficulty}">${topic.difficulty}</span>
+                    <span class="badge badge-hours">${topic.estimated_hours}h</span>
+                </span>`,
+            type: topic.topic_type,
+            data: topic,
+            children: []
+        };
+        topicMap[topic.id] = node;
+    });
+    
+    // Second pass: build hierarchy
+    topics.forEach(topic => {
+        if (topic.parent_id && topicMap[topic.parent_id]) {
+            topicMap[topic.parent_id].children.push(topicMap[topic.id]);
+        } else {
+            treeData.push(topicMap[topic.id]);
+        }
+    });
+    
+    return treeData;
+}
+
+function expandAll() {
+    if (topicsTree) {
+        topicsTree.open_all();
+    }
+}
+
+function collapseAll() {
+    if (topicsTree) {
+        topicsTree.close_all();
+    }
+}
+
+function openAddSubjectModal() {
+    $('#subjectModalTitle').text('Add Subject');
+    $('#subjectForm')[0].reset();
+    $('#subjectId').val('');
+    $('#subjectModal').modal('show');
+}
+
+function editSubject(event, subjectId) {
+    event.stopPropagation();
+    const subject = subjects.find(s => s.id === subjectId);
+    
+    $('#subjectModalTitle').text('Edit Subject');
+    $('#subjectId').val(subject.id);
+    $('#subjectName').val(subject.name);
+    $('#subjectCode').val(subject.code);
+    $('#subjectDescription').val(subject.description);
+    $('#subjectCategory').val(subject.category);
+    $('#subjectLevel').val(subject.level);
+    $('#subjectIcon').val(subject.icon);
+    $('#subjectColor').val(subject.color_code);
+    
+    $('#subjectModal').modal('show');
+}
+
+function saveSubject() {
+    const subjectId = $('#subjectId').val();
+    const data = {
+        name: $('#subjectName').val(),
+        code: $('#subjectCode').val().toUpperCase(),
+        description: $('#subjectDescription').val(),
+        category: $('#subjectCategory').val(),
+        level: $('#subjectLevel').val(),
+        icon: $('#subjectIcon').val() || '📚',
+        color_code: $('#subjectColor').val()
+    };
+    
+    const url = subjectId ? 
+        `/knowledge/api/subjects/${subjectId}/update/` : 
+        '/knowledge/api/subjects/';
+    
+    $.ajax({
+        url: url,
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                $('#subjectModal').modal('hide');
+                loadSubjects();
+                showNotification('Subject saved successfully', 'success');
+            }
+        },
+        error: function(xhr) {
+            showNotification('Error saving subject', 'error');
+        }
+    });
+}
+
+function deleteSubject(event, subjectId) {
+    event.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this subject? This will delete all its topics.')) {
+        return;
+    }
+    
+    $.ajax({
+        url: `/knowledge/api/subjects/${subjectId}/delete/`,
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                loadSubjects();
+                if (currentSubject && currentSubject.id === subjectId) {
+                    $('#topicsContainer').html(`
+                        <div class="empty-state">
+                            <i class="fas fa-folder-tree"></i>
+                            <h3>Select a Subject</h3>
+                            <p>Choose a subject from the left panel to view and manage its topics</p>
+                        </div>
+                    `);
+                }
+                showNotification('Subject deleted successfully', 'success');
+            }
+        },
+        error: function(xhr) {
+            const response = JSON.parse(xhr.responseText);
+            showNotification(response.error || 'Error deleting subject', 'error');
+        }
+    });
+}
+
+function openAddTopicModal(parentId) {
+    $('#topicModalTitle').text(parentId ? 'Add Child Topic' : 'Add Root Topic');
+    $('#topicForm')[0].reset();
+    $('#topicId').val('');
+    $('#topicSubjectId').val(currentSubject.id);
+    $('#topicParentId').val(parentId || '');
+    $('#topicModal').modal('show');
+}
+
+function editTopic(topicId) {
+    const node = topicsTree.get_node(topicId);
+    const topic = node.data;
+    
+    $('#topicModalTitle').text('Edit Topic');
+    $('#topicId').val(topic.id);
+    $('#topicSubjectId').val(currentSubject.id);
+    $('#topicParentId').val(topic.parent_id || '');
+    $('#topicTitle').val(topic.title);
+    $('#topicDescription').val(topic.description);
+    $('#topicType').val(topic.topic_type);
+    $('#topicDifficulty').val(topic.difficulty);
+    $('#topicPriority').val(topic.priority);
+    $('#topicHours').val(topic.estimated_hours);
+    $('#topicOrder').val(topic.order);
+    
+    $('#topicModal').modal('show');
+}
+
+function saveTopic() {
+    const topicId = $('#topicId').val();
+    const data = {
+        title: $('#topicTitle').val(),
+        description: $('#topicDescription').val(),
+        topic_type: $('#topicType').val(),
+        difficulty: $('#topicDifficulty').val(),
+        priority: $('#topicPriority').val(),
+        estimated_hours: $('#topicHours').val(),
+        order: $('#topicOrder').val()
+    };
+    
+    if (!topicId) {
+        data.subject_id = $('#topicSubjectId').val();
+        data.parent_id = $('#topicParentId').val() || null;
+    }
+    
+    const url = topicId ? 
+        `/knowledge/api/topics/${topicId}/update/` : 
+        '/knowledge/api/topics/';
+    
+    $.ajax({
+        url: url,
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                $('#topicModal').modal('hide');
+                loadTopics(currentSubject.id);
+                showNotification('Topic saved successfully', 'success');
+            }
+        },
+        error: function(xhr) {
+            showNotification('Error saving topic', 'error');
+        }
+    });
+}
+
+function deleteTopic(topicId) {
+    if (!confirm('Are you sure you want to delete this topic? This will also delete all child topics.')) {
+        return;
+    }
+    
+    $.ajax({
+        url: `/knowledge/api/topics/${topicId}/delete/`,
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                loadTopics(currentSubject.id);
+                showNotification('Topic deleted successfully', 'success');
+            }
+        },
+        error: function(xhr) {
+            const response = JSON.parse(xhr.responseText);
+            showNotification(response.error || 'Error deleting topic', 'error');
+        }
+    });
+}
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show" 
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+            <i class="fas fa-${icon}"></i> ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    
+    setTimeout(() => {
+        notification.alert('close');
+    }, 3000);
+}
+</script>
+{% endblock %}

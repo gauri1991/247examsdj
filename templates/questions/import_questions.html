@@ -1,0 +1,572 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Import Questions - {{ question_bank.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'question-bank' %}" class="hover:text-gray-700 transition-colors duration-150">Question Banks</a>
+        <span class="text-gray-400">/</span>
+        <a href="{% url 'question-bank-detail' question_bank.id %}" class="hover:text-gray-700 transition-colors duration-150">{{ question_bank.name|truncatechars:20 }}</a>
+        <span class="text-gray-400">/</span>
+        <span class="text-gray-900 font-medium">Import Questions</span>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex items-center">
+            <a href="{% url 'question-bank-detail' question_bank.id %}" class="mr-4 text-gray-400 hover:text-gray-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Import Questions</h1>
+                <p class="mt-1 text-sm text-gray-500">Bulk import questions to {{ question_bank.name }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-5xl">
+
+        <!-- File Upload Section -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Upload File</h3>
+            
+            <form method="POST" enctype="multipart/form-data" id="importForm" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- File Upload Area -->
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors duration-150" id="uploadArea">
+                    <div class="space-y-1 text-center">
+                        <div class="mx-auto mb-4">
+                            <svg class="w-12 h-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-medium text-gray-900 mb-2">
+                                Drop your file here, or <label for="file" class="text-blue-600 hover:text-blue-500 cursor-pointer underline">browse</label>
+                            </div>
+                            <p class="text-sm text-gray-500">CSV, Excel files (.csv, .xlsx, .xls) up to 10MB</p>
+                        </div>
+                        <input type="file" name="file" id="file" accept=".csv,.xlsx,.xls" class="sr-only" required>
+                    </div>
+                    
+                    <!-- File Preview -->
+                    <div id="filePreview" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="w-8 h-8 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-green-900" id="fileName"></div>
+                                <div class="text-xs text-green-700" id="fileSize"></div>
+                            </div>
+                            <button type="button" onclick="clearFile()" class="text-green-600 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- Import Options -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Import Options</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="skip_header" id="skip_header" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3">
+                        <div>
+                            <label for="skip_header" class="text-sm font-medium text-gray-900 cursor-pointer">Skip header row</label>
+                            <p class="text-xs text-gray-500 mt-1">Ignore the first row if it contains column headers</p>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-400">Recommended</div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="update_existing" id="update_existing" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3">
+                        <div>
+                            <label for="update_existing" class="text-sm font-medium text-gray-900 cursor-pointer">Update existing questions</label>
+                            <p class="text-xs text-gray-500 mt-1">Update questions that already exist (matched by question text)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="validate_only" id="validate_only" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3">
+                        <div>
+                            <label for="validate_only" class="text-sm font-medium text-gray-900 cursor-pointer">Validate only (dry run)</label>
+                            <p class="text-xs text-gray-500 mt-1">Check for errors without actually importing questions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-150">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="stop_on_error" id="stop_on_error" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3">
+                        <div>
+                            <label for="stop_on_error" class="text-sm font-medium text-gray-900 cursor-pointer">Stop on first error</label>
+                            <p class="text-xs text-gray-500 mt-1">Stop the import process when the first error is encountered</p>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-400">Recommended</div>
+                </div>
+            </div>
+        </div>
+        <!-- Template Download -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="section-header mb-2">Download Template</h3>
+                    <p class="text-sm text-gray-600">Get a pre-formatted template file to ensure your data matches the required format.</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="downloadTemplate('csv')" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        CSV Template
+                    </button>
+                    <button onclick="downloadTemplate('excel')" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Excel Template
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-8 border-t border-gray-200">
+            <a href="{% url 'question-bank-detail' question_bank.id %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Cancel
+            </a>
+            <button type="button" id="importBtn" onclick="startImport()" disabled class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                </svg>
+                <span id="importBtnText">Import Questions</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div id="progressModal" class="modal-overlay hidden">
+    <div class="modal-container max-w-lg">
+        <div class="modal-header">
+            <h3 class="modal-title">Importing Questions</h3>
+        </div>
+        
+        <div class="space-y-4">
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="bg-primary-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            
+            <!-- Status -->
+            <div id="progressStatus" class="text-center text-sm text-gray-600">
+                Preparing import...
+            </div>
+            
+            <!-- Results -->
+            <div id="progressResults" class="hidden space-y-3">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Questions processed:</span>
+                    <span id="processedCount" class="font-medium">0</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Successfully imported:</span>
+                    <span id="successCount" class="font-medium text-green-600">0</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Errors:</span>
+                    <span id="errorCount" class="font-medium text-red-600">0</span>
+                </div>
+            </div>
+            
+            <!-- Error Details -->
+            <div id="errorDetails" class="hidden max-h-32 overflow-y-auto bg-red-50 border border-red-200 rounded-lg p-3">
+                <div class="text-sm text-red-800" id="errorList"></div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end pt-4 border-t border-gray-200 mt-6">
+            <button id="closeProgressBtn" onclick="closeProgressModal()" disabled class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+        <!-- File Format Requirements -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">File Format Requirements</h3>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h4 class="text-lg font-semibold text-blue-900 mb-4">Required Columns</h4>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-blue-200">
+                                <thead class="bg-blue-100">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">Column Name</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">Required</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">Description</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-blue-900 uppercase tracking-wider">Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-blue-100">
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">question_text</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Required</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">The question text content</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">What is 2 + 2?</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">question_type</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Required</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">mcq, multi_select, true_false, fill_blank, essay</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">mcq</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">option_a</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">MCQ/Multi</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">First option (for MCQ and Multi-Select)</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">4</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">option_b</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">MCQ/Multi</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">Second option</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">option_c</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Optional</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">Third option</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">option_d</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Optional</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">Fourth option</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">6</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">correct_answer</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Required</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">A,B,C,D for MCQ/Multi, true/false, or text for fill_blank</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">A</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">difficulty</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Optional</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">easy, medium, hard, expert</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">medium</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">marks</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Optional</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">Points for the question</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">topic</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Optional</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">Question topic/category</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">Arithmetic</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 text-sm font-medium text-blue-900">explanation</td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Optional</span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-blue-800">Explanation for the answer</td>
+                                        <td class="px-4 py-3 text-sm text-blue-700 font-mono">2 + 2 equals 4</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div class="text-sm">
+                                    <p class="font-medium text-yellow-800 mb-1">Important Notes:</p>
+                                    <ul class="text-yellow-700 space-y-1">
+                                        <li>• For Multi-Select questions, separate multiple correct answers with commas (e.g., "A,C")</li>
+                                        <li>• For Fill-in-the-Blank questions, put the correct answer in the correct_answer column</li>
+                                        <li>• For True/False questions, use "true" or "false" in the correct_answer column</li>
+                                        <li>• Essay questions don't require options or correct answers</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Upload area styling */
+.upload-area {
+    @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors duration-150 cursor-pointer;
+}
+
+.upload-area.dragover {
+    @apply border-primary-400 bg-primary-50;
+}
+
+.upload-content {
+    @apply flex flex-col items-center;
+}
+
+.upload-icon {
+    @apply mb-4;
+}
+
+.upload-text {
+    @apply text-center;
+}
+
+/* Progress styling */
+.progress-spinner {
+    @apply inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600;
+}
+
+/* Table styling */
+.divide-blue-100 > * + * {
+    border-top: 1px solid #dbeafe;
+}
+
+.divide-blue-200 > * + * {
+    border-top: 1px solid #bfdbfe;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .upload-area {
+        @apply p-4;
+    }
+    
+    .upload-icon svg {
+        @apply w-8 h-8;
+    }
+    
+    .upload-text .text-lg {
+        @apply text-base;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('file');
+    const filePreview = document.getElementById('filePreview');
+    const importBtn = document.getElementById('importBtn');
+    const importForm = document.getElementById('importForm');
+    
+    // Drag and drop functionality
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    uploadArea.addEventListener('drop', handleDrop, false);
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        uploadArea.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        uploadArea.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+        }
+    }
+    
+    function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (file) {
+            showFilePreview(file);
+            importBtn.disabled = false;
+        }
+    }
+    
+    function showFilePreview(file) {
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = formatFileSize(file.size);
+        filePreview.classList.remove('hidden');
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    window.clearFile = function() {
+        fileInput.value = '';
+        filePreview.classList.add('hidden');
+        importBtn.disabled = true;
+    };
+    
+    window.downloadTemplate = function(format) {
+        // This would make a request to download the template
+        const url = `/api/questions/bank/{{ question_bank.id }}/template/${format}/`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `question_import_template.${format === 'excel' ? 'xlsx' : 'csv'}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+    
+    window.startImport = function() {
+        if (!fileInput.files[0]) {
+            alert('Please select a file to import.');
+            return;
+        }
+        
+        document.getElementById('progressModal').classList.remove('hidden');
+        document.getElementById('closeProgressBtn').disabled = true;
+        
+        // Collect form data
+        const formData = new FormData(importForm);
+        
+        // Add options
+        const options = ['skip_header', 'update_existing', 'validate_only', 'stop_on_error'];
+        options.forEach(option => {
+            const checkbox = document.getElementById(option);
+            if (checkbox.checked) {
+                formData.append(option, 'true');
+            }
+        });
+        
+        // Simulate import process (in real implementation, this would be an AJAX call)
+        simulateImport();
+    };
+    
+    function simulateImport() {
+        const progressBar = document.getElementById('progressBar');
+        const progressStatus = document.getElementById('progressStatus');
+        const progressResults = document.getElementById('progressResults');
+        const processedCount = document.getElementById('processedCount');
+        const successCount = document.getElementById('successCount');
+        const errorCount = document.getElementById('errorCount');
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 100) progress = 100;
+            
+            progressBar.style.width = progress + '%';
+            
+            if (progress < 30) {
+                progressStatus.textContent = 'Reading file...';
+            } else if (progress < 60) {
+                progressStatus.textContent = 'Validating questions...';
+            } else if (progress < 90) {
+                progressStatus.textContent = 'Importing questions...';
+            } else {
+                progressStatus.textContent = 'Finalizing import...';
+            }
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                // Show results
+                progressStatus.textContent = 'Import completed!';
+                progressResults.classList.remove('hidden');
+                
+                // Simulate results
+                processedCount.textContent = '25';
+                successCount.textContent = '23';
+                errorCount.textContent = '2';
+                
+                document.getElementById('closeProgressBtn').disabled = false;
+                document.getElementById('closeProgressBtn').textContent = 'View Results';
+                document.getElementById('closeProgressBtn').className = 'inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
+            }
+        }, 500);
+    }
+    
+    window.closeProgressModal = function() {
+        document.getElementById('progressModal').classList.add('hidden');
+        // In real implementation, redirect to question bank detail page
+        window.location.href = "{% url 'question-bank-detail' question_bank.id %}";
+    };
+});
+</script>
+{% endblock %}

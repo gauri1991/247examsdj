@@ -1,0 +1,607 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Extracted Questions - {{ document.filename }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-4">
+                            <li>
+                                <a href="{% url 'pdf_extractor:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700">{{ document.filename|truncatechars:30 }}</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-4 text-sm text-gray-500">Extracted Questions</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h1 class="mt-2 text-2xl font-bold text-gray-900">Extracted Questions</h1>
+                    <p class="text-gray-600">{{ total_questions }} questions found in {{ document.filename }}</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'pdf_extractor:convert_all' document.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                        Convert All Approved
+                    </a>
+                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        ← Back to Document
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Filters Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-6 filter-sidebar">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Filters & Search</h3>
+                    
+                    <form method="get" id="filter-form" class="space-y-4">
+                        <!-- Search -->
+                        <div>
+                            <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Questions</label>
+                            <input type="text" name="search" id="search" value="{{ filters.search_query }}" 
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                   placeholder="Search question text...">
+                        </div>
+
+                        <!-- Confidence Filter -->
+                        <div>
+                            <label for="confidence" class="block text-sm font-medium text-gray-700 mb-1">Confidence Level</label>
+                            <select name="confidence" id="confidence" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="all" {% if filters.confidence_filter == 'all' %}selected{% endif %}>All Levels</option>
+                                <option value="high" {% if filters.confidence_filter == 'high' %}selected{% endif %}>High ({{ stats.by_confidence.high }})</option>
+                                <option value="medium" {% if filters.confidence_filter == 'medium' %}selected{% endif %}>Medium ({{ stats.by_confidence.medium }})</option>
+                                <option value="low" {% if filters.confidence_filter == 'low' %}selected{% endif %}>Low ({{ stats.by_confidence.low }})</option>
+                            </select>
+                        </div>
+
+                        <!-- Question Type Filter -->
+                        <div>
+                            <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Question Type</label>
+                            <select name="type" id="type" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="all" {% if filters.question_type_filter == 'all' %}selected{% endif %}>All Types</option>
+                                {% for type_code, type_name in question_types %}
+                                    <option value="{{ type_code }}" {% if filters.question_type_filter == type_code %}selected{% endif %}>
+                                        {{ type_name }} ({{ stats.by_type|default_if_none:0 }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Review Status Filter -->
+                        <div>
+                            <label for="review" class="block text-sm font-medium text-gray-700 mb-1">Review Status</label>
+                            <select name="review" id="review" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="all" {% if filters.review_filter == 'all' %}selected{% endif %}>All Status</option>
+                                <option value="needs_review" {% if filters.review_filter == 'needs_review' %}selected{% endif %}>Needs Review ({{ stats.by_status.needs_review }})</option>
+                                <option value="approved" {% if filters.review_filter == 'approved' %}selected{% endif %}>Approved ({{ stats.by_status.approved }})</option>
+                                <option value="rejected" {% if filters.review_filter == 'rejected' %}selected{% endif %}>Rejected ({{ stats.by_status.rejected }})</option>
+                                <option value="converted" {% if filters.review_filter == 'converted' %}selected{% endif %}>Converted ({{ stats.by_status.converted }})</option>
+                                <option value="pending" {% if filters.review_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            </select>
+                        </div>
+
+                        <!-- Difficulty Filter -->
+                        <div>
+                            <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                            <select name="difficulty" id="difficulty" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="all" {% if filters.difficulty_filter == 'all' %}selected{% endif %}>All Levels</option>
+                                <option value="easy" {% if filters.difficulty_filter == 'easy' %}selected{% endif %}>Easy</option>
+                                <option value="medium" {% if filters.difficulty_filter == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="hard" {% if filters.difficulty_filter == 'hard' %}selected{% endif %}>Hard</option>
+                            </select>
+                        </div>
+
+                        <!-- Topic Filter -->
+                        <div>
+                            <label for="topic" class="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+                            <select name="topic" id="topic" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="all" {% if filters.topic_filter == 'all' %}selected{% endif %}>All Topics</option>
+                                {% for topic in unique_topics %}
+                                    <option value="{{ topic }}" {% if filters.topic_filter == topic %}selected{% endif %}>{{ topic }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Page Range Filter -->
+                        <div>
+                            <label for="page_range" class="block text-sm font-medium text-gray-700 mb-1">Page Range</label>
+                            <input type="text" name="page_range" id="page_range" value="{{ filters.page_filter }}" 
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                   placeholder="e.g., 1-5 or 3">
+                        </div>
+
+                        <!-- Sort Options -->
+                        <div>
+                            <label for="sort" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+                            <select name="sort" id="sort" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="page_number" {% if filters.sort_by == 'page_number' %}selected{% endif %}>Page Number</option>
+                                <option value="confidence_desc" {% if filters.sort_by == 'confidence_desc' %}selected{% endif %}>Confidence (High to Low)</option>
+                                <option value="confidence_asc" {% if filters.sort_by == 'confidence_asc' %}selected{% endif %}>Confidence (Low to High)</option>
+                                <option value="date_desc" {% if filters.sort_by == 'date_desc' %}selected{% endif %}>Date (Newest First)</option>
+                                <option value="date_asc" {% if filters.sort_by == 'date_asc' %}selected{% endif %}>Date (Oldest First)</option>
+                                <option value="difficulty" {% if filters.sort_by == 'difficulty' %}selected{% endif %}>Difficulty</option>
+                                <option value="topic" {% if filters.sort_by == 'topic' %}selected{% endif %}>Topic</option>
+                            </select>
+                        </div>
+
+                        <!-- Per Page -->
+                        <div>
+                            <label for="per_page" class="block text-sm font-medium text-gray-700 mb-1">Items per Page</label>
+                            <select name="per_page" id="per_page" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                <option value="15" {% if filters.per_page == 15 %}selected{% endif %}>15</option>
+                                <option value="25" {% if filters.per_page == 25 %}selected{% endif %}>25</option>
+                                <option value="50" {% if filters.per_page == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if filters.per_page == 100 %}selected{% endif %}>100</option>
+                            </select>
+                        </div>
+
+                        <!-- Apply Filters Button -->
+                        <div class="pt-4">
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                Apply Filters
+                            </button>
+                        </div>
+
+                        <!-- Clear Filters -->
+                        <div>
+                            <a href="{% url 'pdf_extractor:extracted_questions' document.id %}" class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                Clear All Filters
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Questions List -->
+            <div class="lg:col-span-3">
+                <!-- Results Summary -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">
+                                Showing {{ questions.start_index }} to {{ questions.end_index }} of {{ stats.total }} questions
+                                {% if filters.search_query %}
+                                    matching "{{ filters.search_query }}"
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="flex space-x-4 text-sm">
+                            <span class="text-green-600">✓ {{ stats.by_status.approved }} Approved</span>
+                            <span class="text-yellow-600">⚠ {{ stats.by_status.needs_review }} Need Review</span>
+                            <span class="text-red-600">✗ {{ stats.by_status.rejected }} Rejected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions -->
+                <div class="space-y-4">
+                    {% for question in questions %}
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 question-card">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <!-- Question Header -->
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 badge">
+                                            Page {{ question.page_number }}
+                                        </span>
+                                        
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if question.confidence_level == 'high' %}bg-green-100 text-green-800{% elif question.confidence_level == 'medium' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %} badge">
+                                            {{ question.get_confidence_level_display }} ({{ question.confidence_score|floatformat:1 }}%)
+                                        </span>
+                                        
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 badge">
+                                            {{ question.get_question_type_display }}
+                                        </span>
+
+                                        {% if question.estimated_difficulty %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 badge">
+                                                {{ question.estimated_difficulty|title }}
+                                            </span>
+                                        {% endif %}
+
+                                        {% if question.estimated_topic %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 badge">
+                                                {{ question.estimated_topic }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Question Text -->
+                                    <div class="mb-4">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ question.question_text|truncatewords:30 }}</h3>
+                                        
+                                        <!-- Answer Options Preview -->
+                                        {% if question.answer_options %}
+                                            <div class="ml-4 space-y-1">
+                                                {% for option in question.answer_options|slice:":3" %}
+                                                    <div class="flex items-center text-sm text-gray-600">
+                                                        <span class="font-medium mr-2">{{ option.letter|default:forloop.counter0|add:"A" }})</span>
+                                                        <span>{{ option.text|truncatewords:10 }}</span>
+                                                        {% if option.letter in question.correct_answers or option.text in question.correct_answers %}
+                                                            <span class="ml-2 text-green-600">✓</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                                {% if question.answer_options|length > 3 %}
+                                                    <div class="text-sm text-gray-500">... and {{ question.answer_options|length|add:"-3" }} more options</div>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Status Indicators -->
+                                    <div class="flex items-center space-x-4 text-sm">
+                                        {% if question.requires_review %}
+                                            <span class="text-yellow-600">⚠ Needs Review</span>
+                                        {% elif question.is_approved %}
+                                            <span class="text-green-600">✓ Approved</span>
+                                        {% elif question.is_rejected %}
+                                            <span class="text-red-600">✗ Rejected</span>
+                                        {% endif %}
+
+                                        {% if question.is_converted %}
+                                            <span class="text-blue-600">📝 Converted</span>
+                                        {% endif %}
+
+                                        <span class="text-gray-500">Extracted {{ question.extracted_at|timesince }} ago</span>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex-shrink-0 ml-4">
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'pdf_extractor:review_question' question.id %}" 
+                                           class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            Review
+                                        </a>
+                                        
+                                        {% if not question.is_converted %}
+                                            <a href="{% url 'pdf_extractor:convert_question' question.id %}" 
+                                               class="inline-flex items-center px-3 py-1.5 border border-transparent rounded text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                                </svg>
+                                                Convert
+                                            </a>
+                                        {% endif %}
+                                        
+                                        <button type="button" onclick="confirmDeleteQuestion('{{ question.id }}', '{{ question.question_text|truncatewords:8|escapejs }}')" class="inline-flex items-center px-3 py-1.5 border border-red-300 rounded text-sm font-medium text-red-700 bg-white hover:bg-red-50">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No questions found</h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                {% if filters.search_query or filters.confidence_filter != 'all' or filters.question_type_filter != 'all' %}
+                                    Try adjusting your filters to see more results.
+                                {% else %}
+                                    No questions have been extracted from this document yet.
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if questions.has_other_pages %}
+                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {% if questions.has_previous %}
+                                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ questions.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+                            {% endif %}
+                            {% if questions.has_next %}
+                                <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ questions.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+                            {% endif %}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Showing <span class="font-medium">{{ questions.start_index }}</span> to <span class="font-medium">{{ questions.end_index }}</span> of <span class="font-medium">{{ questions.paginator.count }}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    {% if questions.has_previous %}
+                                        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ questions.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Previous</span>
+                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% for num in questions.paginator.page_range %}
+                                        {% if questions.number == num %}
+                                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">{{ num }}</span>
+                                        {% elif num > questions.number|add:'-3' and num < questions.number|add:'3' %}
+                                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ num }}</a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if questions.has_next %}
+                                        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ questions.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Next</span>
+                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </a>
+                                    {% endif %}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    const filterForm = document.getElementById('filter-form');
+    const filterInputs = filterForm.querySelectorAll('select, input[type="text"]');
+    
+    filterInputs.forEach(input => {
+        if (input.name !== 'search' && input.name !== 'page_range') {
+            input.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        }
+    });
+    
+    // Add debounce for search input
+    let searchTimeout;
+    const searchInput = document.getElementById('search');
+    const pageRangeInput = document.getElementById('page_range');
+    
+    [searchInput, pageRangeInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterForm.submit();
+                }, 1000); // 1 second delay
+            });
+        }
+    });
+});
+</script>
+
+<style>
+/* Enhanced Input Styling - Match metadata edit page */
+.enhanced-input, .enhanced-select, .enhanced-textarea {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background: #fafafa !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+}
+
+.enhanced-input:hover, .enhanced-select:hover, .enhanced-textarea:hover {
+    border-color: #d1d5db !important;
+    background: #f9fafb !important;
+}
+
+.enhanced-input:focus, .enhanced-select:focus, .enhanced-textarea:focus {
+    border-color: #3b82f6 !important;
+    background: white !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    transform: translateY(-1px);
+    outline: none !important;
+}
+
+/* Apply enhanced styling to form inputs */
+input[type="text"], input[type="number"], input[type="search"], select, textarea {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    background: #fafafa !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+}
+
+input[type="text"]:hover, input[type="number"]:hover, input[type="search"]:hover, select:hover, textarea:hover {
+    border-color: #d1d5db !important;
+    background: #f9fafb !important;
+}
+
+input[type="text"]:focus, input[type="number"]:focus, input[type="search"]:focus, select:focus, textarea:focus {
+    border-color: #3b82f6 !important;
+    background: white !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    transform: translateY(-1px);
+    outline: none !important;
+}
+
+/* Button enhancements */
+button, .btn {
+    transition: all 0.2s ease !important;
+}
+
+button:hover, .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Label styling */
+label {
+    font-weight: 500 !important;
+    color: #374151 !important;
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+
+/* Card hover effects */
+.question-card {
+    transition: all 0.2s ease;
+}
+
+.question-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced filter sidebar */
+.filter-sidebar {
+    transition: all 0.2s ease;
+}
+
+/* Badge enhancements */
+.badge {
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Pagination button enhancements */
+.pagination-btn {
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover {
+    transform: translateY(-1px);
+}
+</style>
+
+<script>
+// Delete individual question confirmation
+function confirmDeleteQuestion(questionId, questionText) {
+    const message = `Are you sure you want to delete this question?\n\n"${questionText}..."\n\nThis action cannot be undone.`;
+    
+    if (confirm(message)) {
+        deleteQuestion(questionId);
+    }
+}
+
+// Delete individual question API call
+function deleteQuestion(questionId) {
+    const deleteButton = document.querySelector(`[onclick*="${questionId}"]`);
+    const originalText = deleteButton.innerHTML;
+    
+    // Show loading state
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = `
+        <svg class="w-4 h-4 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Deleting...
+    `;
+    
+    fetch(`/pdf-extractor/api/question/${questionId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the question card from the DOM
+            const questionCard = deleteButton.closest('.question-card');
+            if (questionCard) {
+                questionCard.style.transition = 'all 0.3s ease';
+                questionCard.style.transform = 'translateX(-100%)';
+                questionCard.style.opacity = '0';
+                setTimeout(() => {
+                    questionCard.remove();
+                    // Update question count if displayed
+                    updateQuestionCount();
+                }, 300);
+            }
+            
+            // Show success message briefly
+            const successMsg = document.createElement('div');
+            successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50';
+            successMsg.textContent = 'Question deleted successfully';
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 3000);
+            
+        } else {
+            alert('Error deleting question: ' + (data.error || 'Unknown error'));
+            // Restore button
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting question. Please try again.');
+        // Restore button
+        deleteButton.disabled = false;
+        deleteButton.innerHTML = originalText;
+    });
+}
+
+// Helper function to get CSRF token from cookie
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Update question count after deletion
+function updateQuestionCount() {
+    const questionCards = document.querySelectorAll('.question-card');
+    const countElements = document.querySelectorAll('[data-question-count]');
+    countElements.forEach(el => {
+        el.textContent = questionCards.length;
+    });
+}
+</script>
+{% endblock %}

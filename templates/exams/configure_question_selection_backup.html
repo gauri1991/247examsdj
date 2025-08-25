@@ -1,0 +1,90 @@
+// Essential JavaScript functions only
+
+// Simple function for opening question browser
+function openQuestionBrowser() {
+    // Redirect to admin questions page for manual selection
+    window.open('/users/admin/questions/', '_blank');
+}
+
+// Preview question selection results
+async function previewSelection() {
+    if (selectedMode === 'manual') {
+        showNotification('Manual selection does not require preview. Use the Browse Questions button to select manually.', 'info');
+        return;
+    }
+    
+    const selectionData = collectSelectionData();
+    document.getElementById('previewLoading').style.display = 'flex';
+    
+    try {
+        const response = await fetch(`/exams/test/{{ test.id }}/preview-selection/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(selectionData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayPreviewResults(result);
+            updateStepIndicator(3, 'completed');
+            updateStepIndicator(4, 'active');
+        } else {
+            showNotification('Error generating preview: ' + result.error, 'error');
+        }
+    } catch (error) {
+        showNotification('Error generating preview: ' + error.message, 'error');
+    } finally {
+        document.getElementById('previewLoading').style.display = 'none';
+    }
+}
+
+function displayPreviewResults(result) {
+    document.getElementById('previewResults').style.display = 'block';
+    
+    // Display distribution charts
+    displayDistributionChart('difficulty', result.preview.distributions.by_difficulty);
+    displayDistributionChart('category', result.preview.distributions.by_category);
+    displayDistributionChart('type', result.preview.distributions.by_type);
+    
+    // Display sample questions
+    const questionsHtml = result.sample_questions.map(q => `
+        <div class="p-3 border rounded-md">
+            <div class="text-sm font-medium">${q.question_text.substring(0, 100)}...</div>
+            <div class="text-xs text-gray-500 mt-1">${q.subject} • ${q.question_type} • ${q.difficulty}</div>
+        </div>
+    `).join('');
+    
+    document.getElementById('sampleQuestions').innerHTML = questionsHtml;
+    
+    // Update step indicators
+    updateStepIndicator(3, 'completed');
+    updateStepIndicator(4, 'active');
+}
+
+function displayDistributionChart(type, data) {
+    const containerId = type + 'Chart';
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+    const chartHtml = Object.entries(data).map(([key, count]) => {
+        const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+        return `
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm">${key}</span>
+                <div class="flex items-center">
+                    <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="text-sm font-medium">${count}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = chartHtml;
+}

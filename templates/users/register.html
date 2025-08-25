@@ -1,0 +1,153 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sign Up - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Create your account
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Or
+                <a href="{% url 'login' %}" class="font-medium text-primary-600 hover:text-primary-500">
+                    sign in to existing account
+                </a>
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="POST" x-data="{ role: 'student' }">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                <!-- Role Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        I am registering as a
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
+                               :class="role === 'student' ? 'border-primary-500 ring-2 ring-primary-500' : 'border-gray-300'">
+                            <input type="radio" name="role" value="student" class="sr-only" 
+                                   x-model="role">
+                            <div class="flex flex-1">
+                                <div class="flex flex-col">
+                                    <span class="block text-sm font-medium text-gray-900">Student</span>
+                                    <span class="mt-1 flex items-center text-sm text-gray-500">Take tests & view results</span>
+                                </div>
+                            </div>
+                            <svg class="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor"
+                                 x-show="role === 'student'">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </label>
+                        
+                        <label class="relative flex cursor-pointer rounded-lg border bg-white p-4 shadow-sm focus:outline-none"
+                               :class="role === 'teacher' ? 'border-primary-500 ring-2 ring-primary-500' : 'border-gray-300'">
+                            <input type="radio" name="role" value="teacher" class="sr-only" 
+                                   x-model="role">
+                            <div class="flex flex-1">
+                                <div class="flex flex-col">
+                                    <span class="block text-sm font-medium text-gray-900">Teacher</span>
+                                    <span class="mt-1 flex items-center text-sm text-gray-500">Create & manage tests</span>
+                                </div>
+                            </div>
+                            <svg class="h-5 w-5 text-primary-600" viewBox="0 0 20 20" fill="currentColor"
+                                 x-show="role === 'teacher'">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Name Fields -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="id_first_name" class="block text-sm font-medium text-gray-700">
+                            First name
+                        </label>
+                        <input type="text" name="first_name" id="id_first_name" required
+                               class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                    
+                    <div>
+                        <label for="id_last_name" class="block text-sm font-medium text-gray-700">
+                            Last name
+                        </label>
+                        <input type="text" name="last_name" id="id_last_name" required
+                               class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+                
+                <!-- Username -->
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700">
+                        Username
+                    </label>
+                    <input type="text" name="username" id="id_username" required
+                           class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           placeholder="johndoe">
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-gray-700">
+                        Email address
+                    </label>
+                    <input type="email" name="email" id="id_email" required
+                           class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           placeholder="john@example.com">
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label for="id_phone" class="block text-sm font-medium text-gray-700">
+                        Phone number (optional)
+                    </label>
+                    <input type="tel" name="phone" id="id_phone"
+                           class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           placeholder="+1 (555) 123-4567">
+                </div>
+                
+                <!-- Password -->
+                <div>
+                    <label for="id_password" class="block text-sm font-medium text-gray-700">
+                        Password
+                    </label>
+                    <input type="password" name="password" id="id_password" required
+                           class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                           minlength="8">
+                    <p class="mt-1 text-sm text-gray-500">Must be at least 8 characters</p>
+                </div>
+                
+                <!-- Password Confirmation -->
+                <div>
+                    <label for="id_password2" class="block text-sm font-medium text-gray-700">
+                        Confirm password
+                    </label>
+                    <input type="password" name="password2" id="id_password2" required
+                           class="mt-1 focus:ring-primary-500 focus:border-primary-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                
+                <!-- Terms -->
+                <div class="flex items-start">
+                    <input id="terms" name="terms" type="checkbox" required
+                           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                    <label for="terms" class="ml-2 block text-sm text-gray-900">
+                        I agree to the <a href="#" class="text-primary-600 hover:text-primary-500">Terms and Conditions</a>
+                    </label>
+                </div>
+            </div>
+            
+            <div>
+                <button type="submit"
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Create Account
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Subscription Plans - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                Choose Your Plan
+            </h2>
+            <p class="mt-4 text-xl text-gray-600">
+                Select the perfect plan for your learning journey
+            </p>
+        </div>
+
+        {% if user_subscription %}
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">
+                        Current Subscription
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>You are currently subscribed to <strong>{{ user_subscription.plan.name }}</strong></p>
+                        <p>Status: <span class="capitalize">{{ user_subscription.status }}</span></p>
+                        <p>Expires: {{ user_subscription.end_date|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0 xl:grid-cols-3">
+            {% for plan in plans %}
+            <div class="border border-gray-200 rounded-lg shadow-sm divide-y divide-gray-200 {% if plan.is_popular %}ring-2 ring-blue-500{% endif %}">
+                {% if plan.is_popular %}
+                <div class="bg-blue-500 text-white text-center py-2 rounded-t-lg">
+                    <span class="text-sm font-medium">Most Popular</span>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <h2 class="text-lg leading-6 font-medium text-gray-900">{{ plan.name }}</h2>
+                    <p class="mt-4 text-sm text-gray-500">{{ plan.description }}</p>
+                    <p class="mt-8">
+                        <span class="text-4xl font-extrabold text-gray-900">${{ plan.price }}</span>
+                        {% if plan.billing_cycle != 'lifetime' %}
+                        <span class="text-base font-medium text-gray-500">/{{ plan.billing_cycle }}</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if not user_subscription or user_subscription.plan != plan %}
+                    <button onclick="selectPlan('{{ plan.id }}')" 
+                            class="mt-8 block w-full bg-blue-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Choose {{ plan.name }}
+                    </button>
+                    {% else %}
+                    <div class="mt-8 block w-full bg-gray-100 border border-gray-300 rounded-md py-2 text-sm font-semibold text-gray-500 text-center">
+                        Current Plan
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="pt-6 pb-8 px-6">
+                    <h3 class="text-xs font-medium text-gray-900 tracking-wide uppercase">What's included</h3>
+                    <ul class="mt-6 space-y-4">
+                        {% for feature in plan.features_list %}
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-sm text-gray-500">{{ feature }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Discount Code Modal -->
+<div id="discountModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeDiscountModal()"></div>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Apply Discount Code</h3>
+                <div class="mb-4">
+                    <label for="discountCode" class="block text-sm font-medium text-gray-700 mb-2">Discount Code</label>
+                    <input type="text" id="discountCode" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter discount code">
+                </div>
+                <div id="discountResult" class="hidden mb-4 p-3 rounded-md"></div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button onclick="applyDiscount()" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Apply
+                </button>
+                <button onclick="proceedWithoutDiscount()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Continue without discount
+                </button>
+                <button onclick="closeDiscountModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedPlanId = null;
+let appliedDiscount = null;
+
+function selectPlan(planId) {
+    selectedPlanId = planId;
+    document.getElementById('discountModal').classList.remove('hidden');
+}
+
+function closeDiscountModal() {
+    document.getElementById('discountModal').classList.add('hidden');
+    document.getElementById('discountCode').value = '';
+    document.getElementById('discountResult').classList.add('hidden');
+    selectedPlanId = null;
+    appliedDiscount = null;
+}
+
+function applyDiscount() {
+    const discountCode = document.getElementById('discountCode').value.trim();
+    const resultDiv = document.getElementById('discountResult');
+    
+    if (!discountCode) {
+        showDiscountResult('Please enter a discount code', 'error');
+        return;
+    }
+    
+    fetch('/payments/api/validate-discount/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: `code=${encodeURIComponent(discountCode)}&plan_id=${selectedPlanId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            appliedDiscount = {
+                code: discountCode,
+                discount_amount: data.discount_amount
+            };
+            showDiscountResult(`Discount applied! You save $${data.discount_amount.toFixed(2)}`, 'success');
+        } else {
+            showDiscountResult(data.error || 'Invalid discount code', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showDiscountResult('Error validating discount code', 'error');
+    });
+}
+
+function showDiscountResult(message, type) {
+    const resultDiv = document.getElementById('discountResult');
+    resultDiv.textContent = message;
+    resultDiv.className = `mb-4 p-3 rounded-md ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+    resultDiv.classList.remove('hidden');
+}
+
+function proceedWithoutDiscount() {
+    createSubscription();
+}
+
+function createSubscription() {
+    if (!selectedPlanId) return;
+    
+    const data = {
+        plan_id: selectedPlanId
+    };
+    
+    if (appliedDiscount) {
+        data.discount_code = appliedDiscount.code;
+    }
+    
+    fetch('/payments/api/create-subscription/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Subscription created successfully!');
+            location.reload();
+        } else {
+            alert(data.error || 'Error creating subscription');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating subscription');
+    })
+    .finally(() => {
+        closeDiscountModal();
+    });
+}
+</script>
+{% endblock %}

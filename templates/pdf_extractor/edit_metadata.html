@@ -1,0 +1,591 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Edit Metadata - {{ document.filename }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header Section -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-4">
+                            <li>
+                                <a href="{% url 'pdf_extractor:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_list' %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700">Documents</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700">{{ document.filename }}</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-4 text-sm text-gray-500">Edit Metadata</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h1 class="mt-2 text-2xl font-bold text-gray-900">Edit Document Metadata</h1>
+                    <p class="text-gray-600">Update metadata information for "{{ document.filename }}"</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to Document
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Edit Form -->
+        <div class="w-full">
+            <form method="post" action="{% url 'pdf_extractor:edit_metadata' document.id %}">
+                {% csrf_token %}
+                
+                <!-- Enhanced Gradient Header -->
+                <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-t-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="bg-white/20 rounded-lg p-2 mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">Document Metadata</h3>
+                                <p class="text-blue-100 text-sm">Update detailed information for your PDF document</p>
+                            </div>
+                        </div>
+                        <div class="bg-white/10 rounded-full px-3 py-1">
+                            <span class="text-xs font-medium">Enhanced Edit</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Form Container -->
+                <div class="bg-white rounded-b-lg border-2 border-blue-100 shadow-lg">
+                    <div class="p-8">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Basic Information -->
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-blue-500 pl-4">
+                                <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Basic Information
+                                </h4>
+                                <p class="text-sm text-gray-600 mt-1">Essential document details</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Document Title <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="{{ form.title.id_for_label }}" name="{{ form.title.name }}" 
+                                       value="{{ form.title.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="e.g., UPSC Civil Services Prelims 2024, SSC CGL Tier 1 Practice Set"
+                                       maxlength="200">
+                                <p class="text-xs text-gray-500 mt-1">Give your document a descriptive title for easy identification</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <textarea id="{{ form.description.id_for_label }}" name="{{ form.description.name }}" 
+                                          rows="4" class="enhanced-textarea w-full" 
+                                          placeholder="Brief description of the document content, syllabus coverage, difficulty level, or any special notes..."
+                                          maxlength="500">{{ form.description.value|default:'' }}</textarea>
+                                <p class="text-xs text-gray-500 mt-1">Optional: Describe the content, topics covered, or special characteristics (max 500 characters)</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.year.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                <input type="number" id="{{ form.year.id_for_label }}" name="{{ form.year.name }}" 
+                                       value="{{ form.year.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="2024" min="1990" max="2030">
+                                <p class="text-xs text-gray-500 mt-1">Year of examination or document publication</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Exam Information -->
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-green-500 pl-4">
+                                <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                    Exam Information
+                                </h4>
+                                <p class="text-sm text-gray-600 mt-1">Examination and conducting body details</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.exam_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                                <select id="{{ form.exam_type.id_for_label }}" name="{{ form.exam_type.name }}" class="enhanced-select w-full">
+                                    <option value="">Select exam type...</option>
+                                    <option value="upsc" {% if form.exam_type.value == 'upsc' %}selected{% endif %}>UPSC (Civil Services)</option>
+                                    <option value="ssc" {% if form.exam_type.value == 'ssc' %}selected{% endif %}>SSC (Staff Selection Commission)</option>
+                                    <option value="banking" {% if form.exam_type.value == 'banking' %}selected{% endif %}>Banking Exams (SBI, IBPS, RBI)</option>
+                                    <option value="railway" {% if form.exam_type.value == 'railway' %}selected{% endif %}>Railway Exams (RRB)</option>
+                                    <option value="defense" {% if form.exam_type.value == 'defense' %}selected{% endif %}>Defense Exams (NDA, CDS, AFCAT)</option>
+                                    <option value="state_psc" {% if form.exam_type.value == 'state_psc' %}selected{% endif %}>State PSC</option>
+                                    <option value="teaching" {% if form.exam_type.value == 'teaching' %}selected{% endif %}>Teaching Exams (CTET, TET, NET)</option>
+                                    <option value="engineering" {% if form.exam_type.value == 'engineering' %}selected{% endif %}>Engineering Entrance (JEE, GATE)</option>
+                                    <option value="medical" {% if form.exam_type.value == 'medical' %}selected{% endif %}>Medical Entrance (NEET, AIIMS)</option>
+                                    <option value="management" {% if form.exam_type.value == 'management' %}selected{% endif %}>Management Entrance (CAT, MAT, XAT)</option>
+                                    <option value="law" {% if form.exam_type.value == 'law' %}selected{% endif %}>Law Entrance (CLAT, LSAT)</option>
+                                    <option value="judiciary" {% if form.exam_type.value == 'judiciary' %}selected{% endif %}>Judicial Services</option>
+                                    <option value="police" {% if form.exam_type.value == 'police' %}selected{% endif %}>Police & Para-military</option>
+                                    <option value="insurance" {% if form.exam_type.value == 'insurance' %}selected{% endif %}>Insurance Exams (LIC, GIC)</option>
+                                    <option value="academic" {% if form.exam_type.value == 'academic' %}selected{% endif %}>Academic/School Level</option>
+                                    <option value="other" {% if form.exam_type.value == 'other' %}selected{% endif %}>Other</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Select the category of examination this document belongs to</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.exam_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Specific Exam Name</label>
+                                <input type="text" id="{{ form.exam_name.id_for_label }}" name="{{ form.exam_name.name }}" 
+                                       value="{{ form.exam_name.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="e.g., UPSC CSE Prelims 2024, SBI PO Main Exam, JEE Advanced 2024"
+                                       maxlength="150">
+                                <p class="text-xs text-gray-500 mt-1">Full name of the specific examination (e.g., including tier, phase, or level)</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.organization.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Conducting Organization</label>
+                                <input type="text" id="{{ form.organization.id_for_label }}" name="{{ form.organization.name }}" 
+                                       value="{{ form.organization.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="e.g., Union Public Service Commission, State Bank of India"
+                                       maxlength="150">
+                                <p class="text-xs text-gray-500 mt-1">Name of the organization/board conducting the examination</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Subject & Classification -->
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-purple-500 pl-4">
+                                <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                    Subject & Classification
+                                </h4>
+                                <p class="text-sm text-gray-600 mt-1">Academic subject and topic categorization</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.subject.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Main Subject</label>
+                                <input type="text" id="{{ form.subject.id_for_label }}" name="{{ form.subject.name }}" 
+                                       value="{{ form.subject.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="e.g., General Studies, Mathematics, English, Reasoning, Current Affairs"
+                                       maxlength="100">
+                                <p class="text-xs text-gray-500 mt-1">Primary subject area covered in this document</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.topic.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Topic</label>
+                                <input type="text" id="{{ form.topic.id_for_label }}" name="{{ form.topic.name }}" 
+                                       value="{{ form.topic.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="e.g., Indian History, Quantitative Aptitude, Data Interpretation"
+                                       maxlength="100">
+                                <p class="text-xs text-gray-500 mt-1">Specific topic or chapter within the main subject</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.subtopic.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Subtopic</label>
+                                <input type="text" id="{{ form.subtopic.id_for_label }}" name="{{ form.subtopic.name }}" 
+                                       value="{{ form.subtopic.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="e.g., Ancient History, Algebra, Profit & Loss, Reading Comprehension"
+                                       maxlength="100">
+                                <p class="text-xs text-gray-500 mt-1">More specific subdivision or concept within the topic</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-orange-500 pl-4">
+                                <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"></path>
+                                    </svg>
+                                    Additional Information
+                                </h4>
+                                <p class="text-sm text-gray-600 mt-1">Source details and custom tagging</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.source_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Source Type</label>
+                                <select id="{{ form.source_type.id_for_label }}" name="{{ form.source_type.name }}" class="enhanced-select w-full">
+                                    <option value="">Select source type...</option>
+                                    <option value="previous_year" {% if form.source_type.value == 'previous_year' %}selected{% endif %}>Previous Year Paper</option>
+                                    <option value="mock_test" {% if form.source_type.value == 'mock_test' %}selected{% endif %}>Mock Test</option>
+                                    <option value="study_material" {% if form.source_type.value == 'study_material' %}selected{% endif %}>Study Material</option>
+                                    <option value="practice_set" {% if form.source_type.value == 'practice_set' %}selected{% endif %}>Practice Set</option>
+                                    <option value="sample_paper" {% if form.source_type.value == 'sample_paper' %}selected{% endif %}>Sample Paper</option>
+                                    <option value="question_bank" {% if form.source_type.value == 'question_bank' %}selected{% endif %}>Question Bank</option>
+                                    <option value="other" {% if form.source_type.value == 'other' %}selected{% endif %}>Other</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Specify the type of document to help with categorization</p>
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.source_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Source URL (Optional)</label>
+                                <input type="url" id="{{ form.source_url.id_for_label }}" name="{{ form.source_url.name }}" 
+                                       value="{{ form.source_url.value|default:'' }}" 
+                                       class="enhanced-input w-full" 
+                                       placeholder="https://example.com/document-source or official website link">
+                                <p class="text-xs text-gray-500 mt-1">Link to the original source where this document was obtained (if available)</p>
+                            </div>
+                            
+                            <div>
+                                <label for="tags_input" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Tags 
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 ml-1">
+                                        Recommended
+                                    </span>
+                                </label>
+                                <input type="text" id="tags_input" name="tags_input" class="enhanced-input w-full" 
+                                       value="{% if document.tags %}{{ document.tags|join:', ' }}{% endif %}"
+                                       placeholder="prelims, general-studies, current-affairs, 2024, high-difficulty, must-do"
+                                       maxlength="200">
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <strong>Separate with commas.</strong> Examples: exam-level (prelims, mains), difficulty (easy, medium, hard), 
+                                    priority (must-do, important), source (coaching-material, official), year (2024, 2023)
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Fields -->
+                        <div class="md:col-span-2 space-y-6">
+                            <div class="border-l-4 border-indigo-500 pl-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                                            </svg>
+                                            Custom Fields
+                                        </h4>
+                                        <p class="text-sm text-gray-600 mt-1">Add custom metadata fields for your specific needs</p>
+                                    </div>
+                                    <button type="button" id="add-custom-field" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Add Custom Field
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="custom-fields-container" class="space-y-4 bg-gray-50 rounded-lg p-4 min-h-[60px] border-2 border-dashed border-gray-300">
+                                {% if document.custom_fields %}
+                                    {% for key, value in document.custom_fields.items %}
+                                        <div class="custom-field-group bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                                            <div class="flex items-start space-x-3">
+                                                <div class="flex-1">
+                                                    <label class="block text-xs font-medium text-gray-600 mb-1">Field Name</label>
+                                                    <input type="text" name="custom_field_key_{{ forloop.counter }}" class="enhanced-input w-full" 
+                                                           value="{{ key }}" placeholder="e.g., Coaching Institute, Book Name, Author">
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="block text-xs font-medium text-gray-600 mb-1">Field Value</label>
+                                                    <input type="text" name="custom_field_value_{{ forloop.counter }}" class="enhanced-input w-full" 
+                                                           value="{{ value }}" placeholder="e.g., Vajiram & Ravi, Lucent GK, Arihant Publications">
+                                                </div>
+                                                <button type="button" class="remove-custom-field bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-colors duration-200" onclick="removeCustomField(this)">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center text-gray-500 text-sm" id="custom-fields-placeholder">
+                                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Click "Add Custom Field" to create additional metadata fields
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="mt-8 flex items-center justify-between pt-6 border-t border-gray-200">
+                        <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Cancel
+                        </a>
+                        
+                        <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Save Changes
+                        </button>
+                    </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Enhanced Form Styling */
+.enhanced-input {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 14px;
+    padding: 12px 16px;
+}
+
+.enhanced-input:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.enhanced-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.enhanced-select {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 14px;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.enhanced-select:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.enhanced-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.enhanced-textarea {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 14px;
+    padding: 12px 16px;
+    resize: vertical;
+}
+
+.enhanced-textarea:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.enhanced-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-field-group {
+    animation: slideInUp 0.3s ease-out;
+}
+
+/* Character count display */
+.char-count {
+    font-size: 11px;
+    color: #6b7280;
+    text-align: right;
+    margin-top: 2px;
+}
+
+.char-count.warning {
+    color: #f59e0b;
+}
+
+.char-count.danger {
+    color: #ef4444;
+}
+
+/* Required field styling */
+.required-asterisk {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+/* Enhanced spacing for form sections */
+.form-section {
+    margin-bottom: 2rem;
+}
+
+/* Input focus animations */
+.enhanced-input:focus, .enhanced-select:focus, .enhanced-textarea:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom badge styling */
+.badge-recommended {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Custom fields management
+    let customFieldCounter = {% if document.custom_fields %}{{ document.custom_fields|length }}{% else %}0{% endif %};
+    
+    // Function to remove custom field - define globally
+    window.removeCustomField = function(button) {
+        const fieldGroup = button.closest('.custom-field-group');
+        fieldGroup.remove();
+        
+        // Show placeholder if no custom fields remain
+        const container = document.getElementById('custom-fields-container');
+        const placeholder = document.getElementById('custom-fields-placeholder');
+        const remainingFields = container.querySelectorAll('.custom-field-group');
+        
+        if (remainingFields.length === 0 && placeholder) {
+            placeholder.style.display = 'block';
+        }
+    };
+    
+    document.getElementById('add-custom-field').addEventListener('click', function() {
+        customFieldCounter++;
+        const container = document.getElementById('custom-fields-container');
+        const placeholder = document.getElementById('custom-fields-placeholder');
+        
+        // Hide placeholder on first field addition
+        if (placeholder && customFieldCounter === 1) {
+            placeholder.style.display = 'none';
+        }
+        
+        const fieldGroup = document.createElement('div');
+        fieldGroup.className = 'custom-field-group bg-white rounded-lg p-4 border border-gray-200 shadow-sm';
+        fieldGroup.innerHTML = `
+            <div class="flex items-start space-x-3">
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Field Name</label>
+                    <input type="text" name="custom_field_key_${customFieldCounter}" class="enhanced-input w-full" 
+                           placeholder="e.g., Coaching Institute, Book Name, Author" maxlength="50">
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Field Value</label>
+                    <input type="text" name="custom_field_value_${customFieldCounter}" class="enhanced-input w-full" 
+                           placeholder="e.g., Vajiram & Ravi, Lucent GK, Arihant Publications" maxlength="100">
+                </div>
+                <div class="pt-6">
+                    <button type="button" class="remove-custom-field bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-colors duration-200" onclick="removeCustomField(this)" title="Remove this custom field" aria-label="Remove custom field">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(fieldGroup);
+    });
+    
+    // Auto-suggestions for exam type
+    const examTypeSelect = document.getElementById('{{ form.exam_type.id_for_label }}');
+    const organizationInput = document.getElementById('{{ form.organization.id_for_label }}');
+    
+    if (examTypeSelect && organizationInput) {
+        examTypeSelect.addEventListener('change', function() {
+            const examType = this.value;
+            
+            // Auto-suggest organization based on exam type
+            const organizationSuggestions = {
+                'upsc': 'Union Public Service Commission',
+                'ssc': 'Staff Selection Commission',
+                'banking': 'Institute of Banking Personnel Selection',
+                'railway': 'Railway Recruitment Board',
+                'defense': 'Ministry of Defence',
+                'state_psc': 'State Public Service Commission',
+                'teaching': 'Central Board of Secondary Education',
+                'engineering': 'National Testing Agency',
+                'medical': 'National Testing Agency',
+                'management': 'Common Admission Test',
+                'law': 'Consortium of National Law Universities',
+                'judiciary': 'High Court',
+                'police': 'State Police Recruitment Board',
+                'insurance': 'Life Insurance Corporation'
+            };
+            
+            if (organizationSuggestions[examType] && !organizationInput.value) {
+                organizationInput.value = organizationSuggestions[examType];
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

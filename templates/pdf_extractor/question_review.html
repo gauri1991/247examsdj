@@ -1,0 +1,1042 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load pdf_extractor_filters %}
+
+{% block title %}Review Question - {{ question.question_text|truncatewords:8 }}{% endblock %}
+
+{% block extra_css %}
+<!-- Include Quill CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+
+<!-- Include KaTeX CSS for formula rendering in Quill -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<!-- Mathematical Equation Modal CSS -->
+<link rel="stylesheet" href="{% static 'css/math-equation-modal.css' %}">
+
+<style>
+/* Rich text editor enhancements */
+.ql-toolbar {
+    border-top: 1px solid rgb(209 213 219);
+    border-left: 1px solid rgb(209 213 219);
+    border-right: 1px solid rgb(209 213 219);
+    background-color: rgb(249 250 251);
+}
+
+.ql-container {
+    border-bottom: 1px solid rgb(209 213 219);
+    border-left: 1px solid rgb(209 213 219);
+    border-right: 1px solid rgb(209 213 219);
+}
+
+.ql-editor {
+    min-height: 120px;
+}
+
+/* Math equation styling in Quill editor - Simple text highlighting */
+.ql-editor {
+    /* Use CSS to make [EQUATION:...] text more visible */
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Style for equation text - this will work with plain text */
+.ql-editor p:has-text([EQUATION) {
+    /* Unfortunately CSS has-text isn't widely supported, so we'll rely on visual context */
+}
+
+.math-equation-marker {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #2196f3;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    color: #0d47a1;
+    display: inline-block;
+    margin: 0 2px;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+}
+
+.math-equation-marker:hover {
+    background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+    border-color: #1976d2;
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+    transform: translateY(-1px);
+}
+
+.math-equation-marker::before {
+    content: "📐 ";
+    font-size: 12px;
+}
+
+/* MathJax rendering in Quill editor */
+.ql-editor .MathJax {
+    display: inline-block !important;
+    margin: 2px 4px;
+    padding: 2px 4px;
+    background-color: #f8f9fa;
+    border-radius: 3px;
+    border: 1px solid #e9ecef;
+}
+
+.ql-editor .MathJax_Display {
+    margin: 8px 0 !important;
+    padding: 8px !important;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    text-align: center;
+}
+
+/* Drag and drop styling */
+.drag-over {
+    border-color: rgb(96 165 250);
+    background-color: rgb(239 246 255);
+}
+
+/* Additional Math Modal Positioning Fix - ONLY when shown */
+#math-equation-modal.math-modal-shown {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-4">
+                            <li>
+                                <a href="{% url 'pdf_extractor:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_detail' question.pdf_document.id %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700">{{ question.pdf_document.filename }}</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-4 text-sm text-gray-500">Review Question</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h1 class="mt-2 text-2xl font-bold text-gray-900">Review Extracted Question</h1>
+                    <p class="text-gray-600">Review and edit the extracted question before converting to question bank</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'pdf_extractor:document_detail' question.pdf_document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        ← Back to Document
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Enhanced Form Container -->
+        <div class="w-full">
+            <form method="post" id="question-review-form" action="{% url 'pdf_extractor:review_question' question.id %}">
+                {% csrf_token %}
+                
+                <!-- Enhanced Gradient Header -->
+                <div class="bg-gradient-to-r from-indigo-600 via-purple-700 to-blue-700 rounded-t-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="bg-white/20 rounded-lg p-2 mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">Question Review & Enhancement</h3>
+                                <p class="text-blue-100 text-sm">Review and refine extracted question before converting to question bank</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if question.confidence_level == 'high' %}bg-green-100 text-green-800{% elif question.confidence_level == 'medium' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ question.get_confidence_level_display }}
+                            </span>
+                            <div class="bg-white/10 rounded-full px-3 py-1">
+                                <span class="text-xs font-medium">{{ question.confidence_score|floatformat:1 }}% Confidence</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enhanced Form Container -->
+                <div class="bg-white rounded-b-lg border-2 border-indigo-100 shadow-lg">
+                    <div class="p-8">
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Main Content -->
+                        <div class="lg:col-span-2 space-y-8">
+                        
+                            <!-- Question Content Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-purple-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Question Content
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Edit and refine the extracted question text</p>
+                                </div>
+                                
+                                <!-- Question Text -->
+                                <div>
+                                    <label for="question_text" class="block text-sm font-medium text-gray-700 mb-1">Question Text <span class="text-red-500">*</span></label>
+                                    <div class="mt-1">
+                                        <div id="question-editor" class="border border-gray-300 rounded-md"></div>
+                                    </div>
+                                    <textarea name="{{ form.question_text.name }}" id="{{ form.question_text.id_for_label }}" class="hidden" required>{{ form.question_text.value|default:'' }}</textarea>
+                                    {% if form.question_text.errors %}
+                                        <div class="mt-1 text-sm text-red-600">{{ form.question_text.errors }}</div>
+                                    {% endif %}
+                                    <p class="mt-1 text-sm text-gray-500">Enter your question text. Use the toolbar above for rich formatting including mathematical formulas.</p>
+                                    <button type="button" id="render-math" class="mt-2 inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                        Render Math
+                                    </button>
+                                </div>
+                                
+                                <!-- Question Image -->
+                                <div>
+                                    <label for="question_image" class="block text-sm font-medium text-gray-700 mb-1">Question Image</label>
+                                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors duration-150">
+                                        <div class="space-y-1 text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                            <div class="flex text-sm text-gray-600">
+                                                <label for="question_image" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                                                    <span>Upload an image</span>
+                                                    <input id="question_image" name="question_image" type="file" accept="image/*" class="sr-only">
+                                                </label>
+                                                <p class="pl-1">or drag and drop</p>
+                                            </div>
+                                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Question Classification Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-green-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        </svg>
+                                        Question Classification
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Categorize the question type and difficulty</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="{{ form.question_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Question Type <span class="text-red-500">*</span>
+                                        </label>
+                                        <select id="{{ form.question_type.id_for_label }}" name="{{ form.question_type.name }}" class="enhanced-select w-full">
+                                            {% for value, label in form.question_type.field.choices %}
+                                                <option value="{{ value }}" {% if form.question_type.value == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.question_type.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.question_type.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">Select the most appropriate question type</p>
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.difficulty_level.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Difficulty Level
+                                        </label>
+                                        <select id="{{ form.difficulty_level.id_for_label }}" name="{{ form.difficulty_level.name }}" class="enhanced-select w-full">
+                                            {% for value, label in form.difficulty_level.field.choices %}
+                                                <option value="{{ value }}" {% if form.difficulty_level.value == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.difficulty_level.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.difficulty_level.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">Estimate the question difficulty level</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Document Metadata Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-blue-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        Document Metadata
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Metadata inherited from PDF document (can be modified)</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div>
+                                        <label for="{{ form.exam_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                                        <input type="text" id="{{ form.exam_type.id_for_label }}" name="{{ form.exam_type.name }}" 
+                                               value="{{ form.exam_type.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="e.g., UPSC Civil Services, SSC CGL">
+                                        {% if form.exam_type.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.exam_type.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.exam_type.help_text }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.organization.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Organization</label>
+                                        <input type="text" id="{{ form.organization.id_for_label }}" name="{{ form.organization.name }}" 
+                                               value="{{ form.organization.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="e.g., UPSC, SSC, RRB">
+                                        {% if form.organization.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.organization.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.organization.help_text }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.year.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                                        <input type="number" id="{{ form.year.id_for_label }}" name="{{ form.year.name }}" 
+                                               value="{{ form.year.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="2024" min="1990" max="2030">
+                                        {% if form.year.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.year.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.year.help_text }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.subject.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                                        <input type="text" id="{{ form.subject.id_for_label }}" name="{{ form.subject.name }}" 
+                                               value="{{ form.subject.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="e.g., General Studies, Mathematics">
+                                        {% if form.subject.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.subject.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.subject.help_text }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.topic.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Topic</label>
+                                        <input type="text" id="{{ form.topic.id_for_label }}" name="{{ form.topic.name }}" 
+                                               value="{{ form.topic.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="e.g., History, Polity, Geography">
+                                        {% if form.topic.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.topic.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.topic.help_text }}</p>
+                                    </div>
+                                    <div>
+                                        <label for="{{ form.subtopic.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Subtopic</label>
+                                        <input type="text" id="{{ form.subtopic.id_for_label }}" name="{{ form.subtopic.name }}" 
+                                               value="{{ form.subtopic.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="e.g., Ancient History, Constitution">
+                                        {% if form.subtopic.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.subtopic.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.subtopic.help_text }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                                    <input type="text" id="{{ form.tags.id_for_label }}" name="{{ form.tags.name }}" 
+                                           value="{{ form.tags.value|default:'' }}" class="enhanced-input w-full" 
+                                           placeholder="e.g., important, revision, mock-test">
+                                    {% if form.tags.errors %}
+                                        <div class="mt-1 text-sm text-red-600">{{ form.tags.errors }}</div>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500 mt-1">{{ form.tags.help_text }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Answer Options Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-orange-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                        </svg>
+                                        Answer Options
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Add and edit answer choices for this question</p>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm text-gray-600">Configure answer options and mark correct answers</p>
+                                    <button type="button" id="add-option" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-orange-700 bg-orange-100 hover:bg-orange-200 transition">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        Add Option
+                                    </button>
+                                </div>
+                                
+                                <div id="answer-options-container" class="space-y-3">
+                                    {% for option in question.answer_options %}
+                                        <div class="option-row flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border">
+                                            <div class="flex-shrink-0">
+                                                <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-orange-100 text-sm font-medium text-orange-600">
+                                                    {{ option.letter|default:forloop.counter0|add:"A" }}
+                                                </span>
+                                            </div>
+                                            <div class="flex-1">
+                                                <input type="text" name="option_{{ forloop.counter0 }}" value="{{ option.text }}" 
+                                                       class="enhanced-input w-full" placeholder="Enter answer option">
+                                            </div>
+                                            <div class="flex-shrink-0 flex items-center">
+                                                <input type="checkbox" name="correct_{{ forloop.counter0 }}" 
+                                                       {% if option.letter in question.correct_answers or option.text in question.correct_answers %}checked{% endif %}
+                                                       class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                                <label class="ml-2 text-sm text-gray-600">Correct</label>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <button type="button" class="remove-option text-red-600 hover:text-red-800 p-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                            <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                            </svg>
+                                            <p>No answer options added yet</p>
+                                            <p class="text-xs mt-1">Click "Add Option" to create answer choices</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Explanation Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-yellow-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Answer Explanation
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Provide detailed explanation for the correct answer</p>
+                                </div>
+                                
+                                <div>
+                                    <label for="{{ form.explanation.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Explanation (Optional)
+                                    </label>
+                                    <textarea id="{{ form.explanation.id_for_label }}" name="{{ form.explanation.name }}" 
+                                              rows="4" class="enhanced-textarea w-full" 
+                                              placeholder="Provide detailed explanation for why the answer is correct...">{{ form.explanation.value|default:'' }}</textarea>
+                                    {% if form.explanation.errors %}
+                                        <div class="mt-1 text-sm text-red-600">{{ form.explanation.errors }}</div>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500 mt-1">Help students understand the reasoning behind the correct answer</p>
+                                </div>
+                            </div>
+
+                            <!-- Question Bank Selection Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-teal-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        </svg>
+                                        Question Bank Assignment
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Choose where to store this question</p>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="{{ form.question_bank.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Select Question Bank
+                                        </label>
+                                        <select id="{{ form.question_bank.id_for_label }}" name="{{ form.question_bank.name }}" class="enhanced-select w-full">
+                                            <option value="">Choose existing question bank...</option>
+                                            {% for bank in available_question_banks %}
+                                                <option value="{{ bank.id }}" {% if form.question_bank.value == bank.id %}selected{% endif %}>
+                                                    {{ bank.name }} ({{ bank.questions.count }} questions)
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.question_bank.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.question_bank.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="{{ form.create_new_bank.id_for_label }}" name="{{ form.create_new_bank.name }}" 
+                                               class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                                               {% if form.create_new_bank.value %}checked{% endif %}>
+                                        <label for="{{ form.create_new_bank.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                                            Create new question bank
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="new-bank-fields" class="space-y-4 {% if not form.create_new_bank.value %}hidden{% endif %}">
+                                    <div>
+                                        <label for="{{ form.new_bank_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            New Bank Name <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" id="{{ form.new_bank_name.id_for_label }}" name="{{ form.new_bank_name.name }}" 
+                                               value="{{ form.new_bank_name.value|default:'' }}" class="enhanced-input w-full" 
+                                               placeholder="Enter question bank name">
+                                        {% if form.new_bank_name.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.new_bank_name.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.new_bank_name.help_text }}</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="{{ form.new_bank_category.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Category
+                                        </label>
+                                        <select id="{{ form.new_bank_category.id_for_label }}" name="{{ form.new_bank_category.name }}" class="enhanced-select w-full">
+                                            {% for value, label in form.new_bank_category.field.choices %}
+                                                <option value="{{ value }}" {% if form.new_bank_category.value == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        {% if form.new_bank_category.errors %}
+                                            <div class="mt-1 text-sm text-red-600">{{ form.new_bank_category.errors }}</div>
+                                        {% endif %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ form.new_bank_category.help_text }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Review Notes Section -->
+                            <div class="space-y-6">
+                                <div class="border-l-4 border-gray-500 pl-4">
+                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Review Notes
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mt-1">Add notes about changes made or issues identified</p>
+                                </div>
+                                
+                                <div>
+                                    <label for="{{ form.review_notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Notes (Optional)
+                                    </label>
+                                    <textarea id="{{ form.review_notes.id_for_label }}" name="{{ form.review_notes.name }}" 
+                                              rows="3" class="enhanced-textarea w-full" 
+                                              placeholder="Add notes about any changes made or issues identified during review...">{{ form.review_notes.value|default:'' }}</textarea>
+                                    {% if form.review_notes.errors %}
+                                        <div class="mt-1 text-sm text-red-600">{{ form.review_notes.errors }}</div>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500 mt-1">Document any modifications or concerns for future reference</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar -->
+                        <div class="lg:col-span-1">
+                            <!-- Question Status Card -->
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                                <div class="px-6 py-4 border-b border-gray-200">
+                                    <h3 class="text-lg font-semibold text-gray-900">Question Status</h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="space-y-4 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="font-medium text-gray-500">Page Number:</span>
+                                            <span class="text-gray-900">{{ question.page_number }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="font-medium text-gray-500">Question Type:</span>
+                                            <span class="text-gray-900">{{ question.get_question_type_display }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="font-medium text-gray-500">Extraction Method:</span>
+                                            <span class="text-gray-900">{{ question.extraction_method|title }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="font-medium text-gray-500">Requires Review:</span>
+                                            <span class="text-gray-900">
+                                                {% if question.requires_review %}
+                                                    <span class="text-amber-600">Yes</span>
+                                                {% else %}
+                                                    <span class="text-green-600">No</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Confidence Breakdown -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Confidence Analysis</h3>
+                    </div>
+                    <div class="p-6">
+                        {% if question.confidence_factors %}
+                            <div class="space-y-3">
+                                {% for factor, data in question.confidence_factors.items %}
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">{{ factor|underscore_to_space }}</span>
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ data.score|floatformat:0 }}%"></div>
+                                            </div>
+                                            <span class="text-xs text-gray-500">{{ data.score|floatformat:0 }}%</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-sm text-gray-500">No detailed confidence analysis available</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Original PDF Context -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">PDF Context</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Document</dt>
+                            <dd class="text-sm text-gray-900">{{ question.pdf_document.filename }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Page</dt>
+                            <dd class="text-sm text-gray-900">{{ question.page_number }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Position</dt>
+                            <dd class="text-sm text-gray-900">
+                                {% if question.position_on_page %}
+                                    Y: {{ question.position_on_page.start_y|floatformat:0 }}
+                                {% else %}
+                                    Not available
+                                {% endif %}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Processing Date</dt>
+                            <dd class="text-sm text-gray-900">{{ question.created_at|date:"M d, Y H:i" }}</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <button type="button" id="auto-improve" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Auto-improve Question
+                            </button>
+                            <button type="button" id="check-similarity" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                                Check for Duplicates
+                            </button>
+                            <a href="{% url 'pdf_extractor:document_detail' question.pdf_document.id %}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                View All Questions
+                            </a>
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+                    
+                        <!-- Action Buttons -->
+                        <div class="mt-8 flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 space-y-3 sm:space-y-0 sm:space-x-3">
+                            <!-- Left Side - Cancel -->
+                            <a href="{% url 'pdf_extractor:document_detail' question.pdf_document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                </svg>
+                                Cancel
+                            </a>
+                            
+                            <!-- Right Side - Main Actions -->
+                            <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                <button type="button" id="preview-question" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    Preview
+                                </button>
+                                
+                                {% if not question.is_converted %}
+                                    <button type="button" id="reject-question" class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Reject
+                                    </button>
+                                {% endif %}
+                                
+                                <button type="submit" name="action" value="save" class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Save Changes
+                                </button>
+                                
+                                <button type="submit" name="action" value="convert" class="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                    </svg>
+                                    Save & Convert
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Question Preview</h3>
+                <button type="button" id="close-preview" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="preview-content" class="border border-gray-200 rounded-lg p-6">
+                <!-- Preview content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mathematical Equation Input Modal -->
+<div id="math-equation-modal" class="math-equation-modal" style="display: none;">
+    <div class="math-equation-panel">
+        <!-- Header -->
+        <div class="math-panel-header">
+            <div class="math-panel-header-content">
+                <div class="math-panel-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div class="math-panel-title">
+                    <h3>Mathematical Equation Editor</h3>
+                    <p>Create beautiful equations using LaTeX syntax with live preview</p>
+                </div>
+            </div>
+            <button id="close-math-modal" class="math-panel-close">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="math-panel-body">
+            <!-- Symbol Toolbar -->
+            <div class="math-toolbar" id="math-symbol-toolbar">
+                <!-- Comprehensive symbols will be populated by JavaScript -->
+            </div>
+            
+            <!-- Input Area -->
+            <div class="math-input-area">
+                <div class="math-input-section">
+                    <div class="math-section-header">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        <span class="math-section-title">LaTeX Input</span>
+                    </div>
+                    <textarea id="math-latex-input" class="math-latex-input" placeholder="Enter LaTeX equation here... e.g., x^2 + y^2 = z^2"></textarea>
+                </div>
+                <div class="math-input-section">
+                    <div class="math-section-header">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <span class="math-section-title">Live Preview</span>
+                    </div>
+                    <div id="math-preview-pane" class="math-preview-pane">
+                        <div class="math-preview-empty">Enter LaTeX equation to see preview</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="math-panel-footer">
+            <div class="math-status" id="math-status">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span id="math-status-text">Ready for mathematical input</span>
+            </div>
+            <div class="math-panel-actions">
+                <button id="clear-math-input" class="math-btn math-btn-secondary">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Clear
+                </button>
+                <button id="cancel-math-input" class="math-btn math-btn-secondary">
+                    Cancel
+                </button>
+                <button id="insert-math-equation" class="math-btn math-btn-primary">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Insert Equation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Quill JS - Reverting to stable 1.3.7 -->
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
+<!-- Include KaTeX JS for formula rendering in Quill -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+<!-- MathJax for Live Preview -->
+<script>
+window.MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true,
+        packages: ['base', 'ams', 'noerrors', 'noundefined', 'color', 'newcommand', 'mathtools', 'cancel', 'gensymb']
+    },
+    options: {
+        ignoreHtmlClass: 'tex2jax_ignore',
+        processHtmlClass: 'tex2jax_process'
+    }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<!-- Mathematical Equation Modal JavaScript -->
+<script src="{% static 'js/math-equation-modal.js' %}"></script>
+
+
+<script>
+// Configuration for math modal
+window.mathModalConfig = {
+    hiddenTextareaId: '{{ form.question_text.id_for_label }}'
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if Quill is loaded
+    if (typeof Quill === 'undefined') {
+        console.error('Quill editor library not loaded');
+        return;
+    }
+    
+    // Initialize Quill editor for question text
+    const questionEditor = new Quill('#question-editor', {
+        theme: 'snow',
+        placeholder: 'Enter your question text here...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                ['link', 'formula'],
+                ['clean']
+            ]
+        }
+    });
+    
+    // Initialize editor with existing content if available
+    const existingContent = document.getElementById('id_question_text').value;
+    if (existingContent) {
+        questionEditor.root.innerHTML = existingContent;
+    }
+    
+    // Update hidden textarea when editor content changes
+    questionEditor.on('text-change', function() {
+        document.getElementById('id_question_text').value = questionEditor.root.innerHTML;
+    });
+    
+    // Initialize Mathematical Equation Panel
+    if (window.MathEquationModal) {
+        console.log('Initializing Math Equation Modal...');
+        
+        // Ensure page is in correct state first
+        document.body.classList.remove('math-modal-open');
+        document.body.style.overflow = '';
+        document.body.style.pointerEvents = '';
+        
+        // Initialize the modal (should be hidden by default)
+        const initResult = window.MathEquationModal.initialize();
+        console.log('Modal initialization result:', initResult);
+        
+        // Override Quill formula handler after initialization
+        setTimeout(() => {
+            console.log('Setting up Quill formula handler...');
+            try {
+                const handlerResult = window.MathEquationModal.overrideQuillHandler(questionEditor);
+                console.log('Formula handler override result:', handlerResult);
+                
+                if (!handlerResult) {
+                    console.warn('Formula handler override failed, adding manual backup...');
+                    
+                    // Backup approach: Find formula button and add click listener
+                    setTimeout(() => {
+                        const formulaBtn = document.querySelector('.ql-formula');
+                        if (formulaBtn) {
+                            console.log('Adding backup click listener to formula button');
+                            formulaBtn.addEventListener('click', function(e) {
+                                console.log('🔧 Backup formula button clicked!');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                // Set up editor reference
+                                window.currentQuillEditor = questionEditor;
+                                window.storedCursorPosition = 0;
+                                
+                                // Open modal
+                                if (window.MathEquationModal && window.MathEquationModal.openModal) {
+                                    window.MathEquationModal.openModal();
+                                } else {
+                                    alert('Math equation panel is not available. Please refresh the page.');
+                                }
+                            });
+                        } else {
+                            console.error('Could not find formula button for backup handler');
+                        }
+                    }, 500);
+                }
+            } catch (handlerError) {
+                console.error('Error setting up formula handler:', handlerError);
+            }
+        }, 300);
+    } else {
+        console.error('MathEquationModal not found! Check if math-equation-modal.js is loaded.');
+    }
+    
+    // Basic form functionality
+    let optionCounter = {{ question.answer_options|length|default:0 }};
+
+    // Form submission - ensure Quill content is saved
+    document.getElementById('question-review-form').addEventListener('submit', function(e) {
+        // Update hidden textarea with Quill editor content before submission
+        const questionContent = questionEditor.root.innerHTML.trim();
+        document.getElementById('id_question_text').value = questionContent;
+        
+        // Validate question text
+        if (questionContent === '<p><br></p>' || questionContent === '' || questionContent === '<p></p>') {
+            e.preventDefault();
+            alert('Please enter the question text.');
+            return false;
+        }
+    });
+    
+    // Toggle new bank fields when checkbox is changed
+    const createNewBankCheckbox = document.querySelector('[name="create_new_bank"]');
+    const newBankFields = document.getElementById('new-bank-fields');
+    const questionBankSelect = document.querySelector('[name="question_bank"]');
+    
+    if (createNewBankCheckbox && newBankFields && questionBankSelect) {
+        createNewBankCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                newBankFields.classList.remove('hidden');
+                questionBankSelect.disabled = true;
+                questionBankSelect.value = '';
+            } else {
+                newBankFields.classList.add('hidden');
+                questionBankSelect.disabled = false;
+            }
+        });
+        
+        // Initialize state
+        if (createNewBankCheckbox.checked) {
+            newBankFields.classList.remove('hidden');
+            questionBankSelect.disabled = true;
+        }
+    }
+    
+    // Preview functionality
+    document.getElementById('preview-question').addEventListener('click', function() {
+        const previewContent = document.getElementById('preview-content');
+        const questionText = questionEditor.root.innerHTML;
+        
+        // Simple preview for now
+        previewContent.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Question:</h4>
+                    <div class="prose max-w-none">${questionText}</div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('preview-modal').classList.remove('hidden');
+    });
+    
+    // Close preview modal
+    document.getElementById('close-preview').addEventListener('click', function() {
+        document.getElementById('preview-modal').classList.add('hidden');
+    });
+    
+});
+</script>
+{% endblock %}

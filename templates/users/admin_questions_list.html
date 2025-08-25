@@ -1,0 +1,290 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Question Management - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Question Management
+            </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Manage all questions and question banks
+            </p>
+        </div>
+        <div class="mt-4 flex md:mt-0 md:ml-4">
+            <a href="/pdf-extractor/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Extract from PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Card -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 11.685c.554-1.055 1.689-1.685 2.887-1.685 1.198 0 2.333.63 2.887 1.685m-5.774 0h5.774M12 19c-3.866 0-7-3.133-7-7 0-3.866 3.134-7 7-7s7 3.134 7 7c0 3.867-3.134 7-7 7z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Questions</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ total_questions }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Question Banks</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ question_banks.count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <form method="GET" class="space-y-4 md:space-y-0 md:flex md:items-end md:space-x-4">
+            <!-- Search -->
+            <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                    <label for="search" class="block text-sm font-medium text-gray-700">Search Questions</label>
+                    <div class="relative group">
+                        <svg class="w-4 h-4 text-gray-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div class="absolute right-0 top-6 w-80 bg-gray-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                            <div class="font-semibold mb-2">Search across multiple fields:</div>
+                            <ul class="space-y-1">
+                                <li>• <strong>Question text:</strong> Main question content</li>
+                                <li>• <strong>Topic/Subtopic:</strong> Subject categorization</li>
+                                <li>• <strong>Bank name:</strong> Question bank title</li>
+                                <li>• <strong>Category:</strong> Subject like 'mathematics', 'history'</li>
+                                <li>• <strong>Tags:</strong> Keywords and labels</li>
+                                <li>• <strong>Explanation:</strong> Answer explanations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <input type="text" 
+                       name="search" 
+                       id="search"
+                       value="{{ search }}"
+                       placeholder="Search by question text, topic, subtopic, bank name, category, tags, or explanation..."
+                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            
+            <!-- Question Bank Filter -->
+            {% if question_banks %}
+            <div class="min-w-0 flex-1 md:max-w-xs">
+                <label for="question_bank" class="block text-sm font-medium text-gray-700 mb-1">Question Bank</label>
+                <select name="question_bank" id="question_bank" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">All Banks</option>
+                    {% for bank in question_banks %}
+                    <option value="{{ bank.id }}" {% if bank.id|stringformat:"s" == bank_filter %}selected{% endif %}>{{ bank.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <!-- Question Type Filter -->
+            {% if question_types %}
+            <div class="min-w-0 flex-1 md:max-w-xs">
+                <label for="question_type" class="block text-sm font-medium text-gray-700 mb-1">Question Type</label>
+                <select name="question_type" id="question_type" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">All Types</option>
+                    {% for type_key, type_label in question_types %}
+                    <option value="{{ type_key }}" {% if type_key == type_filter %}selected{% endif %}>{{ type_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <!-- Difficulty Filter -->
+            <div class="min-w-0 flex-1 md:max-w-xs">
+                <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                <select name="difficulty" id="difficulty" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">All Levels</option>
+                    {% for diff_key, diff_label in difficulty_levels %}
+                    <option value="{{ diff_key }}" {% if diff_key == difficulty_filter %}selected{% endif %}>{{ diff_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="flex space-x-2">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Search
+                </button>
+                {% if search or bank_filter or type_filter or difficulty_filter %}
+                <a href="{% url 'admin-questions-list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Clear Filters
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Questions Table -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for question in questions %}
+                        <tr>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ question.question_text|truncatewords:15 }}
+                                </div>
+                                {% if question.topic %}
+                                <div class="text-xs text-gray-500">{{ question.topic }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ question.subject|default:"N/A" }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ question.get_question_type_display|default:question.question_type|default:"N/A" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if question.question_bank %}
+                                <div class="text-sm text-gray-900">{{ question.question_bank.name }}</div>
+                                {% else %}
+                                <span class="text-sm text-gray-400">No bank</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ question.created_at|date:"M d, Y" }}
+                                {% if question.created_by %}
+                                <div class="text-xs text-gray-400">by {{ question.created_by.get_full_name|default:question.created_by.username }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                <div class="py-8">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 11.685c.554-1.055 1.689-1.685 2.887-1.685 1.198 0 2.333.63 2.887 1.685m-5.774 0h5.774M12 19c-3.866 0-7-3.133-7-7 0-3.866 3.134-7 7-7s7 3.134 7 7c0 3.867-3.134 7-7 7z"></path>
+                                    </svg>
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No questions found</h3>
+                                    <p class="mt-1 text-sm text-gray-500">Get started by extracting questions from PDFs.</p>
+                                    <div class="mt-6">
+                                        <a href="/pdf-extractor/" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                            Extract Questions
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if questions.has_other_pages %}
+    <div class="mt-8 flex items-center justify-between">
+        <div class="flex-1 flex justify-between sm:hidden">
+            {% if questions.has_previous %}
+            <a href="?page={{ questions.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if bank_filter %}&question_bank={{ bank_filter }}{% endif %}{% if type_filter %}&question_type={{ type_filter }}{% endif %}{% if difficulty_filter %}&difficulty={{ difficulty_filter }}{% endif %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+            {% endif %}
+            {% if questions.has_next %}
+            <a href="?page={{ questions.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if bank_filter %}&question_bank={{ bank_filter }}{% endif %}{% if type_filter %}&question_type={{ type_filter }}{% endif %}{% if difficulty_filter %}&difficulty={{ difficulty_filter }}{% endif %}" 
+               class="inline-flex items-center px-4 py-2 ml-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+            {% endif %}
+        </div>
+        
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">{{ questions.start_index }}</span> to 
+                    <span class="font-medium">{{ questions.end_index }}</span> of 
+                    <span class="font-medium">{{ questions.paginator.count }}</span> results
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                    {% if questions.has_previous %}
+                    <a href="?page={{ questions.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if bank_filter %}&question_bank={{ bank_filter }}{% endif %}{% if type_filter %}&question_type={{ type_filter }}{% endif %}{% if difficulty_filter %}&difficulty={{ difficulty_filter }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    {% endif %}
+                    
+                    {% for num in questions.paginator.page_range %}
+                    {% if num == questions.number %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                        {{ num }}
+                    </span>
+                    {% else %}
+                    <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if bank_filter %}&question_bank={{ bank_filter }}{% endif %}{% if type_filter %}&question_type={{ type_filter }}{% endif %}{% if difficulty_filter %}&difficulty={{ difficulty_filter }}{% endif %}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if questions.has_next %}
+                    <a href="?page={{ questions.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if bank_filter %}&question_bank={{ bank_filter }}{% endif %}{% if type_filter %}&question_type={{ type_filter }}{% endif %}{% if difficulty_filter %}&difficulty={{ difficulty_filter }}{% endif %}" 
+                       class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

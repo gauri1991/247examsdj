@@ -1,0 +1,257 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Test Results - {{ attempt.test.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Results Header -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4
+                        {% if pass_status %}bg-green-100{% else %}bg-red-100{% endif %}">
+                {% if pass_status %}
+                <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {% else %}
+                <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                {% endif %}
+            </div>
+            
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">
+                {% if pass_status %}Congratulations!{% else %}Test Completed{% endif %}
+            </h1>
+            <p class="text-lg text-gray-600 mb-4">{{ attempt.test.title }}</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-2xl font-bold {% if pass_status %}text-green-600{% else %}text-red-600{% endif %}">
+                        {{ attempt.percentage|floatformat:1 }}%
+                    </div>
+                    <div class="text-sm text-gray-500">Score</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900">
+                        {{ attempt.correct_answers }}/{{ attempt.total_questions }}
+                    </div>
+                    <div class="text-sm text-gray-500">Correct</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900">
+                        {{ attempt.marks_obtained }}/{{ attempt.test.total_marks }}
+                    </div>
+                    <div class="text-sm text-gray-500">Marks</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-gray-900">
+                        {% widthratio attempt.time_spent_seconds 60 1 %}m
+                    </div>
+                    <div class="text-sm text-gray-500">Time Spent</div>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 rounded-lg {% if pass_status %}bg-green-50 border border-green-200{% else %}bg-red-50 border border-red-200{% endif %}">
+                <p class="text-sm {% if pass_status %}text-green-800{% else %}text-red-800{% endif %}">
+                    {% if pass_status %}
+                        <strong>Passed!</strong> You scored {{ attempt.percentage|floatformat:1 }}% 
+                        (Required: {{ attempt.test.pass_percentage }}%)
+                    {% else %}
+                        <strong>Not Passed.</strong> You scored {{ attempt.percentage|floatformat:1 }}% 
+                        (Required: {{ attempt.test.pass_percentage }}%)
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section-wise Results -->
+    {% if sections_data|length > 1 %}
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Section-wise Performance</h2>
+        
+        <div class="space-y-4">
+            {% for section_name, section_data in sections_data.items %}
+            <div class="border rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-gray-900">{{ section_name }}</h3>
+                    <span class="text-sm text-gray-500">
+                        {{ section_data.correct }}/{{ section_data.total }} correct
+                    </span>
+                </div>
+                
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" 
+                         style="width: {% widthratio section_data.correct section_data.total 100 %}%"></div>
+                </div>
+                
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>{% widthratio section_data.correct section_data.total 100 %}% accuracy</span>
+                    <span>{{ section_data.marks }} marks</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Detailed Results -->
+    {% if show_detailed_results %}
+    <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-medium text-gray-900">Detailed Results</h2>
+            <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Results
+            </button>
+        </div>
+        
+        <div class="space-y-6">
+            {% for answer in user_answers %}
+            <div class="border rounded-lg p-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm font-medium text-gray-900">
+                            Question {{ forloop.counter }}
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if answer.question.question_type == 'mcq' %}bg-blue-100 text-blue-800{% elif answer.question.question_type == 'multi_select' %}bg-purple-100 text-purple-800{% elif answer.question.question_type == 'true_false' %}bg-green-100 text-green-800{% elif answer.question.question_type == 'fill_blank' %}bg-yellow-100 text-yellow-800{% elif answer.question.question_type == 'essay' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ answer.question.get_question_type_display }}
+                        </span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if answer.question.difficulty == 'easy' %}bg-green-100 text-green-800{% elif answer.question.difficulty == 'medium' %}bg-yellow-100 text-yellow-800{% elif answer.question.difficulty == 'hard' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ answer.question.get_difficulty_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        {% if answer.is_correct %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Correct
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            Incorrect
+                        </span>
+                        {% endif %}
+                        
+                        <span class="text-sm text-gray-500">
+                            {{ answer.marks_obtained }}/{{ answer.question.marks }} marks
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Question Text -->
+                <div class="mb-4">
+                    <p class="text-gray-900 mb-2">{{ answer.question.question_text }}</p>
+                    {% if answer.question.image %}
+                    <img src="{{ answer.question.image.url }}" alt="Question image" class="max-w-sm h-auto rounded border">
+                    {% endif %}
+                </div>
+                
+                <!-- Answer Details -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Your Answer -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Your Answer:</h4>
+                        
+                        {% if answer.question.question_type == 'mcq' or answer.question.question_type == 'multi_select' %}
+                            {% if answer.selected_options.all %}
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    {% for option in answer.selected_options.all %}
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                                        {{ option.option_text }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="text-sm text-gray-500 italic">Not answered</span>
+                            {% endif %}
+                        
+                        {% elif answer.question.question_type == 'true_false' %}
+                            {% if answer.boolean_answer is not None %}
+                                <span class="text-sm text-gray-700">
+                                    {{ answer.boolean_answer|yesno:"True,False" }}
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-gray-500 italic">Not answered</span>
+                            {% endif %}
+                        
+                        {% elif answer.question.question_type in 'fill_blank,essay' %}
+                            {% if answer.text_answer %}
+                                <div class="text-sm text-gray-700 bg-gray-50 p-2 rounded">
+                                    {{ answer.text_answer|linebreaks }}
+                                </div>
+                            {% else %}
+                                <span class="text-sm text-gray-500 italic">Not answered</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Correct Answer -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Correct Answer:</h4>
+                        
+                        {% if answer.question.question_type == 'mcq' or answer.question.question_type == 'multi_select' %}
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                {% for option in answer.question.options.all %}
+                                    {% if option.is_correct %}
+                                    <li class="flex items-center">
+                                        <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                                        {{ option.option_text }}
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        
+                        {% elif answer.question.question_type == 'true_false' %}
+                            {% for option in answer.question.options.all %}
+                                {% if option.is_correct %}
+                                <span class="text-sm text-gray-700">{{ option.option_text }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        
+                        {% elif answer.question.question_type in 'fill_blank,essay' %}
+                            {% if answer.question.expected_answer %}
+                                <div class="text-sm text-gray-700 bg-green-50 p-2 rounded">
+                                    {{ answer.question.expected_answer|linebreaks }}
+                                </div>
+                            {% else %}
+                                <span class="text-sm text-gray-500 italic">Manual evaluation required</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Explanation -->
+                {% if answer.question.explanation %}
+                <div class="mt-4 p-3 bg-blue-50 rounded">
+                    <h4 class="text-sm font-medium text-blue-900 mb-1">Explanation:</h4>
+                    <p class="text-sm text-blue-800">{{ answer.question.explanation }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons -->
+    <div class="mt-8 flex justify-center space-x-4">
+        <a href="{% url 'exam-list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Browse More Exams
+        </a>
+        <a href="{% url 'my-attempts' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            View All Attempts
+        </a>
+    </div>
+</div>
+{% endblock %}

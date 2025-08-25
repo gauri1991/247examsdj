@@ -1,0 +1,445 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Exams - List View{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exam-row {
+        transition: all 0.2s ease;
+    }
+    .exam-row:hover {
+        background-color: #f8fafc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+    .status-active { background-color: #10b981; }
+    .status-inactive { background-color: #ef4444; }
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+    }
+    .sortable-header:hover {
+        background-color: #f1f5f9;
+    }
+    .sort-icon {
+        transition: transform 0.2s ease;
+    }
+    .sort-desc .sort-icon {
+        transform: rotate(180deg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header with View Toggles -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Exams</h1>
+                <p class="mt-1 text-sm text-gray-500">Detailed list view of all exams with sorting and filtering</p>
+            </div>
+            
+            <!-- View Mode Toggles -->
+            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <a href="?view=organization" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'organization' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Organizations
+                </a>
+                <a href="?view=list" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'list' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    List
+                </a>
+                <a href="?view=grid" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'grid' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zM14 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z"></path>
+                    </svg>
+                    Grid
+                </a>
+                <a href="?view=calendar" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'calendar' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Calendar
+                </a>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex space-x-3 mt-4">
+            <a href="{% url 'create-exam' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Exam
+            </a>
+            <a href="{% url 'create-organization' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                </svg>
+                Add Organization
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <div class="relative flex-1 max-w-md">
+                <input type="text" id="examSearch" placeholder="Search exams, organizations..." 
+                       class="block w-full px-4 py-2 pl-10 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Filter Dropdowns -->
+            <div class="flex space-x-3">
+                <select id="organizationFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Organizations</option>
+                    {% for org in organizations %}
+                    <option value="{{ org.id }}">{{ org.short_name|default:org.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select id="yearFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Years</option>
+                    {% for year in years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select id="statusFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                
+                <select id="categoryFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exams Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="examsTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="name">
+                            Exam Name
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="organization">
+                            Organization
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="category">
+                            Category
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="year">
+                            Year
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="tests">
+                            Tests
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="attempts">
+                            Attempts
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="sortable-header px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-sort="created">
+                            Created
+                            <svg class="w-4 h-4 inline ml-1 sort-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="examsTableBody">
+                    {% for exam in exams %}
+                    <tr class="exam-row" 
+                        data-organization="{{ exam.organization.id|default:'' }}" 
+                        data-year="{{ exam.year|default:'' }}" 
+                        data-status="{% if exam.is_active %}active{% else %}inactive{% endif %}"
+                        data-category="{{ exam.category|default:'' }}">
+                        
+                        <!-- Exam Name -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        <a href="{% url 'exam-detail' exam.id %}" class="hover:text-blue-600">{{ exam.name }}</a>
+                                    </div>
+                                    {% if exam.description %}
+                                    <div class="text-sm text-gray-500">{{ exam.description|truncatewords:8 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- Organization -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if exam.organization %}
+                            <div class="text-sm text-gray-900">{{ exam.organization.short_name|default:exam.organization.name }}</div>
+                            <div class="text-sm text-gray-500">{{ exam.organization.get_organization_type_display }}</div>
+                            {% else %}
+                            <div class="text-sm text-gray-400">-</div>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Category -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ exam.category }}
+                            </span>
+                        </td>
+                        
+                        <!-- Year -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if exam.year %}
+                                {{ exam.year }}
+                            {% else %}
+                                <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Status -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center text-sm">
+                                <span class="status-dot {% if exam.is_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                                {% if exam.is_active %}
+                                    <span class="text-green-800">Active</span>
+                                {% else %}
+                                    <span class="text-red-800">Inactive</span>
+                                {% endif %}
+                            </span>
+                        </td>
+                        
+                        <!-- Tests -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ exam.tests_count|default:0 }}
+                        </td>
+                        
+                        <!-- Attempts -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ exam.total_attempts|default:0 }}
+                        </td>
+                        
+                        <!-- Created -->
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ exam.created_at|date:"M d, Y" }}
+                        </td>
+                        
+                        <!-- Actions -->
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex items-center justify-end space-x-2">
+                                <a href="{% url 'exam-detail' exam.id %}" class="text-blue-600 hover:text-blue-900">View</a>
+                                {% if user.role in 'teacher,admin' %}
+                                <span class="text-gray-300">|</span>
+                                <a href="{% url 'edit-exam' exam.id %}" class="text-gray-600 hover:text-gray-900">Edit</a>
+                                <span class="text-gray-300">|</span>
+                                <a href="{% url 'exam-metadata-edit' exam.id %}" class="text-gray-600 hover:text-gray-900">Metadata</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-6 py-12 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No exams found</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by creating your first exam.</p>
+                            <div class="mt-6">
+                                <a href="{% url 'create-exam' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Create Exam
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search and Filter functionality
+const searchInput = document.getElementById('examSearch');
+const organizationFilter = document.getElementById('organizationFilter');
+const yearFilter = document.getElementById('yearFilter');
+const statusFilter = document.getElementById('statusFilter');
+const categoryFilter = document.getElementById('categoryFilter');
+const examRows = document.querySelectorAll('.exam-row');
+
+function filterExams() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedOrg = organizationFilter.value;
+    const selectedYear = yearFilter.value;
+    const selectedStatus = statusFilter.value;
+    const selectedCategory = categoryFilter.value;
+    
+    examRows.forEach(row => {
+        const examName = row.querySelector('a').textContent.toLowerCase();
+        const rowOrg = row.dataset.organization;
+        const rowYear = row.dataset.year;
+        const rowStatus = row.dataset.status;
+        const rowCategory = row.dataset.category;
+        
+        let showRow = true;
+        
+        // Search filter
+        if (searchTerm && !examName.includes(searchTerm)) {
+            showRow = false;
+        }
+        
+        // Organization filter
+        if (selectedOrg && rowOrg !== selectedOrg) {
+            showRow = false;
+        }
+        
+        // Year filter
+        if (selectedYear && rowYear !== selectedYear) {
+            showRow = false;
+        }
+        
+        // Status filter
+        if (selectedStatus && rowStatus !== selectedStatus) {
+            showRow = false;
+        }
+        
+        // Category filter
+        if (selectedCategory && rowCategory !== selectedCategory) {
+            showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+    });
+}
+
+// Add event listeners for filters
+searchInput.addEventListener('input', filterExams);
+organizationFilter.addEventListener('change', filterExams);
+yearFilter.addEventListener('change', filterExams);
+statusFilter.addEventListener('change', filterExams);
+categoryFilter.addEventListener('change', filterExams);
+
+// Sorting functionality
+let currentSort = { column: '', direction: 'asc' };
+
+function sortTable(column) {
+    const direction = currentSort.column === column && currentSort.direction === 'asc' ? 'desc' : 'asc';
+    currentSort = { column, direction };
+    
+    // Update header styling
+    document.querySelectorAll('.sortable-header').forEach(header => {
+        header.classList.remove('sort-desc');
+        if (header.dataset.sort === column && direction === 'desc') {
+            header.classList.add('sort-desc');
+        }
+    });
+    
+    // Sort rows
+    const tbody = document.getElementById('examsTableBody');
+    const rows = Array.from(tbody.querySelectorAll('.exam-row'));
+    
+    rows.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch (column) {
+            case 'name':
+                aVal = a.querySelector('a').textContent.toLowerCase();
+                bVal = b.querySelector('a').textContent.toLowerCase();
+                break;
+            case 'organization':
+                aVal = a.dataset.organization || '';
+                bVal = b.dataset.organization || '';
+                break;
+            case 'category':
+                aVal = a.dataset.category.toLowerCase();
+                bVal = b.dataset.category.toLowerCase();
+                break;
+            case 'year':
+                aVal = parseInt(a.dataset.year) || 0;
+                bVal = parseInt(b.dataset.year) || 0;
+                break;
+            case 'tests':
+                aVal = parseInt(a.cells[5].textContent) || 0;
+                bVal = parseInt(b.cells[5].textContent) || 0;
+                break;
+            case 'attempts':
+                aVal = parseInt(a.cells[6].textContent) || 0;
+                bVal = parseInt(b.cells[6].textContent) || 0;
+                break;
+            case 'created':
+                aVal = new Date(a.cells[7].textContent);
+                bVal = new Date(b.cells[7].textContent);
+                break;
+            default:
+                return 0;
+        }
+        
+        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Add click listeners to sortable headers
+document.querySelectorAll('.sortable-header').forEach(header => {
+    header.addEventListener('click', () => {
+        sortTable(header.dataset.sort);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1086 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Edit Question Bank - {{ question_bank.name }} - Exam Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gradient-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .form-section {
+        background: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+    }
+    .form-section:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .field-group {
+        transition: all 0.2s ease;
+    }
+    .field-group:focus-within {
+        transform: translateY(-1px);
+    }
+    
+    /* Enhanced Input Styling */
+    .enhanced-input {
+        transition: all 0.2s ease;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fafafa;
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+    .enhanced-input:focus {
+        border-color: #3b82f6;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+    .enhanced-input:hover:not(:focus) {
+        border-color: #9ca3af;
+        background: white;
+    }
+    
+    /* Enhanced Select Styling */
+    .enhanced-select {
+        transition: all 0.2s ease;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fafafa;
+        font-size: 14px;
+        padding: 12px 16px;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 12px center;
+        background-repeat: no-repeat;
+        background-size: 16px 12px;
+        padding-right: 40px;
+        appearance: none;
+    }
+    .enhanced-select:focus {
+        border-color: #3b82f6;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+    .enhanced-select:hover:not(:focus) {
+        border-color: #9ca3af;
+        background-color: white;
+    }
+    
+    /* Enhanced Textarea */
+    .enhanced-textarea {
+        transition: all 0.2s ease;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fafafa;
+        font-size: 14px;
+        padding: 12px 16px;
+        resize: vertical;
+        min-height: 100px;
+    }
+    .enhanced-textarea:focus {
+        border-color: #3b82f6;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+    .enhanced-textarea:hover:not(:focus) {
+        border-color: #9ca3af;
+        background: white;
+    }
+    
+    /* Enhanced Label */
+    .enhanced-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    .enhanced-label .required {
+        color: #ef4444;
+        margin-left: 4px;
+    }
+    .enhanced-label .icon {
+        margin-right: 8px;
+        opacity: 0.7;
+    }
+    
+    /* Field containers */
+    .input-container {
+        position: relative;
+    }
+    .input-container .helper-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.4;
+    }
+    .input-container .helper-text.error {
+        color: #ef4444;
+    }
+    .input-container .helper-text.success {
+        color: #10b981;
+    }
+    
+    /* Icon inputs */
+    .input-with-icon {
+        position: relative;
+    }
+    .input-with-icon .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        pointer-events: none;
+        z-index: 10;
+    }
+    .input-with-icon input {
+        padding-left: 40px;
+    }
+    
+    /* Multi-select styling */
+    .multi-select-container {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fafafa;
+        padding: 8px;
+        transition: all 0.2s ease;
+    }
+    .multi-select-container:focus-within {
+        border-color: #3b82f6;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    .multi-select-item {
+        display: inline-flex;
+        align-items: center;
+        background: #3b82f6;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        margin: 2px;
+    }
+    .multi-select-item .remove {
+        margin-left: 6px;
+        cursor: pointer;
+        opacity: 0.8;
+    }
+    .multi-select-item .remove:hover {
+        opacity: 1;
+    }
+    
+    .help-card {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #0ea5e9;
+    }
+    .custom-field-container {
+        background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+        border: 1px solid #f59e0b;
+    }
+    
+    /* Checkbox and Radio styling */
+    .enhanced-checkbox {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    .enhanced-checkbox:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+    .enhanced-checkbox:focus {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Section headers */
+    .section-header {
+        border-bottom: 3px solid #f3f4f6;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+    }
+    .section-icon {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Floating labels */
+    .floating-label {
+        position: relative;
+    }
+    .floating-label input,
+    .floating-label select,
+    .floating-label textarea {
+        padding-top: 20px;
+        padding-bottom: 8px;
+    }
+    .floating-label label {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: all 0.2s ease;
+        pointer-events: none;
+        color: #9ca3af;
+        font-size: 14px;
+    }
+    .floating-label input:focus + label,
+    .floating-label input:not(:placeholder-shown) + label,
+    .floating-label select:focus + label,
+    .floating-label textarea:focus + label,
+    .floating-label textarea:not(:placeholder-shown) + label {
+        transform: translateY(-20px) scale(0.85);
+        color: #3b82f6;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header with Gradient -->
+    <div class="gradient-header shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'question-bank' %}" class="text-white hover:text-gray-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold text-white">Edit Question Bank</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-white opacity-90">Comprehensive Setup</span>
+                    <div class="h-8 w-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                        <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+            <a href="{% url 'question-bank' %}" class="hover:text-gray-700 transition-colors duration-150 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Question Banks
+            </a>
+            <span class="text-gray-400">/</span>
+            <span class="text-gray-900 font-medium">Edit {{ question_bank.name|truncatechars:30 }}</span>
+        </nav>
+
+        <form method="POST" action="{% url 'edit-question-bank' question_bank.id %}" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Basic Information Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Basic Information</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Question Bank Name -->
+                    <div class="lg:col-span-2 field-group">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Question Bank Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" 
+                               name="name" 
+                               id="name"
+                               value="{{ question_bank.name|default:'' }}"
+                               required
+                               placeholder="e.g., UPSC Prelims - Indian Polity 2024"
+                               class="enhanced-input block w-full">
+                        <p class="mt-1 text-sm text-gray-500">Choose a descriptive name that clearly identifies the exam, subject, and level</p>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="lg:col-span-2 field-group">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea name="description" 
+                                  id="description"
+                                  rows="4"
+                                  placeholder="Comprehensive question bank covering Indian Constitution, Fundamental Rights, DPSP, Union & State Governments, Local Governance, and recent constitutional amendments for UPSC Civil Services Preliminary Examination 2024."
+                                  class="enhanced-textarea block w-full">{{ question_bank.description|default:'' }}</textarea>
+                        <p class="mt-1 text-sm text-gray-500">Detailed description helps users understand the scope and purpose</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam Classification Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Exam Classification</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Exam Type -->
+                    <div class="field-group">
+                        <label for="exam_type" class="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                        <select name="exam_type" id="exam_type" class="enhanced-select block w-full">
+                            <option value="">Select exam type...</option>
+                            <option value="upsc">UPSC (Civil Services)</option>
+                            <option value="ssc">SSC (Staff Selection Commission)</option>
+                            <option value="banking">Banking Exams (SBI, IBPS, RBI)</option>
+                            <option value="railway">Railway Exams (RRB)</option>
+                            <option value="defense">Defense Exams (NDA, CDS, AFCAT)</option>
+                            <option value="state_psc">State PSC</option>
+                            <option value="teaching">Teaching Exams (CTET, TET, NET)</option>
+                            <option value="engineering">Engineering Entrance (JEE, GATE)</option>
+                            <option value="medical">Medical Entrance (NEET, AIIMS)</option>
+                            <option value="management">Management Entrance (CAT, MAT, XAT)</option>
+                            <option value="law">Law Entrance (CLAT, LSAT)</option>
+                            <option value="judiciary">Judicial Services</option>
+                            <option value="police">Police & Para-military</option>
+                            <option value="insurance">Insurance Exams (LIC, GIC)</option>
+                            <option value="academic">Academic/School Level</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Organization -->
+                    <div class="field-group">
+                        <label for="organization" class="block text-sm font-medium text-gray-700 mb-2">Conducting Organization</label>
+                        <input type="text" 
+                               name="organization" 
+                               id="organization"
+                               placeholder="e.g., UPSC, SSC, SBI, IBPS"
+                               class="enhanced-input block w-full">
+                    </div>
+                    
+                    <!-- Year -->
+                    <div class="field-group">
+                        <label for="year" class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                        <input type="number" 
+                               name="year" 
+                               id="year"
+                               placeholder="2024"
+                               min="2020" 
+                               max="2030"
+                               class="enhanced-input block w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Organization Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Subject Organization</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Category -->
+                    <div class="field-group">
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Subject Category</label>
+                        <select name="category" id="category" class="enhanced-select block w-full">
+                            <option value="">Select category...</option>
+                            <optgroup label="Core Academic Subjects">
+                                <option value="mathematics">📊 Mathematics</option>
+                                <option value="physics">⚡ Physics</option>
+                                <option value="chemistry">🧪 Chemistry</option>
+                                <option value="biology">🧬 Biology</option>
+                                <option value="english">📚 English Language</option>
+                                <option value="hindi">🇮🇳 Hindi</option>
+                                <option value="history">🏛️ History</option>
+                                <option value="geography">🌍 Geography</option>
+                                <option value="economics">💰 Economics</option>
+                                <option value="political_science">🏛️ Political Science</option>
+                            </optgroup>
+                            <optgroup label="Government Exam Specific">
+                                <option value="general_knowledge">🎯 General Knowledge</option>
+                                <option value="current_affairs">📰 Current Affairs</option>
+                                <option value="reasoning">🧩 Logical Reasoning</option>
+                                <option value="quantitative_aptitude">🔢 Quantitative Aptitude</option>
+                                <option value="data_interpretation">📊 Data Interpretation</option>
+                                <option value="english_comprehension">📖 English Comprehension</option>
+                                <option value="general_science">🔬 General Science</option>
+                                <option value="indian_polity">🏛️ Indian Polity</option>
+                                <option value="indian_economy">💹 Indian Economy</option>
+                                <option value="indian_geography">🗺️ Indian Geography</option>
+                                <option value="indian_history">📜 Indian History</option>
+                                <option value="environment_ecology">🌱 Environment & Ecology</option>
+                            </optgroup>
+                            <optgroup label="Professional & Technical">
+                                <option value="computer_science">💻 Computer Science</option>
+                                <option value="engineering">⚙️ Engineering</option>
+                                <option value="medical">🏥 Medical</option>
+                                <option value="law">⚖️ Law</option>
+                                <option value="commerce">📈 Commerce</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <!-- Subject -->
+                    <div class="field-group">
+                        <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Specific Subject</label>
+                        <input type="text" 
+                               name="subject" 
+                               id="subject"
+                               placeholder="e.g., Indian Constitution"
+                               class="enhanced-input block w-full">
+                    </div>
+                    
+                    <!-- Topic -->
+                    <div class="field-group">
+                        <label for="topic" class="block text-sm font-medium text-gray-700 mb-2">Main Topic</label>
+                        <input type="text" 
+                               name="topic" 
+                               id="topic"
+                               placeholder="e.g., Fundamental Rights"
+                               class="enhanced-input block w-full">
+                    </div>
+                    
+                    <!-- Subtopic -->
+                    <div class="field-group">
+                        <label for="subtopic" class="block text-sm font-medium text-gray-700 mb-2">Subtopic</label>
+                        <input type="text" 
+                               name="subtopic" 
+                               id="subtopic"
+                               placeholder="e.g., Article 19-22"
+                               class="enhanced-input block w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target & Difficulty Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2V7a2 2 0 012-2h2a2 2 0 002 2v2a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 00-2 2h-2a2 2 0 00-2 2v6a2 2 0 01-2 2H9z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Target Audience & Difficulty</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Difficulty Level -->
+                    <div class="field-group">
+                        <label for="difficulty_level" class="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
+                        <select name="difficulty_level" id="difficulty_level" class="enhanced-select block w-full">
+                            <option value="basic">🟢 Basic</option>
+                            <option value="intermediate" selected>🟡 Intermediate</option>
+                            <option value="advanced">🟠 Advanced</option>
+                            <option value="expert">🔴 Expert</option>
+                            <option value="mixed">🔵 Mixed Level</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Target Audience -->
+                    <div class="field-group">
+                        <label for="target_audience" class="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                        <select name="target_audience" id="target_audience" class="enhanced-select block w-full">
+                            <option value="beginners">Beginners</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="competitive_exam">Competitive Exam Aspirants</option>
+                            <option value="school_students">School Students</option>
+                            <option value="college_students">College Students</option>
+                            <option value="professionals">Working Professionals</option>
+                            <option value="general" selected>General Audience</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Language -->
+                    <div class="field-group">
+                        <label for="language" class="block text-sm font-medium text-gray-700 mb-2">Primary Language</label>
+                        <select name="language" id="language" class="enhanced-select block w-full">
+                            <option value="english" selected>English</option>
+                            <option value="hindi">Hindi</option>
+                            <option value="bilingual">Bilingual (English + Hindi)</option>
+                            <option value="tamil">Tamil</option>
+                            <option value="bengali">Bengali</option>
+                            <option value="telugu">Telugu</option>
+                            <option value="marathi">Marathi</option>
+                            <option value="gujarati">Gujarati</option>
+                            <option value="kannada">Kannada</option>
+                            <option value="malayalam">Malayalam</option>
+                            <option value="punjabi">Punjabi</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <!-- State Specific -->
+                    <div class="field-group">
+                        <label for="state_specific" class="block text-sm font-medium text-gray-700 mb-2">State Specific (if any)</label>
+                        <input type="text" 
+                               name="state_specific" 
+                               id="state_specific"
+                               placeholder="e.g., Maharashtra, UP, Bihar"
+                               class="enhanced-input block w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata & Question Types Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Tags & Question Types</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Tags -->
+                    <div class="field-group">
+                        <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                        <input type="text" 
+                               name="tags" 
+                               id="tags"
+                               placeholder="upsc, prelims, polity, constitution, fundamental-rights"
+                               class="enhanced-input block w-full">
+                        <p class="mt-1 text-sm text-gray-500">Comma-separated tags for better discoverability and organization</p>
+                    </div>
+                    
+                    <!-- Question Types Included -->
+                    <div class="field-group">
+                        <label for="question_types_included" class="block text-sm font-medium text-gray-700 mb-2">Question Types Included</label>
+                        <input type="text" 
+                               name="question_types_included" 
+                               id="question_types_included"
+                               placeholder="mcq, multi_select, true_false, assertion_reason"
+                               class="enhanced-input block w-full">
+                        <p class="mt-1 text-sm text-gray-500">Types of questions this bank will contain (helps with filtering)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Default Settings Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Default Question Settings</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Default Difficulty -->
+                    <div class="field-group">
+                        <label for="default_difficulty" class="block text-sm font-medium text-gray-700 mb-2">Default Difficulty</label>
+                        <select name="default_difficulty" id="default_difficulty" class="enhanced-select block w-full">
+                            <option value="basic">🟢 Basic</option>
+                            <option value="intermediate" selected>🟡 Intermediate</option>
+                            <option value="advanced">🟠 Advanced</option>
+                            <option value="expert">🔴 Expert</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Default Marks -->
+                    <div class="field-group">
+                        <label for="default_marks" class="block text-sm font-medium text-gray-700 mb-2">Default Marks per Question</label>
+                        <div class="relative">
+                            <input type="number" 
+                                   name="default_marks" 
+                                   id="default_marks"
+                                   value="1"
+                                   min="0.25"
+                                   step="0.25"
+                                   class="enhanced-input block w-full pr-16">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 text-sm">marks</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Default Time per Question -->
+                    <div class="field-group">
+                        <label for="default_time_per_question" class="block text-sm font-medium text-gray-700 mb-2">Default Time per Question</label>
+                        <div class="relative">
+                            <input type="number" 
+                                   name="default_time_per_question" 
+                                   id="default_time_per_question"
+                                   placeholder="120"
+                                   min="30"
+                                   step="30"
+                                   class="enhanced-input block w-full pr-20">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 text-sm">seconds</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Fields Section -->
+            <div class="custom-field-container rounded-xl p-6" id="customFieldsSection">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="h-8 w-8 bg-amber-100 rounded-full flex items-center justify-center mr-3">
+                            <svg class="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900">Custom Fields</h3>
+                    </div>
+                    <button type="button" onclick="addCustomField()" class="inline-flex items-center px-3 py-1 border border-amber-300 text-sm font-medium rounded-md text-amber-700 bg-amber-50 hover:bg-amber-100">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Field
+                    </button>
+                </div>
+                
+                <div id="customFieldsContainer" class="space-y-4">
+                    <!-- Custom fields will be added here dynamically -->
+                </div>
+                
+                <p class="text-sm text-amber-700 mt-4">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Add custom fields for specific requirements like "Syllabus Reference", "Previous Year Weightage", etc.
+                </p>
+            </div>
+
+            <!-- Visibility & Settings Section -->
+            <div class="form-section rounded-xl p-6">
+                <div class="flex items-center mb-6">
+                    <div class="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                        <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Visibility & Sharing Settings</h3>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Public Visibility -->
+                    <div class="flex items-start space-x-3">
+                        <div class="flex items-center h-5">
+                            <input id="is_public" 
+                                   name="is_public" 
+                                   type="checkbox"
+                                   class="enhanced-checkbox">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <label for="is_public" class="text-base font-medium text-gray-900 cursor-pointer">
+                                Make this question bank public
+                            </label>
+                            <p class="text-sm text-gray-600">
+                                Public question banks can be viewed and used by all teachers and administrators in the system.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Featured -->
+                    <div class="flex items-start space-x-3">
+                        <div class="flex items-center h-5">
+                            <input id="is_featured" 
+                                   name="is_featured" 
+                                   type="checkbox"
+                                   class="enhanced-checkbox">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <label for="is_featured" class="text-base font-medium text-gray-900 cursor-pointer">
+                                Mark as featured question bank
+                            </label>
+                            <p class="text-sm text-gray-600">
+                                Featured question banks appear at the top of search results and listings.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-8 border-t border-gray-200">
+                <a href="{% url 'question-bank' %}" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Update Question Bank
+                </button>
+            </div>
+        </form>
+
+        <!-- Help & Guidelines Section -->
+        <div class="help-card rounded-xl p-8 mt-8">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-blue-900 mb-4">💡 Tips for Creating Effective Indian Exam Question Banks</h3>
+                    <div class="text-sm text-blue-800">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div>
+                                <h4 class="font-semibold mb-3 text-blue-900">📋 Naming Best Practices</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Include exam type and organization (e.g., "UPSC Prelims")</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Specify subject and topic clearly</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Add year for time-sensitive content</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-3 text-blue-900">🎯 Organization Tips</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Use consistent tagging (upsc, ssc, banking)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Organize by syllabus sections</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Plan for future expansions</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-3 text-blue-900">📚 Content Strategy</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Mix different question types</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Include previous year patterns</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                        <span>Balance difficulty levels appropriately</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-6 border-t border-blue-200 mt-6">
+                            <h4 class="font-semibold mb-3 text-blue-900">🚀 What happens next?</h4>
+                            <p class="text-blue-700">
+                                After creating your question bank, you'll be able to add questions of various types including 
+                                MCQs, Statement & Reason, Match the Following, and many other formats specific to Indian competitive exams. 
+                                You can also import questions in bulk from CSV/Excel files and organize them by topics and difficulty levels.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced form interactions for Indian exam context
+document.addEventListener('DOMContentLoaded', function() {
+    let customFieldCounter = 0;
+    
+    // Auto-suggestions based on exam type and category
+    const examTypeCategoryMap = {
+        'upsc': ['indian_polity', 'indian_history', 'indian_geography', 'indian_economy', 'general_knowledge', 'current_affairs'],
+        'ssc': ['reasoning', 'quantitative_aptitude', 'english_comprehension', 'general_knowledge'],
+        'banking': ['reasoning', 'quantitative_aptitude', 'english', 'general_knowledge', 'computer_science'],
+        'railway': ['mathematics', 'general_science', 'reasoning', 'general_knowledge'],
+        'teaching': ['psychology', 'pedagogy', 'subject_knowledge', 'general_knowledge']
+    };
+    
+    const examTypeSelect = document.getElementById('exam_type');
+    const categorySelect = document.getElementById('category');
+    const organizationInput = document.getElementById('organization');
+    const tagsInput = document.getElementById('tags');
+    
+    // Auto-suggestions for organization based on exam type
+    const examOrgMap = {
+        'upsc': 'Union Public Service Commission',
+        'ssc': 'Staff Selection Commission',
+        'banking': 'Institute of Banking Personnel Selection',
+        'railway': 'Railway Recruitment Board',
+        'defense': 'Ministry of Defence',
+        'state_psc': 'State Public Service Commission'
+    };
+    
+    examTypeSelect.addEventListener('change', function() {
+        const examType = this.value;
+        if (examOrgMap[examType]) {
+            organizationInput.value = examOrgMap[examType];
+        }
+        
+        // Auto-suggest tags
+        generateSuggestedTags();
+    });
+    
+    // Auto-generate tags based on selections
+    function generateSuggestedTags() {
+        const examType = examTypeSelect.value;
+        const category = categorySelect.value;
+        const organization = organizationInput.value.toLowerCase();
+        const year = document.getElementById('year').value;
+        
+        let suggestedTags = [];
+        
+        if (examType) suggestedTags.push(examType);
+        if (category) suggestedTags.push(category.replace('_', '-'));
+        if (organization) {
+            const orgAbbrev = organization.split(' ').map(word => word[0]).join('').toLowerCase();
+            if (orgAbbrev.length <= 5) suggestedTags.push(orgAbbrev);
+        }
+        if (year) suggestedTags.push(year);
+        
+        // Add common Indian exam tags
+        if (['upsc', 'ssc', 'banking', 'railway'].includes(examType)) {
+            suggestedTags.push('indian-exams', 'competitive');
+        }
+        
+        if (suggestedTags.length > 0 && !tagsInput.value.trim()) {
+            tagsInput.placeholder = `Suggested: ${suggestedTags.join(', ')}`;
+        }
+    }
+    
+    // Auto-fill organization when exam type changes
+    categorySelect.addEventListener('change', generateSuggestedTags);
+    organizationInput.addEventListener('blur', generateSuggestedTags);
+    
+    // Custom fields functionality
+    window.addCustomField = function() {
+        const container = document.getElementById('customFieldsContainer');
+        const fieldId = `custom_field_${customFieldCounter++}`;
+        
+        const fieldHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-amber-200" id="${fieldId}_container">
+                <div>
+                    <label for="${fieldId}_name" class="block text-sm font-medium text-gray-700 mb-1">Field Name</label>
+                    <input type="text" 
+                           id="${fieldId}_name"
+                           placeholder="e.g., Syllabus Reference, Previous Year Weightage"
+                           class="enhanced-input block w-full"
+                           onchange="updateCustomFieldName('${fieldId}')">
+                </div>
+                <div class="flex space-x-2">
+                    <div class="flex-1">
+                        <label for="${fieldId}_value" class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                        <input type="text" 
+                               id="${fieldId}_value"
+                               name="custom_placeholder"
+                               placeholder="Enter value"
+                               class="enhanced-input block w-full">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" onclick="removeCustomField('${fieldId}')" 
+                                class="inline-flex items-center px-2 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', fieldHtml);
+    };
+    
+    window.updateCustomFieldName = function(fieldId) {
+        const nameInput = document.getElementById(`${fieldId}_name`);
+        const valueInput = document.getElementById(`${fieldId}_value`);
+        const fieldName = nameInput.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+        
+        if (fieldName) {
+            valueInput.name = `custom_${fieldName}`;
+        }
+    };
+    
+    window.removeCustomField = function(fieldId) {
+        const container = document.getElementById(`${fieldId}_container`);
+        if (container) {
+            container.remove();
+        }
+    };
+    
+    // Form validation with Indian exam context
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const examType = examTypeSelect.value;
+        const category = categorySelect.value;
+        
+        let errors = [];
+        
+        if (name.length < 5) {
+            errors.push('Question bank name must be at least 5 characters long.');
+        }
+        
+        // Suggest better naming for Indian exams
+        if (examType && !name.toLowerCase().includes(examType)) {
+            // This is just a suggestion, not an error
+            console.log(`Suggestion: Consider including "${examType.toUpperCase()}" in the name for better identification.`);
+        }
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            errors.forEach(error => {
+                // Show error messages
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4';
+                errorDiv.textContent = error;
+                form.insertBefore(errorDiv, form.firstChild);
+                
+                setTimeout(() => errorDiv.remove(), 5000);
+            });
+        }
+    });
+    
+    // Real-time character count for description
+    const descriptionTextarea = document.getElementById('description');
+    const maxLength = 1000;
+    
+    function updateCharCount() {
+        const currentLength = descriptionTextarea.value.length;
+        let countElement = descriptionTextarea.parentNode.querySelector('.char-count');
+        
+        if (!countElement) {
+            countElement = document.createElement('p');
+            countElement.className = 'char-count text-xs text-gray-500 mt-1 text-right';
+            descriptionTextarea.parentNode.appendChild(countElement);
+        }
+        
+        countElement.textContent = `${currentLength}/${maxLength} characters`;
+        countElement.className = `char-count text-xs mt-1 text-right ${
+            currentLength > maxLength * 0.9 ? 'text-orange-600' : 
+            currentLength > maxLength * 0.8 ? 'text-yellow-600' : 'text-gray-500'
+        }`;
+    }
+    
+    descriptionTextarea.addEventListener('input', updateCharCount);
+    updateCharCount();
+    
+    // Smart defaults based on common Indian exam patterns
+    const yearInput = document.getElementById('year');
+    if (!yearInput.value) {
+        yearInput.value = new Date().getFullYear();
+    }
+    
+    // Pre-populate form fields for edit mode
+    {% if edit_mode and question_bank %}
+    // Basic fields
+    if (document.getElementById('category')) {
+        document.getElementById('category').value = '{{ question_bank.category|default:"" }}';
+    }
+    if (document.getElementById('exam_type')) {
+        document.getElementById('exam_type').value = '{{ question_bank.exam_type|default:"" }}';
+    }
+    if (document.getElementById('organization')) {
+        document.getElementById('organization').value = '{{ question_bank.organization|default:"" }}';
+    }
+    if (document.getElementById('year')) {
+        document.getElementById('year').value = '{{ question_bank.year|default:"" }}';
+    }
+    if (document.getElementById('subject')) {
+        document.getElementById('subject').value = '{{ question_bank.subject|default:"" }}';
+    }
+    if (document.getElementById('topic')) {
+        document.getElementById('topic').value = '{{ question_bank.topic|default:"" }}';
+    }
+    if (document.getElementById('subtopic')) {
+        document.getElementById('subtopic').value = '{{ question_bank.subtopic|default:"" }}';
+    }
+    if (document.getElementById('difficulty_level')) {
+        document.getElementById('difficulty_level').value = '{{ question_bank.difficulty_level|default:"intermediate" }}';
+    }
+    if (document.getElementById('target_audience')) {
+        document.getElementById('target_audience').value = '{{ question_bank.target_audience|default:"general" }}';
+    }
+    if (document.getElementById('language')) {
+        document.getElementById('language').value = '{{ question_bank.language|default:"english" }}';
+    }
+    if (document.getElementById('state_specific')) {
+        document.getElementById('state_specific').value = '{{ question_bank.state_specific|default:"" }}';
+    }
+    if (document.getElementById('tags')) {
+        document.getElementById('tags').value = '{% if question_bank.tags %}{{ question_bank.tags|join:", " }}{% endif %}';
+    }
+    if (document.getElementById('question_types_included')) {
+        document.getElementById('question_types_included').value = '{% if question_bank.question_types_included %}{{ question_bank.question_types_included|join:", " }}{% endif %}';
+    }
+    if (document.getElementById('default_difficulty')) {
+        document.getElementById('default_difficulty').value = '{{ question_bank.default_difficulty|default:"intermediate" }}';
+    }
+    if (document.getElementById('default_marks')) {
+        document.getElementById('default_marks').value = '{{ question_bank.default_marks|default:"1.0" }}';
+    }
+    if (document.getElementById('default_time_per_question')) {
+        document.getElementById('default_time_per_question').value = '{{ question_bank.default_time_per_question|default:"" }}';
+    }
+    
+    // Checkboxes
+    if (document.getElementById('is_public')) {
+        document.getElementById('is_public').checked = {{ question_bank.is_public|lower }};
+    }
+    if (document.getElementById('is_featured')) {
+        document.getElementById('is_featured').checked = {{ question_bank.is_featured|lower }};
+    }
+    
+    // Custom fields
+    {% for key, value in question_bank.custom_fields.items %}
+    if (document.getElementById('custom_{{ key }}')) {
+        document.getElementById('custom_{{ key }}').value = '{{ value }}';
+    }
+    {% endfor %}
+    {% endif %}
+});
+</script>
+{% endblock %}

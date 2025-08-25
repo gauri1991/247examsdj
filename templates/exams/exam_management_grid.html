@@ -1,0 +1,294 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Exams - Grid View{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exam-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .exam-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    .exam-year-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+    .organization-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header with View Toggles -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Exams</h1>
+                <p class="mt-1 text-sm text-gray-500">Grid view of all exams with quick actions</p>
+            </div>
+            
+            <!-- View Mode Toggles -->
+            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <a href="?view=organization" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'organization' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Organizations
+                </a>
+                <a href="?view=list" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'list' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    List
+                </a>
+                <a href="?view=grid" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'grid' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zM14 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z"></path>
+                    </svg>
+                    Grid
+                </a>
+                <a href="?view=calendar" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'calendar' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Calendar
+                </a>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex space-x-3 mt-4">
+            <a href="{% url 'create-exam' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Exam
+            </a>
+            <a href="{% url 'create-organization' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                </svg>
+                Add Organization
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="mb-6 flex flex-col sm:flex-row gap-4">
+        <div class="relative flex-1 max-w-md">
+            <input type="text" id="examSearch" placeholder="Search exams..." 
+                   class="block w-full px-4 py-2 pl-10 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Filter Dropdowns -->
+        <div class="flex space-x-3">
+            <select id="organizationFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Organizations</option>
+                {% for org in organizations %}
+                <option value="{{ org.id }}">{{ org.short_name|default:org.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <select id="yearFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Years</option>
+                {% for year in years %}
+                <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+            
+            <select id="statusFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Exams Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="examsGrid">
+        {% for exam in exams %}
+        <div class="exam-card bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden relative" 
+             data-organization="{{ exam.organization.id|default:'' }}" 
+             data-year="{{ exam.year|default:'' }}" 
+             data-status="{% if exam.is_active %}active{% else %}inactive{% endif %}"
+             onclick="window.location.href='{% url 'exam-detail' exam.id %}'">
+            
+            <!-- Year Badge -->
+            {% if exam.year %}
+            <div class="exam-year-badge">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ exam.year }}
+                </span>
+            </div>
+            {% endif %}
+            
+            <!-- Exam Header -->
+            <div class="p-6">
+                <div class="flex items-start justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-900 pr-8">{{ exam.name }}</h3>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if exam.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {% if exam.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                
+                <!-- Organization Badge -->
+                {% if exam.organization %}
+                <div class="mb-3">
+                    <span class="organization-badge inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white">
+                        {{ exam.organization.short_name|default:exam.organization.name }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                <!-- Category -->
+                <div class="mb-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ exam.category }}
+                    </span>
+                </div>
+                
+                <!-- Description -->
+                {% if exam.description %}
+                <p class="text-sm text-gray-600 mb-4 line-clamp-3">{{ exam.description|truncatewords:15 }}</p>
+                {% endif %}
+                
+                <!-- Stats -->
+                <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        {{ exam.tests_count|default:0 }} test{{ exam.tests_count|default:0|pluralize }}
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                        {{ exam.total_attempts|default:0 }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Footer -->
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div class="flex space-x-2">
+                        <a href="{% url 'exam-detail' exam.id %}" class="text-xs text-blue-600 hover:text-blue-800" onclick="event.stopPropagation();">
+                            View
+                        </a>
+                        {% if user.role in 'teacher,admin' %}
+                        <span class="text-gray-300">•</span>
+                        <a href="{% url 'edit-exam' exam.id %}" class="text-xs text-gray-600 hover:text-gray-800" onclick="event.stopPropagation();">
+                            Edit
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        {{ exam.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No exams found</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating your first exam.</p>
+            <div class="mt-6">
+                <a href="{% url 'create-exam' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create Exam
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search and Filter functionality
+const searchInput = document.getElementById('examSearch');
+const organizationFilter = document.getElementById('organizationFilter');
+const yearFilter = document.getElementById('yearFilter');
+const statusFilter = document.getElementById('statusFilter');
+const examCards = document.querySelectorAll('.exam-card');
+
+function filterExams() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedOrg = organizationFilter.value;
+    const selectedYear = yearFilter.value;
+    const selectedStatus = statusFilter.value;
+    
+    examCards.forEach(card => {
+        const examName = card.querySelector('h3').textContent.toLowerCase();
+        const cardOrg = card.dataset.organization;
+        const cardYear = card.dataset.year;
+        const cardStatus = card.dataset.status;
+        
+        let showCard = true;
+        
+        // Search filter
+        if (searchTerm && !examName.includes(searchTerm)) {
+            showCard = false;
+        }
+        
+        // Organization filter
+        if (selectedOrg && cardOrg !== selectedOrg) {
+            showCard = false;
+        }
+        
+        // Year filter
+        if (selectedYear && cardYear !== selectedYear) {
+            showCard = false;
+        }
+        
+        // Status filter
+        if (selectedStatus && cardStatus !== selectedStatus) {
+            showCard = false;
+        }
+        
+        card.style.display = showCard ? 'block' : 'none';
+    });
+}
+
+// Add event listeners
+searchInput.addEventListener('input', filterExams);
+organizationFilter.addEventListener('change', filterExams);
+yearFilter.addEventListener('change', filterExams);
+statusFilter.addEventListener('change', filterExams);
+
+// Line clamp utility for description
+function initLineClamp() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+initLineClamp();
+</script>
+{% endblock %}

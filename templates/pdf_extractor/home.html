@@ -1,0 +1,882 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}PDF Question Extractor{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header Section -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">PDF Question Extractor</h1>
+                    <p class="mt-2 text-gray-600">Extract questions and answers from PDF documents automatically</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="{% url 'pdf_extractor:document_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        My Documents
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Documents</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ total_documents }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Questions Extracted</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ total_questions }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Success Rate</p>
+                        <p class="text-2xl font-semibold text-gray-900">{% if total_documents > 0 %}{{ total_questions|floatformat:0 }}%{% else %}0%{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="w-full mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Upload PDF Document</h2>
+                    
+                    <!-- Upload Form -->
+                    <form id="pdf-upload-form" method="post" enctype="multipart/form-data" action="{% url 'pdf_extractor:upload' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Drag and Drop Area -->
+                        <div id="drop-zone" class="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors duration-200">
+                            <input type="file" id="pdf-file-input" name="file" accept=".pdf" class="hidden">
+                            
+                            <div id="drop-zone-content">
+                                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <h3 class="text-sm font-medium text-gray-900 mb-2">Drop your PDF file here</h3>
+                                <p class="text-sm text-gray-500 mb-4">or click to browse</p>
+                                <button type="button" id="browse-button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Select PDF File
+                                </button>
+                            </div>
+
+                            <!-- File Preview -->
+                            <div id="file-preview" class="hidden">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <div>
+                                        <p id="file-name" class="text-sm font-medium text-gray-900"></p>
+                                        <p id="file-size" class="text-xs text-gray-500"></p>
+                                    </div>
+                                </div>
+                                <button type="button" id="remove-file" class="mt-2 text-sm text-red-600 hover:text-red-800">Remove file</button>
+                            </div>
+
+                            <!-- Upload Progress -->
+                            <div id="upload-progress" class="hidden">
+                                <div class="flex items-center justify-center space-x-2 mb-2">
+                                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sm text-gray-600">Processing PDF...</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metadata Section - Initially Hidden -->
+                        <div id="metadata-section" class="hidden mt-6">
+                            <!-- Enhanced Gradient Header -->
+                            <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-t-lg p-6 text-white">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="bg-white/20 rounded-lg p-2 mr-4">
+                                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-bold">Document Metadata</h3>
+                                            <p class="text-blue-100 text-sm">Add detailed information to organize your PDF documents</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white/10 rounded-full px-3 py-1">
+                                        <span class="text-xs font-medium">Enhanced Upload</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Enhanced Form Container -->
+                            <div class="bg-white rounded-b-lg border-2 border-blue-100 shadow-lg">
+                                <div class="p-8">
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <!-- Basic Information -->
+                                    <div class="space-y-6">
+                                        <div class="border-l-4 border-blue-500 pl-4">
+                                            <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                Basic Information
+                                            </h4>
+                                            <p class="text-sm text-gray-600 mt-1">Essential document details</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Document Title</label>
+                                            <input type="text" id="title" name="title" class="enhanced-input w-full" placeholder="Enter document title">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                            <textarea id="description" name="description" rows="3" class="enhanced-textarea w-full" placeholder="Brief description of the document content"></textarea>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                                            <input type="number" id="year" name="year" min="1990" max="2030" class="enhanced-input w-full" placeholder="e.g., 2024">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Exam Information -->
+                                    <div class="space-y-6">
+                                        <div class="border-l-4 border-green-500 pl-4">
+                                            <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                                </svg>
+                                                Exam Information
+                                            </h4>
+                                            <p class="text-sm text-gray-600 mt-1">Examination and conducting body details</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="exam_type" class="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
+                                            <select id="exam_type" name="exam_type" class="enhanced-select w-full">
+                                                <option value="">Select exam type</option>
+                                                <option value="upsc">UPSC (Civil Services)</option>
+                                                <option value="ssc">SSC (Staff Selection Commission)</option>
+                                                <option value="banking">Banking Exams (SBI, IBPS, RBI)</option>
+                                                <option value="railway">Railway Exams (RRB)</option>
+                                                <option value="defense">Defense Exams (NDA, CDS, AFCAT)</option>
+                                                <option value="state_psc">State PSC</option>
+                                                <option value="teaching">Teaching Exams (CTET, TET, NET)</option>
+                                                <option value="engineering">Engineering Entrance (JEE, GATE)</option>
+                                                <option value="medical">Medical Entrance (NEET, AIIMS)</option>
+                                                <option value="management">Management Entrance (CAT, MAT, XAT)</option>
+                                                <option value="law">Law Entrance (CLAT, LSAT)</option>
+                                                <option value="judiciary">Judicial Services</option>
+                                                <option value="police">Police & Para-military</option>
+                                                <option value="insurance">Insurance Exams (LIC, GIC)</option>
+                                                <option value="academic">Academic/School Level</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="exam_name" class="block text-sm font-medium text-gray-700 mb-1">Specific Exam Name</label>
+                                            <input type="text" id="exam_name" name="exam_name" class="enhanced-input w-full" placeholder="e.g., UPSC CSE Prelims 2024">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="organization" class="block text-sm font-medium text-gray-700 mb-1">Conducting Organization</label>
+                                            <input type="text" id="organization" name="organization" class="enhanced-input w-full" placeholder="e.g., Union Public Service Commission">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Subject & Classification -->
+                                    <div class="space-y-6">
+                                        <div class="border-l-4 border-purple-500 pl-4">
+                                            <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                                </svg>
+                                                Subject & Classification
+                                            </h4>
+                                            <p class="text-sm text-gray-600 mt-1">Academic subject and topic categorization</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Main Subject</label>
+                                            <input type="text" id="subject" name="subject" class="enhanced-input w-full" placeholder="e.g., General Studies, Mathematics">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="topic" class="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+                                            <input type="text" id="topic" name="topic" class="enhanced-input w-full" placeholder="e.g., Indian History, Quantitative Aptitude">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="subtopic" class="block text-sm font-medium text-gray-700 mb-1">Subtopic</label>
+                                            <input type="text" id="subtopic" name="subtopic" class="enhanced-input w-full" placeholder="e.g., Ancient History, Algebra">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Additional Information -->
+                                    <div class="space-y-6">
+                                        <div class="border-l-4 border-orange-500 pl-4">
+                                            <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z"></path>
+                                                </svg>
+                                                Additional Information
+                                            </h4>
+                                            <p class="text-sm text-gray-600 mt-1">Source details and custom tagging</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="source_type" class="block text-sm font-medium text-gray-700 mb-1">Source Type</label>
+                                            <select id="source_type" name="source_type" class="enhanced-select w-full">
+                                                <option value="">Select source type</option>
+                                                <option value="previous_year">Previous Year Paper</option>
+                                                <option value="mock_test">Mock Test</option>
+                                                <option value="study_material">Study Material</option>
+                                                <option value="practice_set">Practice Set</option>
+                                                <option value="sample_paper">Sample Paper</option>
+                                                <option value="question_bank">Question Bank</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="source_url" class="block text-sm font-medium text-gray-700 mb-1">Source URL (Optional)</label>
+                                            <input type="url" id="source_url" name="source_url" class="enhanced-input w-full" placeholder="https://example.com/document">
+                                        </div>
+                                        
+                                        <div>
+                                            <label for="tags_input" class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                                            <input type="text" id="tags_input" name="tags_input" class="enhanced-input w-full" placeholder="Enter tags separated by commas">
+                                            <p class="text-xs text-gray-500 mt-1">Separate multiple tags with commas (e.g., prelims, general studies, 2024)</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Custom Fields -->
+                                    <div class="md:col-span-2 space-y-6">
+                                        <div class="border-l-4 border-indigo-500 pl-4">
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <h4 class="text-lg font-bold text-gray-800 flex items-center">
+                                                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                                                        </svg>
+                                                        Custom Fields
+                                                    </h4>
+                                                    <p class="text-sm text-gray-600 mt-1">Add custom metadata fields for your specific needs</p>
+                                                </div>
+                                                <button type="button" id="add-custom-field" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                    </svg>
+                                                    Add Custom Field
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="custom-fields-container" class="space-y-4 bg-gray-50 rounded-lg p-4 min-h-[60px] border-2 border-dashed border-gray-300">
+                                            <div class="text-center text-gray-500 text-sm" id="custom-fields-placeholder">
+                                                <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Click "Add Custom Field" to create additional metadata fields
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="mt-6">
+                            <button type="submit" id="upload-submit" disabled class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                Upload Document with Metadata
+                            </button>
+                        </div>
+                    </form>
+                </div>
+        </div>
+
+        <!-- Recent Documents Section -->
+        <div class="w-full mt-8">
+            <div class="sidebar-animate">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Recent Documents
+                            </h2>
+                            <a href="{% url 'pdf_extractor:document_list' %}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                View All
+                            </a>
+                        </div>
+                    
+                    {% if recent_documents %}
+                        <div class="space-y-3">
+                            {% for document in recent_documents %}
+                                <div class="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors duration-150 hover:border-blue-300 hover:shadow-sm">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="text-sm font-medium text-gray-900 truncate">
+                                                {% if document.title %}
+                                                    {{ document.title }}
+                                                {% else %}
+                                                    {{ document.filename }}
+                                                {% endif %}
+                                            </h3>
+                                            {% if document.exam_type %}
+                                                <p class="text-xs text-blue-600 font-medium mt-1">
+                                                    {{ document.get_exam_type_display }}
+                                                </p>
+                                            {% endif %}
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                {{ document.uploaded_at|timesince }} ago
+                                                {% if document.year %} • {{ document.year }}{% endif %}
+                                            </p>
+                                            <div class="flex items-center mt-1">
+                                                {% if document.status == 'completed' %}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        Completed
+                                                    </span>
+                                                {% elif document.status == 'processing' %}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        <svg class="animate-spin w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Processing
+                                                    </span>
+                                                {% elif document.status == 'failed' %}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                                        </svg>
+                                                        Failed
+                                                    </span>
+                                                {% else %}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                        {{ document.get_status_display }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0 ml-2">
+                                            <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="text-blue-600 hover:text-blue-800 text-xs">
+                                                View
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-6">
+                            <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-medium text-gray-900">No documents yet</h3>
+                            <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                                Upload your first PDF document to see it appear here for quick access.
+                            </p>
+                        </div>
+                    {% endif %}
+                    </div>
+                    
+                    <!-- File Requirements in Sidebar -->
+                    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <svg class="h-4 w-4 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            <h3 class="text-sm font-medium text-blue-800">Upload Requirements</h3>
+                        </div>
+                        <div class="text-xs text-blue-700 space-y-1">
+                            <div class="flex items-center">
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                PDF files only (max 50MB)
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                Text-based PDFs work best
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                Scanned PDFs supported with OCR
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                Maximum 500 pages per document
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Enhanced Form Styling */
+.enhanced-input {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 14px;
+    padding: 12px 16px;
+}
+
+.enhanced-input:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.enhanced-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.enhanced-select {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 14px;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.enhanced-select:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.enhanced-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.enhanced-textarea {
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 14px;
+    padding: 12px 16px;
+    resize: vertical;
+}
+
+.enhanced-textarea:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.enhanced-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.metadata-section-show {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-field-group {
+    animation: slideInUp 0.3s ease-out;
+}
+
+.sidebar-animate {
+    animation: fadeInRight 0.5s ease-out;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('pdf-upload-form');
+    const fileInput = document.getElementById('pdf-file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const browseButton = document.getElementById('browse-button');
+    const dropZoneContent = document.getElementById('drop-zone-content');
+    const filePreview = document.getElementById('file-preview');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const removeFileButton = document.getElementById('remove-file');
+    const uploadProgress = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const submitButton = document.getElementById('upload-submit');
+
+    let selectedFile = null;
+
+    // Drag and drop handlers
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelection(files[0]);
+        }
+    });
+
+    // Browse button click
+    browseButton.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelection(e.target.files[0]);
+        }
+    });
+
+    // Remove file button
+    removeFileButton.addEventListener('click', function() {
+        clearFileSelection();
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (selectedFile) {
+            uploadFile();
+        }
+    });
+
+    function handleFileSelection(file) {
+        // Validate file type
+        if (file.type !== 'application/pdf') {
+            showToast('Please select a PDF file only.', 'error');
+            return;
+        }
+
+        // Validate file size (50MB)
+        const maxSize = 50 * 1024 * 1024;
+        if (file.size > maxSize) {
+            showToast('File size must be less than 50MB.', 'error');
+            return;
+        }
+
+        selectedFile = file;
+        fileInput.files = createFileList([file]);
+
+        // Update UI
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        dropZoneContent.classList.add('hidden');
+        filePreview.classList.remove('hidden');
+        
+        // Show metadata section with animation
+        const metadataSection = document.getElementById('metadata-section');
+        metadataSection.classList.remove('hidden');
+        metadataSection.classList.add('metadata-section-show');
+        
+        // Auto-fill filename as title if empty
+        const titleInput = document.getElementById('title');
+        if (!titleInput.value) {
+            titleInput.value = file.name.replace('.pdf', '');
+        }
+        
+        submitButton.disabled = false;
+        submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
+
+    function clearFileSelection() {
+        selectedFile = null;
+        fileInput.value = '';
+        
+        dropZoneContent.classList.remove('hidden');
+        filePreview.classList.add('hidden');
+        uploadProgress.classList.add('hidden');
+        
+        // Hide metadata section
+        const metadataSection = document.getElementById('metadata-section');
+        metadataSection.classList.add('hidden');
+        metadataSection.classList.remove('metadata-section-show');
+        
+        submitButton.disabled = true;
+        submitButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+        submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    }
+
+    function uploadFile() {
+        const formData = new FormData(form);
+        
+        // Show progress
+        filePreview.classList.add('hidden');
+        uploadProgress.classList.remove('hidden');
+        submitButton.disabled = true;
+
+        // Simulate progress (in real implementation, this would track actual upload)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 20;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 200);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            
+            if (data.success) {
+                showToast('PDF uploaded successfully! Processing has started.', 'success');
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
+            } else {
+                showToast(data.error || 'Upload failed. Please try again.', 'error');
+                clearFileSelection();
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+            console.error('Upload error:', error);
+            showToast('Upload failed. Please try again.', 'error');
+            clearFileSelection();
+        });
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function createFileList(files) {
+        const dt = new DataTransfer();
+        files.forEach(file => dt.items.add(file));
+        return dt.files;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+        
+        toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        
+        document.getElementById('toast-container').appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    // Custom fields management
+    let customFieldCounter = 0;
+    
+    // Function to remove custom field - define globally
+    window.removeCustomField = function(button) {
+        const fieldGroup = button.closest('.custom-field-group');
+        fieldGroup.remove();
+        
+        // Show placeholder if no custom fields remain
+        const container = document.getElementById('custom-fields-container');
+        const placeholder = document.getElementById('custom-fields-placeholder');
+        const remainingFields = container.querySelectorAll('.custom-field-group');
+        
+        if (remainingFields.length === 0 && placeholder) {
+            placeholder.style.display = 'block';
+        }
+    };
+    
+    document.getElementById('add-custom-field').addEventListener('click', function() {
+        customFieldCounter++;
+        const container = document.getElementById('custom-fields-container');
+        const placeholder = document.getElementById('custom-fields-placeholder');
+        
+        // Hide placeholder on first field addition
+        if (placeholder && customFieldCounter === 1) {
+            placeholder.style.display = 'none';
+        }
+        
+        const fieldGroup = document.createElement('div');
+        fieldGroup.className = 'custom-field-group bg-white rounded-lg p-4 border border-gray-200 shadow-sm';
+        fieldGroup.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="flex-1">
+                    <input type="text" name="custom_field_key_${customFieldCounter}" class="enhanced-input w-full" placeholder="Field name (e.g., Institute, Coaching Center)">
+                </div>
+                <div class="flex-1">
+                    <input type="text" name="custom_field_value_${customFieldCounter}" class="enhanced-input w-full" placeholder="Field value (e.g., Vajiram & Ravi)">
+                </div>
+                <button type="button" class="remove-custom-field bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg transition-colors duration-200" onclick="removeCustomField(this)" title="Remove this custom field" aria-label="Remove custom field">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(fieldGroup);
+    });
+    
+    // Smart auto-suggestions for exam type
+    document.getElementById('exam_type').addEventListener('change', function() {
+        const examType = this.value;
+        const organizationInput = document.getElementById('organization');
+        const examNameInput = document.getElementById('exam_name');
+        
+        // Auto-suggest organization based on exam type
+        const organizationSuggestions = {
+            'upsc': 'Union Public Service Commission',
+            'ssc': 'Staff Selection Commission',
+            'banking': 'Institute of Banking Personnel Selection',
+            'railway': 'Railway Recruitment Board',
+            'defense': 'Ministry of Defence',
+            'state_psc': 'State Public Service Commission',
+            'teaching': 'Central Board of Secondary Education',
+            'engineering': 'National Testing Agency',
+            'medical': 'National Testing Agency',
+            'management': 'Common Admission Test',
+            'law': 'Consortium of National Law Universities',
+            'judiciary': 'High Court',
+            'police': 'State Police Recruitment Board',
+            'insurance': 'Life Insurance Corporation'
+        };
+        
+        if (organizationSuggestions[examType] && !organizationInput.value) {
+            organizationInput.value = organizationSuggestions[examType];
+        }
+    });
+});
+</script>
+{% endblock %}

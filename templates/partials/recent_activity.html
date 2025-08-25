@@ -1,0 +1,72 @@
+{% if activities %}
+    {% for activity in activities %}
+    <li class="px-4 py-4 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    {% if activity.type == 'test_attempt' %}
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    {% elif activity.type == 'test_created' %}
+                    <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                    </div>
+                    {% elif activity.type == 'student_attempt' %}
+                    <div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                        <svg class="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">
+                        {{ activity.title }}
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        {{ activity.description }}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    {% if activity.status == 'completed' or activity.status == 'evaluated' %}
+                        bg-green-100 text-green-800
+                    {% elif activity.status == 'published' %}
+                        bg-blue-100 text-blue-800
+                    {% elif activity.status == 'draft' %}
+                        bg-gray-100 text-gray-800
+                    {% else %}
+                        bg-yellow-100 text-yellow-800
+                    {% endif %}">
+                    {{ activity.status|capfirst }}
+                </span>
+                <div class="text-sm text-gray-500" title="{{ activity.time|date:'F j, Y, g:i A' }}">
+                    {{ activity.time|timesince }} ago
+                </div>
+            </div>
+        </div>
+    </li>
+    {% endfor %}
+{% else %}
+    <li class="px-4 py-4 sm:px-6">
+        <div class="text-center py-8">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
+            <p class="mt-1 text-sm text-gray-500">
+                {% if user.role == 'student' %}
+                Start taking tests to see your activity here.
+                {% else %}
+                Create tests or questions to see your activity here.
+                {% endif %}
+            </p>
+        </div>
+    </li>
+{% endif %}

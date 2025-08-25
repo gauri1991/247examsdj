@@ -1,0 +1,411 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Exams - Calendar View{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background-color: #e5e7eb;
+        border: 1px solid #e5e7eb;
+    }
+    .calendar-day {
+        background-color: white;
+        min-height: 120px;
+        padding: 8px;
+        position: relative;
+    }
+    .calendar-day.other-month {
+        background-color: #f9fafb;
+        color: #9ca3af;
+    }
+    .calendar-day.today {
+        background-color: #dbeafe;
+        border: 2px solid #3b82f6;
+    }
+    .calendar-event {
+        font-size: 11px;
+        padding: 2px 4px;
+        margin-bottom: 2px;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .calendar-event:hover {
+        transform: scale(1.02);
+        z-index: 10;
+        position: relative;
+    }
+    .event-exam-date { background-color: #fef3c7; color: #d97706; }
+    .event-application { background-color: #dcfce7; color: #16a34a; }
+    .event-result { background-color: #fce7f3; color: #be185d; }
+    .event-admit-card { background-color: #e0e7ff; color: #4338ca; }
+    .month-navigation {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 20px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        margin-right: 16px;
+    }
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        margin-right: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header with View Toggles -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Exams</h1>
+                <p class="mt-1 text-sm text-gray-500">Calendar view of exam schedules and important dates</p>
+            </div>
+            
+            <!-- View Mode Toggles -->
+            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <a href="?view=organization" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'organization' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Organizations
+                </a>
+                <a href="?view=list" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'list' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    List
+                </a>
+                <a href="?view=grid" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'grid' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zM14 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z"></path>
+                    </svg>
+                    Grid
+                </a>
+                <a href="?view=calendar" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'calendar' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Calendar
+                </a>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex space-x-3 mt-4">
+            <a href="{% url 'create-exam' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Exam
+            </a>
+            <a href="{% url 'create-organization' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                </svg>
+                Add Organization
+            </a>
+        </div>
+    </div>
+
+    <!-- Calendar Navigation and Legend -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <!-- Month Navigation -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <button onclick="changeMonth(-1)" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <h2 class="text-2xl font-bold text-gray-900" id="currentMonth">{{ current_month_name }} {{ current_year }}</h2>
+                <button onclick="changeMonth(1)" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="goToToday()" class="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Today
+                </button>
+                <select id="monthSelector" class="px-3 py-2 text-sm border border-gray-300 rounded-lg" onchange="goToMonth()">
+                    {% for month in months %}
+                    <option value="{{ month.number }}" {% if month.number == current_month %}selected{% endif %}>{{ month.name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="yearSelector" class="px-3 py-2 text-sm border border-gray-300 rounded-lg" onchange="goToMonth()">
+                    {% for year in available_years %}
+                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center">
+            <div class="legend-item">
+                <div class="legend-color event-exam-date"></div>
+                <span>Exam Dates</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color event-application"></div>
+                <span>Application Period</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color event-result"></div>
+                <span>Results</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color event-admit-card"></div>
+                <span>Admit Card</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <!-- Weekday Headers -->
+        <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Sunday</div>
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Monday</div>
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Tuesday</div>
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Wednesday</div>
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Thursday</div>
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Friday</div>
+            <div class="p-4 text-center text-sm font-medium text-gray-700">Saturday</div>
+        </div>
+        
+        <!-- Calendar Grid -->
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Calendar days will be populated by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Event Details Modal -->
+    <div id="eventModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+                <div class="flex items-start justify-between">
+                    <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Event Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-4" id="modalContent">
+                    <!-- Event details will be populated here -->
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Close
+                    </button>
+                    <a id="modalViewExam" href="#" class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+                        View Exam
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Calendar data and state
+let currentMonth = {{ current_month }};
+let currentYear = {{ current_year }};
+const today = new Date();
+const examEvents = {{ exam_events|safe }}; // JSON data from Django
+
+// Month names
+const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Generate calendar for current month
+function generateCalendar(month, year) {
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+    
+    const calendarGrid = document.getElementById('calendarGrid');
+    calendarGrid.innerHTML = '';
+    
+    let dayCount = 1;
+    let nextMonthDay = 1;
+    
+    // Generate 6 weeks (42 days)
+    for (let i = 0; i < 42; i++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'calendar-day';
+        
+        let dayNumber, isCurrentMonth = true, fullDate;
+        
+        if (i < firstDay) {
+            // Previous month days
+            dayNumber = daysInPrevMonth - firstDay + i + 1;
+            isCurrentMonth = false;
+            dayDiv.classList.add('other-month');
+            fullDate = new Date(year, month - 2, dayNumber);
+        } else if (dayCount <= daysInMonth) {
+            // Current month days
+            dayNumber = dayCount;
+            fullDate = new Date(year, month - 1, dayNumber);
+            dayCount++;
+            
+            // Highlight today
+            if (year === today.getFullYear() && month - 1 === today.getMonth() && dayNumber === today.getDate()) {
+                dayDiv.classList.add('today');
+            }
+        } else {
+            // Next month days
+            dayNumber = nextMonthDay;
+            isCurrentMonth = false;
+            dayDiv.classList.add('other-month');
+            fullDate = new Date(year, month, nextMonthDay);
+            nextMonthDay++;
+        }
+        
+        // Add day number
+        const dayNumberDiv = document.createElement('div');
+        dayNumberDiv.className = 'text-sm font-medium mb-1';
+        dayNumberDiv.textContent = dayNumber;
+        dayDiv.appendChild(dayNumberDiv);
+        
+        // Add events for this day
+        if (isCurrentMonth) {
+            addEventsToDay(dayDiv, fullDate);
+        }
+        
+        calendarGrid.appendChild(dayDiv);
+    }
+    
+    // Update month display
+    document.getElementById('currentMonth').textContent = `${monthNames[month - 1]} ${year}`;
+}
+
+// Add events to a specific day
+function addEventsToDay(dayDiv, date) {
+    const dateStr = formatDate(date);
+    
+    examEvents.forEach(event => {
+        const eventDate = new Date(event.date);
+        if (formatDate(eventDate) === dateStr) {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `calendar-event event-${event.type}`;
+            eventDiv.textContent = event.title;
+            eventDiv.onclick = () => showEventModal(event);
+            dayDiv.appendChild(eventDiv);
+        }
+    });
+}
+
+// Format date as YYYY-MM-DD
+function formatDate(date) {
+    return date.getFullYear() + '-' + 
+           String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+           String(date.getDate()).padStart(2, '0');
+}
+
+// Show event details modal
+function showEventModal(event) {
+    document.getElementById('modalTitle').textContent = event.title;
+    document.getElementById('modalContent').innerHTML = `
+        <div class="space-y-3">
+            <div>
+                <span class="text-sm font-medium text-gray-700">Exam:</span>
+                <span class="text-sm text-gray-900">${event.exam_name}</span>
+            </div>
+            <div>
+                <span class="text-sm font-medium text-gray-700">Organization:</span>
+                <span class="text-sm text-gray-900">${event.organization || 'Not specified'}</span>
+            </div>
+            <div>
+                <span class="text-sm font-medium text-gray-700">Date:</span>
+                <span class="text-sm text-gray-900">${new Date(event.date).toLocaleDateString()}</span>
+            </div>
+            <div>
+                <span class="text-sm font-medium text-gray-700">Type:</span>
+                <span class="text-sm text-gray-900">${event.type_display}</span>
+            </div>
+            ${event.description ? `
+            <div>
+                <span class="text-sm font-medium text-gray-700">Description:</span>
+                <p class="text-sm text-gray-900 mt-1">${event.description}</p>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('modalViewExam').href = event.exam_url;
+    document.getElementById('eventModal').classList.remove('hidden');
+}
+
+// Close modal
+function closeModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+// Navigation functions
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear++;
+    } else if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear--;
+    }
+    
+    updateSelectors();
+    generateCalendar(currentMonth, currentYear);
+}
+
+function goToToday() {
+    currentMonth = today.getMonth() + 1;
+    currentYear = today.getFullYear();
+    updateSelectors();
+    generateCalendar(currentMonth, currentYear);
+}
+
+function goToMonth() {
+    currentMonth = parseInt(document.getElementById('monthSelector').value);
+    currentYear = parseInt(document.getElementById('yearSelector').value);
+    generateCalendar(currentMonth, currentYear);
+}
+
+function updateSelectors() {
+    document.getElementById('monthSelector').value = currentMonth;
+    document.getElementById('yearSelector').value = currentYear;
+}
+
+// Initialize calendar
+generateCalendar(currentMonth, currentYear);
+
+// Close modal when clicking outside
+document.getElementById('eventModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

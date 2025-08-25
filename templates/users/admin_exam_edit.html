@@ -1,0 +1,818 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Admin: Edit Exam - {{ exam.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .admin-card {
+        background: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+    .admin-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .admin-input {
+        transition: all 0.2s ease;
+    }
+    .admin-input:focus-within {
+        transform: translateY(-1px);
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border: 1px solid #d1d5db;
+    }
+    .slide-in {
+        animation: slideIn 0.5s ease-out forwards;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Admin Header -->
+    <div class="admin-header shadow-lg border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'admin-exams-list' %}" class="text-white hover:text-gray-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </a>
+                    <h1 class="text-2xl font-bold">Admin: Edit Exam</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm opacity-90">Admin Panel</span>
+                    <div class="h-8 w-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                        {{ exam.name }}
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Advanced exam configuration and management
+                    </p>
+                    <div class="flex items-center mt-2 space-x-4">
+                        <span class="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">ID: {{ exam.id|truncatechars:8 }}...</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">Created: {{ exam.created_at|date:"M d, Y" }}</span>
+                        <span class="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">By: {{ exam.created_by.get_full_name|default:exam.created_by.username }}</span>
+                    </div>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="openQuickActions()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Quick Actions
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Tests</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ exam.tests.count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Published Tests</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ exam.published_tests_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Attempts</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ exam.tests.all|length }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card rounded-lg p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Last Activity</dt>
+                            <dd class="text-lg font-medium text-gray-900">2h ago</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <!-- Left Column: Main Edit Form -->
+            <div class="xl:col-span-2 space-y-8">
+                <!-- Advanced Exam Editor -->
+                <div class="admin-card rounded-xl p-8 slide-in">
+                    <div class="border-b border-gray-200 pb-4 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Exam Configuration
+                        </h3>
+                        <p class="text-gray-500 text-sm mt-1">Update exam information and settings</p>
+                    </div>
+
+                    <form method="POST" class="space-y-8">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information Section -->
+                        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Basic Information
+                            </h4>
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                <!-- Exam Name -->
+                                <div class="sm:col-span-2">
+                                    <label for="name" class="block text-sm font-medium text-gray-700">
+                                        Exam Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="text" name="name" id="name" required
+                                               value="{{ exam.name }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="Enter comprehensive exam name">
+                                    </div>
+                                </div>
+
+                                <!-- Category -->
+                                <div>
+                                    <label for="category" class="block text-sm font-medium text-gray-700">
+                                        Category
+                                    </label>
+                                    <div class="mt-1">
+                                        <select name="category" id="category"
+                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <option value="">Select Category</option>
+                                            <optgroup label="Core Academic Subjects">
+                                                <option value="mathematics" {% if exam.category == 'mathematics' %}selected{% endif %}>📊 Mathematics</option>
+                                                <option value="physics" {% if exam.category == 'physics' %}selected{% endif %}>⚡ Physics</option>
+                                                <option value="chemistry" {% if exam.category == 'chemistry' %}selected{% endif %}>🧪 Chemistry</option>
+                                                <option value="biology" {% if exam.category == 'biology' %}selected{% endif %}>🧬 Biology</option>
+                                                <option value="english" {% if exam.category == 'english' %}selected{% endif %}>📚 English Language</option>
+                                                <option value="hindi" {% if exam.category == 'hindi' %}selected{% endif %}>🇮🇳 Hindi</option>
+                                                <option value="history" {% if exam.category == 'history' %}selected{% endif %}>🏛️ History</option>
+                                                <option value="geography" {% if exam.category == 'geography' %}selected{% endif %}>🌍 Geography</option>
+                                                <option value="economics" {% if exam.category == 'economics' %}selected{% endif %}>💰 Economics</option>
+                                            </optgroup>
+                                            <optgroup label="Government Exam Specific">
+                                                <option value="general_knowledge" {% if exam.category == 'general_knowledge' %}selected{% endif %}>🎯 General Knowledge</option>
+                                                <option value="current_affairs" {% if exam.category == 'current_affairs' %}selected{% endif %}>📰 Current Affairs</option>
+                                                <option value="reasoning" {% if exam.category == 'reasoning' %}selected{% endif %}>🧩 Logical Reasoning</option>
+                                                <option value="quantitative_aptitude" {% if exam.category == 'quantitative_aptitude' %}selected{% endif %}>🔢 Quantitative Aptitude</option>
+                                                <option value="english_comprehension" {% if exam.category == 'english_comprehension' %}selected{% endif %}>📖 English Comprehension</option>
+                                                <option value="general_science" {% if exam.category == 'general_science' %}selected{% endif %}>🔬 General Science</option>
+                                            </optgroup>
+                                            <optgroup label="Professional & Technical">
+                                                <option value="computer_science" {% if exam.category == 'computer_science' %}selected{% endif %}>💻 Computer Science</option>
+                                                <option value="engineering" {% if exam.category == 'engineering' %}selected{% endif %}>⚙️ Engineering</option>
+                                                <option value="medical" {% if exam.category == 'medical' %}selected{% endif %}>🏥 Medical</option>
+                                                <option value="law" {% if exam.category == 'law' %}selected{% endif %}>⚖️ Law</option>
+                                                <option value="commerce" {% if exam.category == 'commerce' %}selected{% endif %}>📈 Commerce</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Exam Type -->
+                                <div>
+                                    <label for="exam_type" class="block text-sm font-medium text-gray-700">
+                                        Exam Type
+                                    </label>
+                                    <div class="mt-1">
+                                        <select name="exam_type" id="exam_type"
+                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <option value="">Select Exam Type</option>
+                                            <option value="upsc" {% if exam.exam_type == 'upsc' %}selected{% endif %}>UPSC (Civil Services)</option>
+                                            <option value="ssc" {% if exam.exam_type == 'ssc' %}selected{% endif %}>SSC (Staff Selection Commission)</option>
+                                            <option value="banking" {% if exam.exam_type == 'banking' %}selected{% endif %}>Banking Exams (SBI, IBPS, RBI)</option>
+                                            <option value="railway" {% if exam.exam_type == 'railway' %}selected{% endif %}>Railway Exams (RRB)</option>
+                                            <option value="defense" {% if exam.exam_type == 'defense' %}selected{% endif %}>Defense Exams (NDA, CDS, AFCAT)</option>
+                                            <option value="state_psc" {% if exam.exam_type == 'state_psc' %}selected{% endif %}>State PSC</option>
+                                            <option value="teaching" {% if exam.exam_type == 'teaching' %}selected{% endif %}>Teaching Exams (CTET, TET, NET)</option>
+                                            <option value="engineering" {% if exam.exam_type == 'engineering' %}selected{% endif %}>Engineering Entrance (JEE, GATE)</option>
+                                            <option value="medical" {% if exam.exam_type == 'medical' %}selected{% endif %}>Medical Entrance (NEET, AIIMS)</option>
+                                            <option value="management" {% if exam.exam_type == 'management' %}selected{% endif %}>Management Entrance (CAT, MAT, XAT)</option>
+                                            <option value="law" {% if exam.exam_type == 'law' %}selected{% endif %}>Law Entrance (CLAT, LSAT)</option>
+                                            <option value="academic" {% if exam.exam_type == 'academic' %}selected{% endif %}>Academic/School Level</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Organization -->
+                                <div>
+                                    <label for="organization" class="block text-sm font-medium text-gray-700">
+                                        Organization
+                                    </label>
+                                    <div class="mt-1">
+                                        <select name="organization" id="organization"
+                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <option value="">Select Organization</option>
+                                            {% for org in organizations %}
+                                            <option value="{{ org.id }}" {% if exam.organization_id == org.id %}selected{% endif %}>
+                                                {{ org.short_name|default:org.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Year -->
+                                <div>
+                                    <label for="year" class="block text-sm font-medium text-gray-700">
+                                        Year
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="number" name="year" id="year"
+                                               value="{{ exam.year|default:'' }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="2024" min="2020" max="2030">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Subject & Content Organization -->
+                        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                                Content Organization
+                            </h4>
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
+                                <!-- Subject -->
+                                <div>
+                                    <label for="subject" class="block text-sm font-medium text-gray-700">
+                                        Subject
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="text" name="subject" id="subject"
+                                               value="{{ exam.subject }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="Specific subject">
+                                    </div>
+                                </div>
+
+                                <!-- Topic -->
+                                <div>
+                                    <label for="topic" class="block text-sm font-medium text-gray-700">
+                                        Topic
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="text" name="topic" id="topic"
+                                               value="{{ exam.topic }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="Main topic">
+                                    </div>
+                                </div>
+
+                                <!-- Subtopic -->
+                                <div>
+                                    <label for="subtopic" class="block text-sm font-medium text-gray-700">
+                                        Subtopic
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="text" name="subtopic" id="subtopic"
+                                               value="{{ exam.subtopic }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="Subtopic">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Difficulty & Target Audience -->
+                        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Difficulty & Audience
+                            </h4>
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                <!-- Difficulty Level -->
+                                <div>
+                                    <label for="difficulty_level" class="block text-sm font-medium text-gray-700">
+                                        Difficulty Level
+                                    </label>
+                                    <div class="mt-1">
+                                        <select name="difficulty_level" id="difficulty_level"
+                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <option value="basic" {% if exam.difficulty_level == 'basic' %}selected{% endif %}>🟢 Basic</option>
+                                            <option value="intermediate" {% if exam.difficulty_level == 'intermediate' %}selected{% endif %}>🟡 Intermediate</option>
+                                            <option value="advanced" {% if exam.difficulty_level == 'advanced' %}selected{% endif %}>🟠 Advanced</option>
+                                            <option value="expert" {% if exam.difficulty_level == 'expert' %}selected{% endif %}>🔴 Expert</option>
+                                            <option value="mixed" {% if exam.difficulty_level == 'mixed' %}selected{% endif %}>🔵 Mixed Level</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Target Audience -->
+                                <div>
+                                    <label for="target_audience" class="block text-sm font-medium text-gray-700">
+                                        Target Audience
+                                    </label>
+                                    <div class="mt-1">
+                                        <select name="target_audience" id="target_audience"
+                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <option value="beginners" {% if exam.target_audience == 'beginners' %}selected{% endif %}>Beginners</option>
+                                            <option value="intermediate" {% if exam.target_audience == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                            <option value="advanced" {% if exam.target_audience == 'advanced' %}selected{% endif %}>Advanced</option>
+                                            <option value="competitive_exam" {% if exam.target_audience == 'competitive_exam' %}selected{% endif %}>Competitive Exam Aspirants</option>
+                                            <option value="school_students" {% if exam.target_audience == 'school_students' %}selected{% endif %}>School Students</option>
+                                            <option value="college_students" {% if exam.target_audience == 'college_students' %}selected{% endif %}>College Students</option>
+                                            <option value="professionals" {% if exam.target_audience == 'professionals' %}selected{% endif %}>Working Professionals</option>
+                                            <option value="general" {% if exam.target_audience == 'general' %}selected{% endif %}>General Audience</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Language & Location -->
+                        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Language & Location
+                            </h4>
+                            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                                <!-- Language -->
+                                <div>
+                                    <label for="language" class="block text-sm font-medium text-gray-700">
+                                        Primary Language
+                                    </label>
+                                    <div class="mt-1">
+                                        <select name="language" id="language"
+                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <option value="english" {% if exam.language == 'english' %}selected{% endif %}>English</option>
+                                            <option value="hindi" {% if exam.language == 'hindi' %}selected{% endif %}>Hindi</option>
+                                            <option value="bilingual" {% if exam.language == 'bilingual' %}selected{% endif %}>English & Hindi</option>
+                                            <option value="regional" {% if exam.language == 'regional' %}selected{% endif %}>Regional Language</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- State Specific -->
+                                <div>
+                                    <label for="state_specific" class="block text-sm font-medium text-gray-700">
+                                        State Specific
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="text" name="state_specific" id="state_specific"
+                                               value="{{ exam.state_specific }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="State-specific content (if any)">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description & Settings -->
+                        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Description & Settings
+                            </h4>
+                            <div class="space-y-6">
+                                <!-- Description -->
+                                <div>
+                                    <label for="description" class="block text-sm font-medium text-gray-700">
+                                        Description
+                                    </label>
+                                    <div class="mt-1">
+                                        <textarea name="description" id="description" rows="4"
+                                                  class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                  placeholder="Enter comprehensive exam description with admin notes...">{{ exam.description }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Status Checkboxes -->
+                                <div class="flex items-center space-x-6">
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" name="is_active" id="is_active" {% if exam.is_active %}checked{% endif %}
+                                               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                        <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                                            Active Exam
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" name="is_featured" id="is_featured" {% if exam.is_featured %}checked{% endif %}
+                                               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                        <label for="is_featured" class="ml-2 block text-sm text-gray-900">
+                                            Featured Exam
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Tags -->
+                                <div>
+                                    <label for="tags" class="block text-sm font-medium text-gray-700">
+                                        Tags
+                                    </label>
+                                    <div class="mt-1">
+                                        <input type="text" name="tags" id="tags"
+                                               value="{{ exam.tags|join:', ' }}"
+                                               class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                               placeholder="Enter tags separated by commas (e.g., math, algebra, competitive)">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Separate multiple tags with commas</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="pt-6 border-t border-gray-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex space-x-3">
+                                    <button type="button" onclick="resetForm()" 
+                                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                        Reset Form
+                                    </button>
+                                    <button type="button" onclick="previewChanges()" 
+                                            class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Preview
+                                    </button>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <a href="{% url 'admin-exams-list' %}" 
+                                       class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Cancel
+                                    </a>
+                                    <button type="submit"
+                                            class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Update Exam
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Test Management -->
+                <div class="admin-card rounded-lg p-6">
+                    <div class="border-b border-gray-200 pb-4 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                            Test Management
+                        </h3>
+                        <p class="text-gray-500 text-sm mt-1">Quick actions for managing exam tests</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Quick Actions -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button onclick="createNewTest()" class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center transition-colors">
+                                <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <p class="text-sm font-medium">Create Test</p>
+                            </button>
+                            
+                            <button onclick="bulkManageTests()" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-lg text-center transition-colors">
+                                <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                </svg>
+                                <p class="text-sm font-medium">Bulk Actions</p>
+                            </button>
+                            
+                            <button onclick="publishAllTests()" class="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-center transition-colors">
+                                <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                <p class="text-sm font-medium">Publish All</p>
+                            </button>
+                            
+                            <button onclick="exportTests()" class="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg text-center transition-colors">
+                                <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <p class="text-sm font-medium">Export</p>
+                            </button>
+                        </div>
+
+                        <!-- Test List -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-bold text-gray-800 mb-4">Recent Tests</h4>
+                            {% if exam.tests.all %}
+                                <div class="space-y-3">
+                                    {% for test in exam.tests.all|slice:":5" %}
+                                    <div class="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h5 class="font-semibold text-gray-900">{{ test.title }}</h5>
+                                                <p class="text-sm text-gray-600">{{ test.duration_minutes }} min • {{ test.total_marks }} marks</p>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                {% if test.is_published %}
+                                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Published</span>
+                                                {% else %}
+                                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">Draft</span>
+                                                {% endif %}
+                                                <button onclick="editTest('{{ test.id }}')" class="text-blue-600 hover:text-blue-800">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-gray-500 text-center py-8">No tests created yet. Create your first test above.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Admin Tools -->
+            <div class="space-y-6">
+                <!-- Admin Actions -->
+                <div class="admin-card rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Admin Actions</h3>
+                    <div class="space-y-3">
+                        <button onclick="duplicateExam()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-md text-sm font-medium transition-colors flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Duplicate Exam
+                        </button>
+                        <button onclick="exportExamData()" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-md text-sm font-medium transition-colors flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export Data
+                        </button>
+                        <button onclick="generateReport()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-md text-sm font-medium transition-colors flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="admin-card rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Stats</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Active Users Today</span>
+                            <span class="text-sm font-medium text-gray-900">42</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Completion Rate</span>
+                            <span class="text-sm font-medium text-gray-900">87%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Average Time</span>
+                            <span class="text-sm font-medium text-gray-900">24 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="admin-card rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-2 w-2 bg-green-400 rounded-full"></div>
+                            <div>
+                                <p class="text-sm text-gray-900">Test published</p>
+                                <p class="text-xs text-gray-500">2 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="h-2 w-2 bg-blue-400 rounded-full"></div>
+                            <div>
+                                <p class="text-sm text-gray-900">User registered</p>
+                                <p class="text-xs text-gray-500">4 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="h-2 w-2 bg-yellow-400 rounded-full"></div>
+                            <div>
+                                <p class="text-sm text-gray-900">Settings updated</p>
+                                <p class="text-xs text-gray-500">1 day ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="admin-card rounded-lg p-6 border-2 border-red-200">
+                    <h3 class="text-lg font-medium text-red-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        Danger Zone
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="deleteExam()" class="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded-md text-sm font-medium transition-colors">
+                            Delete Exam
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Admin Functionality -->
+<script>
+function openQuickActions() {
+    alert('Quick Actions panel would open here with admin shortcuts');
+}
+
+function resetForm() {
+    if (confirm('Are you sure you want to reset all form fields to their original values?')) {
+        document.querySelector('form').reset();
+        location.reload();
+    }
+}
+
+function previewChanges() {
+    // Get form data
+    const formData = new FormData(document.querySelector('form'));
+    const examName = formData.get('name');
+    const category = formData.get('category');
+    const examType = formData.get('exam_type');
+    
+    let previewText = `Preview of Exam:\n\n`;
+    previewText += `Name: ${examName}\n`;
+    previewText += `Category: ${category}\n`;
+    previewText += `Type: ${examType}\n`;
+    previewText += `\nThis is how the exam configuration will appear to users.`;
+    
+    alert(previewText);
+}
+
+function createNewTest() {
+    window.location.href = `/exams/{{ exam.id }}/create-test/`;
+}
+
+function bulkManageTests() {
+    alert('Bulk test management panel would open here with options to:\n• Publish multiple tests\n• Update test settings\n• Delete multiple tests');
+}
+
+function publishAllTests() {
+    if (confirm('Publish all draft tests for this exam?')) {
+        // Here you would make an AJAX call to publish all tests
+        alert('All tests published successfully!');
+    }
+}
+
+function exportTests() {
+    alert('Exporting tests to Excel/PDF format...');
+}
+
+function editTest(testId) {
+    window.location.href = `/tests/${testId}/edit/`;
+}
+
+function duplicateExam() {
+    if (confirm('Create a duplicate of this exam with all settings?')) {
+        // Here you would make an AJAX call to duplicate the exam
+        alert('Exam duplicated successfully! Redirecting to the new exam...');
+    }
+}
+
+function archiveExam() {
+    if (confirm('Archive this exam? It will be hidden from regular users but data will be preserved.')) {
+        alert('Exam archived successfully!');
+    }
+}
+
+function exportExamData() {
+    alert('Exporting exam data including statistics, tests, and user attempts...');
+}
+
+function generateReport() {
+    alert('Generating comprehensive analytics report with:\n• User performance data\n• Test completion rates\n• Question difficulty analysis');
+}
+
+function deleteExam() {
+    if (confirm('⚠️ WARNING: This will permanently delete the exam and ALL data. This cannot be undone!')) {
+        if (prompt('Type DELETE to confirm:') === 'DELETE') {
+            alert('Exam deletion initiated...');
+            // window.location.href = `/admin/exams/{{ exam.id }}/delete/`;
+        }
+    }
+}
+
+// Auto-suggestion for categories based on exam type
+document.getElementById('exam_type').addEventListener('change', function() {
+    const examType = this.value;
+    const categorySelect = document.getElementById('category');
+    
+    // Clear current selection
+    categorySelect.selectedIndex = 0;
+    
+    // Suggest appropriate categories based on exam type
+    if (examType === 'upsc' || examType === 'ssc' || examType === 'state_psc') {
+        // Highlight government exam categories
+        console.log('Consider: General Knowledge, Current Affairs, Reasoning');
+    } else if (examType === 'banking') {
+        console.log('Consider: Quantitative Aptitude, Reasoning, General Knowledge');
+    } else if (examType === 'engineering') {
+        console.log('Consider: Mathematics, Physics, Chemistry');
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const name = document.getElementById('name').value.trim();
+    if (name.length < 3) {
+        e.preventDefault();
+        alert('Exam name must be at least 3 characters long.');
+        return false;
+    }
+    
+    // Additional validation can be added here
+    return true;
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,715 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Exam Topic Selector{% endblock %}
+
+{% block extra_css %}
+<style>
+    .topic-selector-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        padding: 30px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .selection-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .panel-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .templates-section {
+        margin-bottom: 30px;
+    }
+
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .template-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .template-card:hover {
+        border-color: #10b981;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .template-card.selected {
+        border-color: #10b981;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+    }
+
+    .template-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 15px;
+    }
+
+    .template-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .template-badge {
+        background: #edf2ff;
+        color: #3730a3;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .template-description {
+        color: #4a5568;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    .template-stats {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: #718096;
+    }
+
+    .stat-value {
+        font-weight: 700;
+        color: #10b981;
+    }
+
+    .custom-selection-area {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+    }
+
+    .subject-filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .topic-results {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .topic-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+
+    .topic-item:hover {
+        border-color: #10b981;
+        transform: translateX(5px);
+    }
+
+    .topic-item.selected {
+        border-color: #10b981;
+        background: #ecfdf5;
+    }
+
+    .topic-checkbox {
+        margin-right: 15px;
+        width: 18px;
+        height: 18px;
+        accent-color: #10b981;
+    }
+
+    .topic-info {
+        flex: 1;
+    }
+
+    .topic-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 4px;
+    }
+
+    .topic-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #718096;
+    }
+
+    .compatibility-score {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .selected-topics-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 20px;
+    }
+
+    .selected-topic {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        padding: 10px 15px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .selected-topic-info {
+        flex: 1;
+    }
+
+    .selected-topic-title {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 14px;
+    }
+
+    .selected-topic-subject {
+        font-size: 12px;
+        color: #059669;
+    }
+
+    .remove-topic-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #4a5568;
+        border: 2px solid #e2e8f0;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        border-color: #10b981;
+        color: #10b981;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #718096;
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        opacity: 0.3;
+    }
+
+    /* Loading states */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f4f6;
+        border-top: 2px solid #10b981;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 1024px) {
+        .selection-panel {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .template-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .subject-filters {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topic-selector-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 style="margin: 0; font-size: 32px; font-weight: 700;">
+            🎯 Exam Topic Selector
+        </h1>
+        <p style="margin-top: 10px; opacity: 0.95; font-size: 18px;">
+            Select topics from our global taxonomy to build your exam syllabus
+        </p>
+    </div>
+
+    <!-- Quick Templates Section -->
+    <div class="templates-section panel-card">
+        <h3 style="margin-top: 0; color: #2d3748;">
+            📋 Quick Start Templates
+        </h3>
+        <p style="color: #718096; margin-bottom: 20px;">
+            Choose from pre-built topic templates or create a custom selection
+        </p>
+        
+        <div class="template-grid">
+            {% for template in templates %}
+            <div class="template-card" data-template-id="{{ template.id }}" onclick="selectTemplate('{{ template.id }}')">
+                <div class="template-header">
+                    <div class="template-title">{{ template.name }}</div>
+                    <div class="template-badge">{{ template.get_template_type_display }}</div>
+                </div>
+                
+                <div class="template-description">
+                    {{ template.description|truncatewords:20 }}
+                </div>
+                
+                <div class="template-stats">
+                    <div class="stat-item">
+                        📚 <span class="stat-value">{{ template.source_subject.name }}</span>
+                    </div>
+                    <div class="stat-item">
+                        🔥 <span class="stat-value">{{ template.usage_count }}</span> uses
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">📋</div>
+                <h4>No Templates Available</h4>
+                <p>Create a custom selection using the search below.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Custom Selection Area -->
+    <div class="custom-selection-area">
+        <h3 style="margin-top: 0; color: #2d3748;">
+            🔍 Custom Topic Selection
+        </h3>
+        <p style="color: #718096; margin-bottom: 20px;">
+            Search and select specific topics to customize your exam syllabus
+        </p>
+        
+        <div class="subject-filters">
+            <select id="categoryFilter" class="filter-input">
+                <option value="">All Categories</option>
+                {% for value, label in categories %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+            
+            <select id="difficultyFilter" class="filter-input">
+                <option value="">All Difficulty Levels</option>
+                {% for value, label in difficulty_levels %}
+                <option value="{{ value }}">{{ label|capfirst }}</option>
+                {% endfor %}
+            </select>
+            
+            <input type="text" id="searchInput" class="filter-input" 
+                   placeholder="Search topics..." />
+            
+            <button onclick="searchTopics()" class="filter-input btn-primary" style="border: none;">
+                🔍 Search Topics
+            </button>
+        </div>
+        
+        <div id="topicResults" class="topic-results" style="display: none;">
+            <!-- Search results will be populated here -->
+        </div>
+    </div>
+
+    <!-- Selection Panel -->
+    <div class="selection-panel">
+        <!-- Selected Topics -->
+        <div class="selected-topics-panel">
+            <h4 style="margin-top: 0; color: #2d3748;">
+                ✅ Selected Topics (<span id="selectedCount">0</span>)
+            </h4>
+            
+            <div id="selectedTopicsList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <p>No topics selected yet</p>
+                </div>
+            </div>
+            
+            <div class="action-buttons" style="margin-top: 20px;">
+                <button onclick="generateSyllabus()" class="btn-primary" id="generateBtn" disabled>
+                    ⚡ Generate Syllabus
+                </button>
+                <button onclick="clearSelection()" class="btn-secondary">
+                    🗑️ Clear All
+                </button>
+            </div>
+        </div>
+        
+        <!-- Summary Panel -->
+        <div class="panel-card">
+            <h4 style="margin-top: 0; color: #2d3748;">📊 Selection Summary</h4>
+            
+            <div id="selectionSummary">
+                <div class="stat-item" style="margin-bottom: 10px;">
+                    <strong>Total Topics:</strong> <span id="totalTopicsCount">0</span>
+                </div>
+                <div class="stat-item" style="margin-bottom: 10px;">
+                    <strong>Estimated Hours:</strong> <span id="totalHours">0</span>h
+                </div>
+                <div class="stat-item" style="margin-bottom: 10px;">
+                    <strong>Subjects Covered:</strong> <span id="subjectsCount">0</span>
+                </div>
+                <div class="stat-item" style="margin-bottom: 10px;">
+                    <strong>Difficulty Range:</strong> <span id="difficultyRange">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedTopics = [];
+let allSearchResults = [];
+
+// Template selection
+function selectTemplate(templateId) {
+    // Clear current selection
+    selectedTopics = [];
+    
+    // Update template UI
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    document.querySelector(`[data-template-id="${templateId}"]`).classList.add('selected');
+    
+    // Load template topics (this would be implemented with an API call)
+    console.log('Loading template:', templateId);
+    // For now, just show a message
+    updateSelectedTopicsDisplay();
+    updateSummary();
+}
+
+// Topic search
+function searchTopics() {
+    const category = document.getElementById('categoryFilter').value;
+    const difficulty = document.getElementById('difficultyFilter').value;
+    const search = document.getElementById('searchInput').value;
+    
+    if (!search && !category && !difficulty) {
+        alert('Please enter search criteria');
+        return;
+    }
+    
+    // Show loading state
+    const resultsDiv = document.getElementById('topicResults');
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = '<div class="loading-spinner"></div> Searching topics...';
+    
+    // Build search parameters
+    const params = new URLSearchParams();
+    if (search) params.append('q', search);
+    if (category) params.append('category', category);
+    if (difficulty) params.append('difficulty', difficulty);
+    params.append('limit', '20');
+    
+    // Search topics via API
+    fetch(`/knowledge/api/search/?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allSearchResults = data.results;
+                displaySearchResults(data.results);
+            } else {
+                resultsDiv.innerHTML = '<div class="empty-state"><h4>Search Failed</h4><p>Please try again.</p></div>';
+            }
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            resultsDiv.innerHTML = '<div class="empty-state"><h4>Error</h4><p>Failed to search topics.</p></div>';
+        });
+}
+
+function displaySearchResults(results) {
+    const resultsDiv = document.getElementById('topicResults');
+    
+    if (!results || results.length === 0) {
+        resultsDiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <h4>No Topics Found</h4>
+                <p>Try different search criteria.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const resultsHtml = results.map(topic => {
+        const isSelected = selectedTopics.some(t => t.id === topic.id);
+        return `
+            <div class="topic-item ${isSelected ? 'selected' : ''}" data-topic-id="${topic.id}">
+                <input type="checkbox" class="topic-checkbox" ${isSelected ? 'checked' : ''} 
+                       onchange="toggleTopic('${topic.id}')">
+                <div class="topic-info">
+                    <div class="topic-title">${topic.title}</div>
+                    <div class="topic-meta">
+                        <span style="color: ${topic.subject.color_code};">${topic.subject.name}</span> •
+                        <span>${topic.difficulty}</span> •
+                        <span>${topic.estimated_hours}h</span> •
+                        <span>${topic.topic_type}</span>
+                    </div>
+                </div>
+                <div class="compatibility-score">95%</div>
+            </div>
+        `;
+    }).join('');
+    
+    resultsDiv.innerHTML = resultsHtml;
+}
+
+// Topic selection
+function toggleTopic(topicId) {
+    const topic = allSearchResults.find(t => t.id === topicId);
+    if (!topic) return;
+    
+    const existingIndex = selectedTopics.findIndex(t => t.id === topicId);
+    
+    if (existingIndex > -1) {
+        // Remove topic
+        selectedTopics.splice(existingIndex, 1);
+    } else {
+        // Add topic
+        selectedTopics.push(topic);
+    }
+    
+    // Update UI
+    updateSelectedTopicsDisplay();
+    updateSummary();
+    
+    // Update search results checkboxes
+    const topicItem = document.querySelector(`[data-topic-id="${topicId}"]`);
+    if (topicItem) {
+        topicItem.classList.toggle('selected');
+        const checkbox = topicItem.querySelector('.topic-checkbox');
+        checkbox.checked = existingIndex === -1;
+    }
+}
+
+function removeSelectedTopic(topicId) {
+    selectedTopics = selectedTopics.filter(t => t.id !== topicId);
+    updateSelectedTopicsDisplay();
+    updateSummary();
+    
+    // Update search results if visible
+    const topicItem = document.querySelector(`[data-topic-id="${topicId}"]`);
+    if (topicItem) {
+        topicItem.classList.remove('selected');
+        const checkbox = topicItem.querySelector('.topic-checkbox');
+        if (checkbox) checkbox.checked = false;
+    }
+}
+
+function updateSelectedTopicsDisplay() {
+    const listDiv = document.getElementById('selectedTopicsList');
+    const countSpan = document.getElementById('selectedCount');
+    const generateBtn = document.getElementById('generateBtn');
+    
+    countSpan.textContent = selectedTopics.length;
+    
+    if (selectedTopics.length === 0) {
+        listDiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <p>No topics selected yet</p>
+            </div>
+        `;
+        generateBtn.disabled = true;
+        return;
+    }
+    
+    generateBtn.disabled = false;
+    
+    const topicsHtml = selectedTopics.map(topic => `
+        <div class="selected-topic">
+            <div class="selected-topic-info">
+                <div class="selected-topic-title">${topic.title}</div>
+                <div class="selected-topic-subject">${topic.subject.name}</div>
+            </div>
+            <button class="remove-topic-btn" onclick="removeSelectedTopic('${topic.id}')">×</button>
+        </div>
+    `).join('');
+    
+    listDiv.innerHTML = topicsHtml;
+}
+
+function updateSummary() {
+    const totalHours = selectedTopics.reduce((sum, topic) => sum + parseFloat(topic.estimated_hours || 0), 0);
+    const subjects = [...new Set(selectedTopics.map(topic => topic.subject.name))];
+    const difficulties = [...new Set(selectedTopics.map(topic => topic.difficulty))];
+    
+    document.getElementById('totalTopicsCount').textContent = selectedTopics.length;
+    document.getElementById('totalHours').textContent = totalHours.toFixed(1);
+    document.getElementById('subjectsCount').textContent = subjects.length;
+    document.getElementById('difficultyRange').textContent = difficulties.length > 0 ? difficulties.join(', ') : '-';
+}
+
+function clearSelection() {
+    selectedTopics = [];
+    updateSelectedTopicsDisplay();
+    updateSummary();
+    
+    // Clear template selection
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Clear search results selection
+    document.querySelectorAll('.topic-item').forEach(item => {
+        item.classList.remove('selected');
+        const checkbox = item.querySelector('.topic-checkbox');
+        if (checkbox) checkbox.checked = false;
+    });
+}
+
+function generateSyllabus() {
+    if (selectedTopics.length === 0) {
+        alert('Please select at least one topic');
+        return;
+    }
+    
+    // This would integrate with the exam creation system
+    console.log('Generating syllabus with topics:', selectedTopics);
+    alert(`Syllabus generation started with ${selectedTopics.length} topics!\n\nThis would integrate with your exam creation workflow.`);
+}
+
+// Auto search on enter key
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchTopics();
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedTopicsDisplay();
+    updateSummary();
+});
+</script>
+{% endblock %}

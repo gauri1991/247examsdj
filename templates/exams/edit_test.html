@@ -1,0 +1,99 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Test - {{ test.title }} - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Edit Test
+            </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Edit test "{{ test.title }}" in "{{ test.exam.name }}"
+            </p>
+        </div>
+        <div class="mt-4 md:mt-0 md:ml-4">
+            <a href="{% url 'exam-detail' test.exam.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Exam
+            </a>
+        </div>
+    </div>
+
+    <!-- Edit Test Form -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label for="title" class="block text-sm font-medium text-gray-700">Test Title *</label>
+                    <input type="text" name="title" id="title" value="{{ test.title }}" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="Enter test name">
+                </div>
+                
+                <div class="sm:col-span-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="description" rows="3"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              placeholder="Enter test description">{{ test.description }}</textarea>
+                </div>
+                
+                <div>
+                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700">Duration (minutes) *</label>
+                    <input type="number" name="duration_minutes" id="duration_minutes" value="{{ test.duration_minutes }}" min="1" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="total_marks" class="block text-sm font-medium text-gray-700">Total Marks *</label>
+                    <input type="number" name="total_marks" id="total_marks" value="{{ test.total_marks }}" min="1" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="pass_percentage" class="block text-sm font-medium text-gray-700">Pass Percentage *</label>
+                    <input type="number" name="pass_percentage" id="pass_percentage" value="{{ test.pass_percentage }}" min="0" max="100" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="max_attempts" class="block text-sm font-medium text-gray-700">Max Attempts *</label>
+                    <input type="number" name="max_attempts" id="max_attempts" value="{{ test.max_attempts }}" min="1" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div class="sm:col-span-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_published" id="is_published" {% if test.is_published %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="is_published" class="ml-2 block text-sm text-gray-900">
+                            Publish test (make it available to students)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'exam-detail' test.exam.id %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Update Test
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

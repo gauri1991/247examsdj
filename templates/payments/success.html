@@ -1,0 +1,57 @@
+{% extends "base/base.html" %}
+
+{% block title %}Payment Successful - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-green-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div class="text-center">
+                <!-- Success Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                
+                <h1 class="mt-4 text-2xl font-bold text-gray-900">Payment Successful!</h1>
+                <p class="mt-2 text-gray-600">
+                    Your subscription has been activated successfully.
+                </p>
+                
+                {% if amount and currency %}
+                <div class="mt-4 p-3 bg-green-50 rounded-md">
+                    <p class="text-sm text-green-800">
+                        Amount Paid: <span class="font-semibold">{{ currency }} {{ amount }}</span>
+                    </p>
+                </div>
+                {% endif %}
+                
+                {% if session_id %}
+                <div class="mt-2">
+                    <p class="text-xs text-gray-500">Transaction ID: {{ session_id }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="mt-6 space-y-3">
+                    <a href="{% url 'dashboard' %}" 
+                       class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Go to Dashboard
+                    </a>
+                    
+                    <a href="{% url 'payments:subscription_plans' %}" 
+                       class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        View My Subscription
+                    </a>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        You will receive an email confirmation shortly.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

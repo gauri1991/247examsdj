@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+
+{% block title %}Payment Cancelled - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-red-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div class="text-center">
+                <!-- Cancel Icon -->
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
+                    <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </div>
+                
+                <h1 class="mt-4 text-2xl font-bold text-gray-900">Payment Cancelled</h1>
+                <p class="mt-2 text-gray-600">
+                    Your payment was cancelled. No charges were made to your account.
+                </p>
+                
+                <div class="mt-6 space-y-3">
+                    <a href="{% url 'payments:subscription_plans' %}" 
+                       class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Try Again
+                    </a>
+                    
+                    <a href="{% url 'dashboard' %}" 
+                       class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Go to Dashboard
+                    </a>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-500">
+                        Need help? <a href="mailto:support@examportal.com" class="text-blue-600 hover:text-blue-500">Contact Support</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

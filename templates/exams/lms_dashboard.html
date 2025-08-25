@@ -1,0 +1,748 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Learning Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Shadcn UI inspired clean design system */
+:root {
+    /* Color Palette - Minimal and Professional */
+    --background: #ffffff;
+    --foreground: #09090b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --primary: #0f172a;
+    --primary-foreground: #f8fafc;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f8fafc;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --border: #e2e8f0;
+    --ring: #94a3b8;
+    
+    /* Typography Scale */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    
+    /* Spacing Scale */
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.5rem;
+    --spacing-3: 0.75rem;
+    --spacing-4: 1rem;
+    --spacing-6: 1.5rem;
+    --spacing-8: 2rem;
+    
+    /* Radius */
+    --radius: 0.5rem;
+}
+
+/* Reset and Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+.lms-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-6);
+    background: var(--background);
+    min-height: 100vh;
+}
+
+/* Typography System */
+.h1 {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.h2 {
+    font-size: var(--text-xl);
+    font-weight: 500;
+    color: var(--foreground);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.h3 {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    color: var(--foreground);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.body {
+    font-size: var(--text-base);
+    color: var(--foreground);
+    line-height: 1.5;
+}
+
+.caption {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+    line-height: 1.4;
+}
+
+.small {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    line-height: 1.3;
+}
+
+/* Header Section - Clean and Minimal */
+.header {
+    margin-bottom: var(--spacing-8);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-6);
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+}
+
+.breadcrumb-item {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+}
+
+.breadcrumb-separator {
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+}
+
+/* Card Component - Shadcn UI Style */
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--spacing-6);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.card-content {
+    padding: 0;
+}
+
+/* Button Component */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background: #1e293b;
+    text-decoration: none;
+    color: var(--primary-foreground);
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    border-color: var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--accent);
+    text-decoration: none;
+    color: var(--accent-foreground);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--foreground);
+    border-color: transparent;
+}
+
+.btn-ghost:hover {
+    background: var(--accent);
+    text-decoration: none;
+    color: var(--accent-foreground);
+}
+
+/* Layout Grid */
+.grid {
+    display: grid;
+    gap: var(--spacing-6);
+}
+
+.grid-2 {
+    grid-template-columns: 2fr 1fr;
+}
+
+.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Stats Section - Minimal Cards */
+.stats-section {
+    margin-bottom: var(--spacing-8);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-4);
+}
+
+.stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--spacing-4);
+    transition: border-color 0.2s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--ring);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: var(--spacing-2);
+}
+
+.stat-value {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--foreground);
+    margin-bottom: var(--spacing-1);
+}
+
+.stat-label {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+    font-weight: 500;
+}
+
+/* Action Items - Clean List Design */
+.action-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    padding: var(--spacing-4);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--foreground);
+    transition: all 0.2s ease;
+}
+
+.action-item:hover {
+    background: var(--muted);
+    border-color: var(--ring);
+    text-decoration: none;
+    color: var(--foreground);
+}
+
+.action-item-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    flex: 1;
+}
+
+.action-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--muted-foreground);
+}
+
+.action-title {
+    font-weight: 500;
+    color: var(--foreground);
+    margin-bottom: var(--spacing-1);
+}
+
+.action-description {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+}
+
+/* Progress Component */
+.progress {
+    width: 100%;
+    height: 8px;
+    background: var(--secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+}
+
+/* Badge Component */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    border-radius: calc(var(--radius) / 2);
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+}
+
+.badge-success {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.badge-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+/* Recent Activity - Simplified List */
+.recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+.recent-item {
+    display: flex;
+    justify-content: between;
+    align-items: flex-start;
+    padding: var(--spacing-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+}
+
+.recent-content {
+    flex: 1;
+}
+
+.recent-title {
+    font-weight: 500;
+    color: var(--foreground);
+    margin-bottom: var(--spacing-1);
+    font-size: var(--text-sm);
+}
+
+.recent-meta {
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-8);
+    background: var(--muted);
+    border-radius: var(--radius);
+    border: 1px dashed var(--border);
+}
+
+.empty-state-icon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-4);
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: var(--text-lg);
+    font-weight: 500;
+    color: var(--foreground);
+    margin-bottom: var(--spacing-2);
+}
+
+.empty-state-description {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+    margin-bottom: var(--spacing-4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .lms-container {
+        padding: var(--spacing-4);
+    }
+    
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-4);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Focus States for Accessibility */
+.btn:focus,
+.action-item:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lms-container">
+    <!-- Header Section -->
+    <header class="header">
+        <div class="breadcrumb">
+            <span class="breadcrumb-item">Dashboard</span>
+            <span class="breadcrumb-separator">/</span>
+            <span class="breadcrumb-item">Learning Management</span>
+        </div>
+        <div class="header-content">
+            <div>
+                <h1 class="h1">Learning Management System</h1>
+                <p class="caption">Manage educational content and track learning progress</p>
+            </div>
+            <a href="{% url 'teacher-content-management' %}" class="btn btn-primary">
+                Create Content
+            </a>
+        </div>
+    </header>
+
+    <!-- Key Metrics -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Total Concepts</div>
+                </div>
+                <div class="stat-value">{{ total_nodes|default:"0" }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">With Content</div>
+                </div>
+                <div class="stat-value">{{ nodes_with_content|default:"0" }}</div>
+                <div class="small">{{ coverage_percentage|default:"0" }}% coverage</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Your Content</div>
+                </div>
+                <div class="stat-value">{{ teacher_content_count|default:"0" }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-label">Active Exams</div>
+                </div>
+                <div class="stat-value">{{ exams_with_syllabus|default:"0" }}</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-2">
+        <!-- Primary Actions -->
+        <div>
+            <!-- Knowledge Management -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h2">Knowledge Management</h2>
+                </div>
+                <div class="card-content">
+                    <div class="action-list">
+                        <a href="{% url 'knowledge:topic_browser' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Topic Browser</div>
+                                    <div class="action-description">Browse global subjects and topic taxonomy</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+
+                        <a href="{% url 'knowledge:exam_topic_selector' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Topic Selector</div>
+                                    <div class="action-description">Import topics for exam creation</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Management -->
+            <div class="card" style="margin-top: var(--spacing-6);">
+                <div class="card-header">
+                    <h2 class="h2">Content Management</h2>
+                </div>
+                <div class="card-content">
+                    <div class="action-list">
+                        <a href="{% url 'teacher-content-management' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Content Dashboard</div>
+                                    <div class="action-description">View and manage all learning materials</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+
+                        <a href="{% url 'teacher-content-management' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Create New Content</div>
+                                    <div class="action-description">Build interactive learning materials</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+
+                        <a href="{% url 'teacher-content-management' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-7H5m14 14H5"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Content Library</div>
+                                    <div class="action-description">Browse and edit existing content</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Tools -->
+            <div class="card" style="margin-top: var(--spacing-6);">
+                <div class="card-header">
+                    <h2 class="h2">Learning Tools</h2>
+                </div>
+                <div class="card-content">
+                    <div class="action-list">
+                        <a href="{% url 'syllabus-tracker' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Syllabus Tracker</div>
+                                    <div class="action-description">Monitor student progress across topics</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+
+                        <a href="{% url 'teacher-content-management' %}?show=analytics" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Analytics</div>
+                                    <div class="action-description">Content performance insights</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+
+                        <a href="{% url 'knowledge:topic_browser' %}" class="action-item">
+                            <div class="action-item-content">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <div>
+                                    <div class="action-title">Global Topics</div>
+                                    <div class="action-description">Browse global topic taxonomy and templates</div>
+                                </div>
+                            </div>
+                            <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside>
+            <!-- Recent Activity -->
+            {% if has_recent_content %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h3">Recent Content</h3>
+                </div>
+                <div class="card-content">
+                    <div class="recent-list">
+                        {% for content in recent_teacher_content|slice:":3" %}
+                        <div class="recent-item">
+                            <div class="recent-content">
+                                <div class="recent-title">{{ content.title }}</div>
+                                <div class="recent-meta">{{ content.node.title }}</div>
+                            </div>
+                            <a href="{% url 'edit-learning-content' content.id %}" class="btn btn-ghost" style="padding: var(--spacing-2);">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div style="margin-top: var(--spacing-4);">
+                        <a href="{% url 'teacher-content-management' %}" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                            View All Content
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            {% if needs_content_attention %}
+            <div class="card" style="margin-top: var(--spacing-6);">
+                <div class="card-header">
+                    <h3 class="h3">Content Needed</h3>
+                    <span class="badge badge-info">{{ concepts_needing_content.count }}</span>
+                </div>
+                <div class="card-content">
+                    <div class="recent-list">
+                        {% for concept in concepts_needing_content|slice:":3" %}
+                        <div class="recent-item">
+                            <div class="recent-content">
+                                <div class="recent-title">{{ concept.title }}</div>
+                                <div class="recent-meta">{{ concept.syllabus.exam.name }}</div>
+                            </div>
+                            <a href="{% url 'create-learning-content' concept.id %}" class="btn btn-primary" style="font-size: var(--text-xs); padding: var(--spacing-1) var(--spacing-2);">
+                                Create
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Empty State -->
+            {% if not has_recent_content and teacher_content_count == 0 %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <div class="empty-state-title">Start Creating Content</div>
+                <div class="empty-state-description">
+                    Create your first learning material to help students succeed.
+                </div>
+                <a href="{% url 'teacher-content-management' %}" class="btn btn-primary">
+                    Browse Concepts
+                </a>
+            </div>
+            {% endif %}
+        </aside>
+    </div>
+</div>
+{% endblock %}

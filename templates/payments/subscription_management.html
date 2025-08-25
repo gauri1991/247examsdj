@@ -1,0 +1,514 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Subscription Management - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .enhanced-input {
+        background: linear-gradient(to right, #f9fafb, #ffffff);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .enhanced-input:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .enhanced-input:focus {
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Subscription Management</h1>
+                    <p class="mt-2 text-sm text-gray-600">Manage subscription plans and user subscriptions</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'admin-management' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to Admin
+                    </a>
+                    <button onclick="showCreatePlanModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create New Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Plans</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ plans.count }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Subscriptions</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ stats.active_subscriptions }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Monthly Revenue</dt>
+                                <dd class="text-2xl font-bold text-gray-900">${{ stats.total_revenue|floatformat:2 }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Active Discounts</dt>
+                                <dd class="text-2xl font-bold text-gray-900">{{ active_discounts }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Plans Section -->
+        <div class="bg-white shadow-lg rounded-lg mb-8">
+            <div class="section-header">
+                <h2 class="text-xl font-semibold">Subscription Plans</h2>
+                <p class="text-sm opacity-90 mt-1">Manage your subscription tiers and pricing</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {% for plan in plans %}
+                    <div class="border rounded-lg hover:shadow-lg transition-shadow duration-200 {% if plan.is_popular %}border-blue-500 shadow-md{% else %}border-gray-200{% endif %}">
+                        {% if plan.is_popular %}
+                        <div class="bg-blue-500 text-white text-center py-2 rounded-t-lg text-sm font-medium">
+                            Most Popular
+                        </div>
+                        {% endif %}
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900">{{ plan.name }}</h3>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editPlan('{{ plan.id }}')" class="text-blue-600 hover:text-blue-800">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button onclick="togglePlanStatus('{{ plan.id }}', {{ plan.is_active|yesno:'false,true' }})" class="{% if plan.is_active %}text-red-600 hover:text-red-800{% else %}text-green-600 hover:text-green-800{% endif %}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            {% if plan.is_active %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                            {% else %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            {% endif %}
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="text-3xl font-bold text-gray-900 mb-2">
+                                ${{ plan.price }}
+                                <span class="text-base font-normal text-gray-500">/{{ plan.billing_cycle }}</span>
+                            </div>
+                            
+                            <p class="text-sm text-gray-600 mb-4">{{ plan.description }}</p>
+                            
+                            <div class="space-y-2 mb-4">
+                                {% for feature in plan.features_list %}
+                                <div class="flex items-start text-sm">
+                                    <svg class="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span class="text-gray-700">{{ feature }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="pt-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-500">Subscribers</span>
+                                    <span class="font-semibold text-gray-900">{{ plan.subscriptions.count }}</span>
+                                </div>
+                                {% if plan.trial_days > 0 %}
+                                <div class="flex items-center justify-between text-sm mt-2">
+                                    <span class="text-gray-500">Trial Period</span>
+                                    <span class="font-semibold text-gray-900">{{ plan.trial_days }} days</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-span-3 text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No subscription plans</h3>
+                        <p class="mt-1 text-sm text-gray-500">Get started by creating a new subscription plan.</p>
+                        <div class="mt-6">
+                            <button onclick="showCreatePlanModal()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Create First Plan
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Subscriptions Section -->
+        <div class="bg-white shadow-lg rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-900">Active Subscriptions</h2>
+                <div class="flex items-center space-x-2">
+                    <input type="text" placeholder="Search subscriptions..." class="enhanced-input px-3 py-1.5 text-sm rounded-md">
+                    <select class="enhanced-input px-3 py-1.5 text-sm rounded-md">
+                        <option value="">All Plans</option>
+                        {% for plan in plans %}
+                        <option value="{{ plan.id }}">{{ plan.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="enhanced-input px-3 py-1.5 text-sm rounded-md">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="trial">Trial</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auto Renew</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for subscription in subscriptions %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-gray-700">{{ subscription.user.username|first|upper }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ subscription.user.get_full_name|default:subscription.user.username }}</div>
+                                        <div class="text-sm text-gray-500">{{ subscription.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ subscription.plan.name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if subscription.status == 'active' %}bg-green-100 text-green-800
+                                    {% elif subscription.status == 'trial' %}bg-blue-100 text-blue-800
+                                    {% elif subscription.status == 'cancelled' %}bg-red-100 text-red-800
+                                    {% elif subscription.status == 'expired' %}bg-gray-100 text-gray-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ subscription.status|title }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ subscription.start_date|date:"M d, Y" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ subscription.end_date|date:"M d, Y" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if subscription.auto_renew %}
+                                <span class="text-green-600">Yes</span>
+                                {% else %}
+                                <span class="text-gray-400">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="viewSubscriptionDetails('{{ subscription.id }}')" class="text-blue-600 hover:text-blue-900 mr-2">View</button>
+                                {% if subscription.status == 'active' %}
+                                <button onclick="cancelSubscription('{{ subscription.id }}')" class="text-red-600 hover:text-red-900">Cancel</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                No active subscriptions found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Plan Modal -->
+<div id="createPlanModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="hideCreatePlanModal()"></div>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <form onsubmit="createPlan(event)">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Create New Subscription Plan</h3>
+                    
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Plan Name</label>
+                            <input type="text" name="name" required class="enhanced-input w-full px-3 py-2 rounded-md">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Plan Type</label>
+                            <select name="plan_type" required class="enhanced-input w-full px-3 py-2 rounded-md">
+                                <option value="">Select type</option>
+                                <option value="basic">Basic</option>
+                                <option value="pro">Pro</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                            <input type="number" name="price" step="0.01" required class="enhanced-input w-full px-3 py-2 rounded-md">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Billing Cycle</label>
+                            <select name="billing_cycle" required class="enhanced-input w-full px-3 py-2 rounded-md">
+                                <option value="">Select cycle</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                                <option value="lifetime">Lifetime</option>
+                            </select>
+                        </div>
+                        
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea name="description" rows="3" class="enhanced-input w-full px-3 py-2 rounded-md"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Max Tests</label>
+                            <input type="number" name="max_tests" class="enhanced-input w-full px-3 py-2 rounded-md" placeholder="-1 for unlimited">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Max Questions</label>
+                            <input type="number" name="max_questions" class="enhanced-input w-full px-3 py-2 rounded-md" placeholder="-1 for unlimited">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Trial Days</label>
+                            <input type="number" name="trial_days" value="0" class="enhanced-input w-full px-3 py-2 rounded-md">
+                        </div>
+                        
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Features</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="pdf_extraction" class="mr-2">
+                                    <span class="text-sm">PDF Extraction</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="analytics_access" class="mr-2">
+                                    <span class="text-sm">Advanced Analytics</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="priority_support" class="mr-2">
+                                    <span class="text-sm">Priority Support</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="custom_branding" class="mr-2">
+                                    <span class="text-sm">Custom Branding</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="api_access" class="mr-2">
+                                    <span class="text-sm">API Access</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Create Plan
+                    </button>
+                    <button type="button" onclick="hideCreatePlanModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showCreatePlanModal() {
+    document.getElementById('createPlanModal').classList.remove('hidden');
+}
+
+function hideCreatePlanModal() {
+    document.getElementById('createPlanModal').classList.add('hidden');
+}
+
+function createPlan(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = {
+        action: 'create_plan'
+    };
+    
+    for (let [key, value] of formData.entries()) {
+        if (key === 'pdf_extraction' || key === 'analytics_access' || key === 'priority_support' || 
+            key === 'custom_branding' || key === 'api_access') {
+            data[key] = formData.has(key);
+        } else {
+            data[key] = value;
+        }
+    }
+    
+    fetch('/payments/admin/subscriptions/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            location.reload();
+        } else {
+            alert(result.error || 'Error creating plan');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating plan');
+    });
+}
+
+function editPlan(planId) {
+    // For now, redirect to Django admin
+    window.open(`/admin/payments/subscriptionplan/${planId}/change/`, '_blank');
+}
+
+function togglePlanStatus(planId, activate) {
+    const action = activate ? 'activate' : 'deactivate';
+    if (confirm(`Are you sure you want to ${action} this plan?`)) {
+        // Implementation would go here
+        alert('Status update feature coming soon!');
+    }
+}
+
+function viewSubscriptionDetails(subscriptionId) {
+    // Implementation would go here
+    alert('Subscription details view coming soon!');
+}
+
+function cancelSubscription(subscriptionId) {
+    if (confirm('Are you sure you want to cancel this subscription?')) {
+        fetch('/payments/api/cancel-subscription/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({
+                subscription_id: subscriptionId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Error cancelling subscription');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

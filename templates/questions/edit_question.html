@@ -1,0 +1,784 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Edit Question - {{ question.question_text|truncatewords:5 }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'question-bank' %}" class="hover:text-gray-700 transition-colors duration-150">Question Banks</a>
+        <span class="text-gray-400">/</span>
+        <a href="{% url 'question-bank-detail' question.question_bank.id %}" class="hover:text-gray-700 transition-colors duration-150">{{ question.question_bank.name|truncatechars:20 }}</a>
+        <span class="text-gray-400">/</span>
+        <span class="text-gray-900 font-medium">Edit Question</span>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex items-center">
+            <a href="{% url 'question-bank-detail' question.question_bank.id %}" class="mr-4 text-gray-400 hover:text-gray-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Edit Question</h1>
+                <p class="mt-1 text-sm text-gray-500">Update question in {{ question.question_bank.name }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Question Info -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if question.question_type == 'mcq' %}bg-blue-100 text-blue-800{% elif question.question_type == 'multi_select' %}bg-purple-100 text-purple-800{% elif question.question_type == 'true_false' %}bg-green-100 text-green-800{% elif question.question_type == 'fill_blank' %}bg-yellow-100 text-yellow-800{% elif question.question_type == 'essay' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ question.get_question_type_display }}
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if question.difficulty == 'easy' %}bg-green-100 text-green-800{% elif question.difficulty == 'medium' %}bg-yellow-100 text-yellow-800{% elif question.difficulty == 'hard' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ question.get_difficulty_display }}
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ question.marks }} point{{ question.marks|pluralize }}
+                </span>
+                {% if question.time_limit %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ question.time_limit }}s
+                </span>
+                {% endif %}
+            </div>
+            <div class="text-sm text-gray-500">
+                Last updated {{ question.updated_at|timesince }} ago
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-5xl">
+        <form method="POST" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Question Type Selection -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Question Type</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150" for="type_mcq">
+                        <input type="radio" name="question_type" value="mcq" id="type_mcq" class="sr-only" {% if question.question_type == 'mcq' %}checked{% endif %}>
+                        <div class="question-type-icon bg-blue-100 text-blue-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium text-gray-900">Multiple Choice</div>
+                            <div class="text-sm text-gray-500">Single correct answer</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150" for="type_multi_select">
+                        <input type="radio" name="question_type" value="multi_select" id="type_multi_select" class="sr-only" {% if question.question_type == 'multi_select' %}checked{% endif %}>
+                        <div class="question-type-icon bg-purple-100 text-purple-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium text-gray-900">Multi-Select</div>
+                            <div class="text-sm text-gray-500">Multiple correct answers</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150" for="type_true_false">
+                        <input type="radio" name="question_type" value="true_false" id="type_true_false" class="sr-only" {% if question.question_type == 'true_false' %}checked{% endif %}>
+                        <div class="question-type-icon bg-green-100 text-green-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium text-gray-900">True/False</div>
+                            <div class="text-sm text-gray-500">Binary choice</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150" for="type_fill_blank">
+                        <input type="radio" name="question_type" value="fill_blank" id="type_fill_blank" class="sr-only" {% if question.question_type == 'fill_blank' %}checked{% endif %}>
+                        <div class="question-type-icon bg-yellow-100 text-yellow-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium text-gray-900">Fill in the Blank</div>
+                            <div class="text-sm text-gray-500">Text input answer</div>
+                        </div>
+                    </label>
+                    
+                    <label class="flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150" for="type_essay">
+                        <input type="radio" name="question_type" value="essay" id="type_essay" class="sr-only" {% if question.question_type == 'essay' %}checked{% endif %}>
+                        <div class="question-type-icon bg-red-100 text-red-600">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-medium text-gray-900">Essay</div>
+                            <div class="text-sm text-gray-500">Long-form response</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Basic Question Information -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Question Details</h3>
+                
+                <div class="space-y-6">
+                    <!-- Question Text -->
+                    <div>
+                        <label for="question_text" class="block text-sm font-medium text-gray-700 mb-1">Question Text <span class="text-red-500">*</span></label>
+                        <div class="border border-gray-300 rounded-md overflow-hidden">
+                            <div id="question-editor" class="min-h-[200px] p-3"></div>
+                        </div>
+                        <textarea name="question_text" id="question_text" class="hidden" required>{{ question.question_text|safe }}</textarea>
+                        <p class="mt-1 text-sm text-gray-500">Enter your question text. Use the toolbar above for rich formatting.</p>
+                    </div>
+                    
+                    <!-- Question Image -->
+                    <div>
+                        <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Question Image</label>
+                        {% if question.image %}
+                        <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <img src="{{ question.image.url }}" alt="Current question image" class="w-20 h-20 object-cover rounded-lg border border-gray-200">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Current Image</p>
+                                    <p class="text-sm text-gray-500">Upload a new image to replace this one</p>
+                                </div>
+                                <label class="relative cursor-pointer">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="remove_image" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2">
+                                        <span class="text-sm text-red-600">Remove image</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors duration-150">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="image" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                                        <span>{% if question.image %}Upload new image{% else %}Upload an image{% endif %}</span>
+                                        <input id="image" name="image" type="file" accept="image/*" class="sr-only">
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Options Section (Dynamic based on type) -->
+            <div id="options-section" class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Answer Options</h3>
+                
+                <!-- MCQ/Multi-Select Options -->
+                <div id="mcq-options" class="space-y-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-sm text-gray-600">Edit answer options for your question</p>
+                        <button type="button" id="add-option" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add Option
+                        </button>
+                    </div>
+                    
+                    <div id="options-container">
+                        {% for option in question.options.all %}
+                        <div class="flex items-start space-x-3 p-4 border {% if option.is_correct %}border-green-300 bg-green-50{% else %}border-gray-200{% endif %} rounded-lg" data-option="{{ forloop.counter }}">
+                            <div class="flex-shrink-0 mt-1">
+                                <input type="{% if question.question_type == 'multi_select' %}checkbox{% else %}radio{% endif %}" 
+                                       name="correct_option{% if question.question_type == 'multi_select' %}[]{% endif %}" 
+                                       value="{{ forloop.counter }}" 
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300{% if question.question_type == 'multi_select' %} rounded{% endif %}"
+                                       {% if option.is_correct %}checked{% endif %}>
+                            </div>
+                            <div class="flex-1">
+                                <input type="text" 
+                                       name="option_{{ forloop.counter }}" 
+                                       value="{{ option.option_text }}"
+                                       placeholder="Enter option text..."
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       required>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button type="button" onclick="removeOption({{ forloop.counter }})" 
+                                        class="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded p-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- True/False Options -->
+                <div id="true-false-options" class="hidden space-y-4">
+                    <p class="text-sm text-gray-600 mb-4">Select the correct answer</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="radio" name="correct_answer" value="true" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-3"
+                                   {% if question.correct_answers and 'true' in question.correct_answers %}checked{% endif %}>
+                            <span class="text-sm font-medium text-gray-900">True</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="correct_answer" value="false" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mr-3"
+                                   {% if question.correct_answers and 'false' in question.correct_answers %}checked{% endif %}>
+                            <span class="text-sm font-medium text-gray-900">False</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Fill in the Blank Options -->
+                <div id="fill-blank-options" class="hidden space-y-4">
+                    <div>
+                        <label for="correct_answers" class="block text-sm font-medium text-gray-700 mb-1">Correct Answers <span class="text-red-500">*</span></label>
+                        <textarea name="correct_answers" id="correct_answers" rows="3" 
+                                  placeholder="Enter correct answers, one per line. Multiple acceptable answers can be provided."
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{% if question.correct_answers %}{% for answer in question.correct_answers %}{{ answer }}{% if not forloop.last %}
+{% endif %}{% endfor %}{% endif %}</textarea>
+                        <p class="mt-1 text-sm text-gray-500">Enter all acceptable answers, one per line. Case sensitivity can be configured below.</p>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" name="case_sensitive" id="case_sensitive" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                               {% if question.case_sensitive %}checked{% endif %}>
+                        <label for="case_sensitive" class="text-sm text-gray-700">Case sensitive answers</label>
+                    </div>
+                </div>
+                
+                <!-- Essay Requirements -->
+                <div id="essay-options" class="hidden space-y-4">
+                    <p class="text-sm text-gray-600 mb-4">Set requirements for essay responses</p>
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="min_words" class="block text-sm font-medium text-gray-700 mb-1">Minimum Words</label>
+                            <input type="number" name="min_words" id="min_words" min="0" 
+                                   value="{{ question.min_words|default:'' }}"
+                                   class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <p class="mt-1 text-sm text-gray-500">Minimum word count required</p>
+                        </div>
+                        <div>
+                            <label for="max_words" class="block text-sm font-medium text-gray-700 mb-1">Maximum Words</label>
+                            <input type="number" name="max_words" id="max_words" min="0" 
+                                   value="{{ question.max_words|default:'' }}"
+                                   class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <p class="mt-1 text-sm text-gray-500">Maximum word count allowed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Settings -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Question Settings</h3>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Topic & Subtopic -->
+                    <div>
+                        <label for="topic" class="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+                        <input type="text" name="topic" id="topic" 
+                               value="{{ question.topic|default:'' }}"
+                               placeholder="e.g., Algebra, Geometry"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <p class="mt-1 text-sm text-gray-500">Main topic or subject area</p>
+                    </div>
+                    
+                    <div>
+                        <label for="subtopic" class="block text-sm font-medium text-gray-700 mb-1">Subtopic</label>
+                        <input type="text" name="subtopic" id="subtopic" 
+                               value="{{ question.subtopic|default:'' }}"
+                               placeholder="e.g., Linear Equations, Quadratic Functions"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <p class="mt-1 text-sm text-gray-500">Specific subtopic within the main topic</p>
+                    </div>
+                    
+                    <!-- Difficulty Level -->
+                    <div>
+                        <label for="difficulty" class="block text-sm font-medium text-gray-700 mb-1">Difficulty Level</label>
+                        <select name="difficulty" id="difficulty" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="easy" {% if question.difficulty == 'easy' %}selected{% endif %}>🟢 Easy</option>
+                            <option value="medium" {% if question.difficulty == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                            <option value="hard" {% if question.difficulty == 'hard' %}selected{% endif %}>🔴 Hard</option>
+                            <option value="expert" {% if question.difficulty == 'expert' %}selected{% endif %}>🟣 Expert</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">How challenging is this question?</p>
+                    </div>
+                    
+                    <!-- Marks -->
+                    <div>
+                        <label for="marks" class="block text-sm font-medium text-gray-700 mb-1">Marks/Points</label>
+                        <div class="relative">
+                            <input type="number" name="marks" id="marks" 
+                                   value="{{ question.marks }}"
+                                   min="0.5" step="0.5"
+                                   class="block w-full px-3 py-2 pr-16 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 text-sm">points</span>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">Points awarded for correct answer</p>
+                    </div>
+                    
+                    <!-- Time Limit -->
+                    <div>
+                        <label for="time_limit" class="block text-sm font-medium text-gray-700 mb-1">Time Limit</label>
+                        <div class="relative">
+                            <input type="number" name="time_limit" id="time_limit" 
+                                   value="{{ question.time_limit|default:'' }}"
+                                   min="10" step="10"
+                                   placeholder="120"
+                                   class="block w-full px-3 py-2 pr-20 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 text-sm">seconds</span>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">Optional time limit for answering (leave blank for no limit)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Explanation Section -->
+            <div class="bg-white shadow rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Explanation (Optional)</h3>
+                
+                <div>
+                    <label for="explanation" class="block text-sm font-medium text-gray-700 mb-1">Answer Explanation</label>
+                    <div class="border border-gray-300 rounded-md overflow-hidden">
+                        <div id="explanation-editor" class="min-h-[200px] p-3"></div>
+                    </div>
+                    <textarea name="explanation" id="explanation" class="hidden">{{ question.explanation|safe }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500">Provide an explanation that will be shown after the question is answered</p>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-8 border-t border-gray-200">
+                <a href="{% url 'question-bank-detail' question.question_bank.id %}" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Cancel
+                </a>
+                <button type="button" id="preview-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Preview Question
+                </button>
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Update Question
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 50;">
+    <div class="relative top-20 mx-auto p-5 border max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Question Preview</h3>
+            <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="previewContent" class="space-y-4">
+            <!-- Preview content will be generated here -->
+        </div>
+        
+        <div class="flex justify-end pt-4 border-t border-gray-200">
+            <button onclick="closePreviewModal()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Close Preview</button>
+        </div>
+    </div>
+</div>
+
+<!-- Include Quill CSS -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+<style>
+/* Question type selection styling */
+.question-type-option input:checked + .question-type-icon {
+    @apply bg-primary-100 text-primary-600;
+}
+
+.question-type-option input:checked ~ div {
+    @apply text-primary-900;
+}
+
+.question-type-option.selected {
+    @apply border-primary-500 bg-primary-50;
+}
+
+/* Rich text editor enhancements */
+.ql-toolbar {
+    @apply border-t border-l border-r border-gray-300 bg-gray-50;
+}
+
+.ql-container {
+    @apply border-b border-l border-r border-gray-300;
+}
+
+.ql-editor {
+    @apply min-h-[120px];
+}
+
+/* Option styling */
+.option-item {
+    @apply flex items-start space-x-3 p-4 border border-gray-200 rounded-lg;
+}
+
+.option-item.correct {
+    @apply border-green-300 bg-green-50;
+}
+
+/* Drag and drop styling */
+.drag-over {
+    @apply border-primary-400 bg-primary-50;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .question-type-grid {
+        @apply grid-cols-1 gap-3;
+    }
+    
+    .content-grid {
+        @apply grid-cols-1;
+    }
+}
+</style>
+
+<!-- Include Quill JS -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Quill editors
+    const questionEditor = new Quill('#question-editor', {
+        theme: 'snow',
+        placeholder: 'Enter your question text here...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                ['link', 'formula'],
+                ['clean']
+            ]
+        }
+    });
+    
+    const explanationEditor = new Quill('#explanation-editor', {
+        theme: 'snow',
+        placeholder: 'Enter explanation for this question...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+    
+    // Set initial content from server
+    questionEditor.root.innerHTML = document.getElementById('question_text').value;
+    explanationEditor.root.innerHTML = document.getElementById('explanation').value;
+    
+    // Question type selection
+    const questionTypeInputs = document.querySelectorAll('input[name="question_type"]');
+    const mcqOptions = document.getElementById('mcq-options');
+    const trueFalseOptions = document.getElementById('true-false-options');
+    const fillBlankOptions = document.getElementById('fill-blank-options');
+    const essayOptions = document.getElementById('essay-options');
+    
+    let optionCount = {{ question.options.count|default:0 }};
+    
+    function updateQuestionType(type) {
+        // Hide all option sections
+        mcqOptions.classList.add('hidden');
+        trueFalseOptions.classList.add('hidden');
+        fillBlankOptions.classList.add('hidden');
+        essayOptions.classList.add('hidden');
+        
+        // Show relevant section
+        switch(type) {
+            case 'mcq':
+            case 'multi_select':
+                mcqOptions.classList.remove('hidden');
+                break;
+            case 'true_false':
+                trueFalseOptions.classList.remove('hidden');
+                break;
+            case 'fill_blank':
+                fillBlankOptions.classList.remove('hidden');
+                break;
+            case 'essay':
+                essayOptions.classList.remove('hidden');
+                break;
+        }
+        
+        // Update visual selection
+        questionTypeInputs.forEach(input => {
+            const option = input.closest('.question-type-option');
+            if (input.checked) {
+                option.classList.add('selected');
+            } else {
+                option.classList.remove('selected');
+            }
+        });
+    }
+    
+    function addOption() {
+        optionCount++;
+        const container = document.getElementById('options-container');
+        const currentType = document.querySelector('input[name="question_type"]:checked').value;
+        const isMultiSelect = currentType === 'multi_select';
+        
+        const optionHtml = `
+            <div class="flex items-start space-x-3 p-4 border border-gray-200 rounded-lg" data-option="${optionCount}">
+                <div class="flex-shrink-0 mt-1">
+                    <input type="${isMultiSelect ? 'checkbox' : 'radio'}" 
+                           name="correct_option${isMultiSelect ? '[]' : ''}" 
+                           value="${optionCount}" 
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300${isMultiSelect ? ' rounded' : ''}">
+                </div>
+                <div class="flex-1">
+                    <input type="text" 
+                           name="option_${optionCount}" 
+                           placeholder="Enter option text..."
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           required>
+                </div>
+                <div class="flex-shrink-0">
+                    <button type="button" onclick="removeOption(${optionCount})" 
+                            class="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', optionHtml);
+    }
+    
+    window.removeOption = function(optionNum) {
+        const option = document.querySelector(`[data-option="${optionNum}"]`);
+        if (option) {
+            option.remove();
+        }
+    };
+    
+    // Event listeners
+    questionTypeInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            updateQuestionType(e.target.value);
+        });
+    });
+    
+    document.getElementById('add-option').addEventListener('click', addOption);
+    
+    // Form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // Update hidden textareas with editor content
+        document.getElementById('question_text').value = questionEditor.root.innerHTML;
+        document.getElementById('explanation').value = explanationEditor.root.innerHTML;
+    });
+    
+    // Initialize with current question type
+    const currentType = document.querySelector('input[name="question_type"]:checked').value;
+    updateQuestionType(currentType);
+    
+    // Preview functionality (same as create question template)
+    document.getElementById('preview-btn').addEventListener('click', function() {
+        generatePreview();
+    });
+    
+    function generatePreview() {
+        const questionText = questionEditor.root.innerHTML;
+        const questionType = document.querySelector('input[name="question_type"]:checked').value;
+        const difficulty = document.getElementById('difficulty').value;
+        const marks = document.getElementById('marks').value;
+        const timeLimit = document.getElementById('time_limit').value;
+        
+        let previewHtml = `
+            <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="badge badge-${questionType.replace('_', '-')}">${getQuestionTypeLabel(questionType)}</span>
+                        <span class="badge badge-${difficulty === 'easy' ? 'success' : difficulty === 'medium' ? 'warning' : 'danger'}">${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}</span>
+                        <span class="badge badge-secondary">${marks} point${marks > 1 ? 's' : ''}</span>
+                        ${timeLimit ? `<span class="badge badge-info">${timeLimit}s</span>` : ''}
+                    </div>
+                </div>
+                
+                <div class="prose max-w-none">
+                    ${questionText}
+                </div>
+        `;
+        
+        // Add options based on question type
+        if (questionType === 'mcq' || questionType === 'multi_select') {
+            const options = document.querySelectorAll('[name^="option_"]');
+            if (options.length > 0) {
+                previewHtml += '<div class="space-y-2 mt-4"><h4 class="font-medium text-gray-900">Options:</h4>';
+                options.forEach((option, index) => {
+                    if (option.value.trim()) {
+                        previewHtml += `
+                            <div class="flex items-center space-x-3">
+                                <span class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center text-sm font-medium">
+                                    ${String.fromCharCode(65 + index)}
+                                </span>
+                                <span>${option.value}</span>
+                            </div>
+                        `;
+                    }
+                });
+                previewHtml += '</div>';
+            }
+        } else if (questionType === 'true_false') {
+            previewHtml += `
+                <div class="space-y-2 mt-4">
+                    <h4 class="font-medium text-gray-900">Options:</h4>
+                    <div class="flex space-x-6">
+                        <label class="flex items-center">
+                            <input type="radio" name="preview_tf" class="form-radio mr-2" disabled>
+                            <span>True</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="preview_tf" class="form-radio mr-2" disabled>
+                            <span>False</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        } else if (questionType === 'fill_blank') {
+            previewHtml += `
+                <div class="mt-4">
+                    <input type="text" placeholder="Enter your answer..." class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm max-w-md" disabled>
+                </div>
+            `;
+        } else if (questionType === 'essay') {
+            const minWords = document.getElementById('min_words').value;
+            const maxWords = document.getElementById('max_words').value;
+            let wordRequirement = '';
+            if (minWords || maxWords) {
+                wordRequirement = ` (${minWords ? `Min: ${minWords}` : ''}${minWords && maxWords ? ', ' : ''}${maxWords ? `Max: ${maxWords}` : ''} words)`;
+            }
+            previewHtml += `
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Your Answer${wordRequirement}</label>
+                    <textarea rows="6" placeholder="Enter your essay response..." class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" disabled></textarea>
+                </div>
+            `;
+        }
+        
+        previewHtml += '</div>';
+        
+        document.getElementById('previewContent').innerHTML = previewHtml;
+        document.getElementById('previewModal').classList.remove('hidden');
+    }
+    
+    function getQuestionTypeLabel(type) {
+        const labels = {
+            'mcq': 'Multiple Choice',
+            'multi_select': 'Multi-Select',
+            'true_false': 'True/False',
+            'fill_blank': 'Fill in the Blank',
+            'essay': 'Essay'
+        };
+        return labels[type] || type;
+    }
+    
+    window.closePreviewModal = function() {
+        document.getElementById('previewModal').classList.add('hidden');
+    };
+    
+    // Modal close on escape and click outside
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePreviewModal();
+        }
+    });
+    
+    document.getElementById('previewModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePreviewModal();
+        }
+    });
+    
+    // Image upload with drag and drop
+    const imageInput = document.getElementById('image');
+    const imageUploadArea = imageInput.closest('.border-dashed');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        imageUploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        imageUploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        imageUploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        imageUploadArea.classList.add('drag-over');
+    }
+    
+    function unhighlight(e) {
+        imageUploadArea.classList.remove('drag-over');
+    }
+    
+    imageUploadArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            imageInput.files = files;
+        }
+    }
+});
+</script>
+{% endblock %}

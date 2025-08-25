@@ -1,0 +1,547 @@
+/* Custom styles for ExamPortal */
+
+/* Loading animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Exam card hover effects */
+.exam-card {
+    transition: all 0.3s ease;
+}
+
+.exam-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Question navigation */
+.question-nav {
+    position: sticky;
+    top: 20px;
+}
+
+.question-nav-item {
+    @apply w-10 h-10 rounded border-2 border-gray-300 flex items-center justify-center text-sm font-medium cursor-pointer transition-all duration-200;
+}
+
+.question-nav-item.current {
+    @apply border-blue-500 bg-blue-50 text-blue-700;
+}
+
+.question-nav-item.answered {
+    @apply border-green-500 bg-green-50 text-green-700;
+}
+
+.question-nav-item.marked {
+    @apply border-yellow-500 bg-yellow-50 text-yellow-700;
+}
+
+.question-nav-item.not-answered {
+    @apply border-red-500 bg-red-50 text-red-700;
+}
+
+/* Timer styling */
+.timer {
+    @apply font-mono text-lg font-bold;
+}
+
+.timer.warning {
+    @apply text-orange-600;
+    animation: pulse 1s infinite;
+}
+
+.timer.critical {
+    @apply text-red-600;
+    animation: pulse 0.5s infinite;
+}
+
+/* Progress bar */
+.progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2.5;
+}
+
+.progress-bar-fill {
+    @apply bg-blue-600 h-2.5 rounded-full transition-all duration-300;
+}
+
+/* Custom buttons */
+.btn-primary {
+    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+}
+
+.btn-secondary {
+    @apply inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+}
+
+.btn-danger {
+    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
+}
+
+/* Form enhancements */
+.form-input {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.form-error {
+    @apply mt-1 text-sm text-red-600;
+}
+
+/* Card components */
+.card {
+    @apply bg-white overflow-hidden shadow rounded-lg;
+}
+
+.card-header {
+    @apply px-4 py-5 sm:px-6 border-b border-gray-200;
+}
+
+.card-body {
+    @apply px-4 py-5 sm:p-6;
+}
+
+.card-footer {
+    @apply px-4 py-4 sm:px-6 bg-gray-50 border-t border-gray-200;
+}
+
+/* Statistics cards */
+.stat-card {
+    @apply bg-white overflow-hidden shadow rounded-lg;
+}
+
+.stat-card:hover {
+    @apply shadow-md;
+    transform: translateY(-1px);
+}
+
+/* Loading states */
+.loading-spinner {
+    @apply inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900;
+}
+
+/* Custom table styles */
+.table {
+    @apply min-w-full divide-y divide-gray-200;
+}
+
+.table thead th {
+    @apply px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table tbody td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+
+.table tbody tr:nth-child(even) {
+    @apply bg-gray-50;
+}
+
+/* Question types styling */
+.question-type {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.question-type.mcq {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.question-type.essay {
+    @apply bg-green-100 text-green-800;
+}
+
+.question-type.true-false {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+/* Difficulty badges */
+.difficulty {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.difficulty.easy {
+    @apply bg-green-100 text-green-800;
+}
+
+.difficulty.medium {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.difficulty.hard {
+    @apply bg-red-100 text-red-800;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 640px) {
+    .question-nav {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .question-nav-item {
+        @apply w-8 h-8 text-xs;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break {
+        page-break-before: always;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    /* Add dark mode styles when needed */
+}
+
+/* Animation utilities */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+/* Focus improvements for accessibility */
+.focus-visible:focus {
+    @apply outline-none ring-2 ring-offset-2 ring-blue-500;
+}
+
+/* Custom checkbox and radio styles */
+.custom-checkbox {
+    @apply h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded;
+}
+
+.custom-radio {
+    @apply h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300;
+}
+
+.form-checkbox {
+    @apply h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded;
+}
+
+.form-radio {
+    @apply h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300;
+}
+
+/* Enhanced form styles */
+.form-help {
+    @apply mt-1 text-sm text-gray-500;
+}
+
+.form-label.required::after {
+    content: ' *';
+    @apply text-red-500;
+}
+
+/* Page section styles */
+.page-header {
+    @apply mb-8;
+}
+
+.page-title {
+    @apply text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate;
+}
+
+.page-subtitle {
+    @apply mt-1 text-sm text-gray-500;
+}
+
+.section-header {
+    @apply text-lg font-medium text-gray-900 mb-4;
+}
+
+.section-divider {
+    @apply border-b border-gray-200 pb-6;
+}
+
+/* Card improvements */
+.feature-card {
+    @apply bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-200;
+}
+
+.question-card {
+    @apply bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow duration-200;
+}
+
+.stats-grid {
+    @apply grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4;
+}
+
+.stats-card {
+    @apply bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-all duration-200;
+}
+
+.stats-card:hover {
+    transform: translateY(-1px);
+}
+
+/* Badge system */
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-danger {
+    @apply bg-red-100 text-red-800;
+}
+
+.badge-info {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.badge-secondary {
+    @apply bg-gray-100 text-gray-800;
+}
+
+/* Question type specific badges */
+.badge-mcq {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.badge-multi-select {
+    @apply bg-purple-100 text-purple-800;
+}
+
+.badge-true-false {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-fill-blank {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-essay {
+    @apply bg-red-100 text-red-800;
+}
+
+/* Layout improvements */
+.container-fluid {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.content-section {
+    @apply bg-white shadow rounded-lg p-6 mb-6;
+}
+
+.content-grid {
+    @apply grid grid-cols-1 gap-6;
+}
+
+@media (min-width: 768px) {
+    .content-grid {
+        @apply grid-cols-2;
+    }
+}
+
+@media (min-width: 1024px) {
+    .content-grid-3 {
+        @apply grid-cols-3;
+    }
+}
+
+/* Navigation breadcrumbs */
+.breadcrumb {
+    @apply flex items-center space-x-2 text-sm text-gray-500 mb-6;
+}
+
+.breadcrumb-item {
+    @apply hover:text-gray-700 transition-colors duration-150;
+}
+
+.breadcrumb-separator {
+    @apply text-gray-400;
+}
+
+/* Empty state styling */
+.empty-state {
+    @apply text-center py-12;
+}
+
+.empty-state-icon {
+    @apply mx-auto h-12 w-12 text-gray-400 mb-4;
+}
+
+.empty-state-title {
+    @apply text-sm font-medium text-gray-900 mb-2;
+}
+
+.empty-state-description {
+    @apply text-sm text-gray-500 mb-6;
+}
+
+/* Action bar */
+.action-bar {
+    @apply flex flex-wrap items-center justify-between gap-4 mb-6;
+}
+
+.action-group {
+    @apply flex items-center space-x-3;
+}
+
+/* Filter panel */
+.filter-panel {
+    @apply bg-white shadow rounded-lg p-6 mb-6;
+}
+
+.filter-grid {
+    @apply grid grid-cols-1 gap-4 md:gap-6;
+}
+
+@media (min-width: 768px) {
+    .filter-grid {
+        @apply grid-cols-2 lg:grid-cols-4;
+    }
+}
+
+/* Modal improvements */
+.modal-overlay {
+    @apply fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full;
+    z-index: 50;
+}
+
+.modal-container {
+    @apply relative top-20 mx-auto p-5 border max-w-md shadow-lg rounded-md bg-white;
+}
+
+.modal-header {
+    @apply flex items-center justify-between mb-4;
+}
+
+.modal-title {
+    @apply text-lg font-medium text-gray-900;
+}
+
+.modal-close {
+    @apply text-gray-400 hover:text-gray-600 transition-colors duration-150;
+}
+
+/* Question type selection */
+.question-type-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.question-type-option {
+    @apply flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-150;
+}
+
+.question-type-option.selected {
+    @apply border-primary-500 bg-primary-50;
+}
+
+.question-type-icon {
+    @apply w-8 h-8 rounded-full flex items-center justify-center mb-2;
+}
+
+/* Rich text editor styling */
+.editor-container {
+    @apply border border-gray-300 rounded-md overflow-hidden;
+}
+
+.editor-toolbar {
+    @apply border-b border-gray-200 bg-gray-50;
+}
+
+.editor-content {
+    @apply min-h-[200px] p-3;
+}
+
+/* Progress and loading states */
+.progress-container {
+    @apply w-full bg-gray-200 rounded-full h-2 mb-4;
+}
+
+.progress-bar-animated {
+    @apply bg-gradient-to-r from-primary-400 to-primary-600 h-2 rounded-full transition-all duration-300;
+}
+
+.skeleton {
+    @apply animate-pulse bg-gray-200 rounded;
+}
+
+.skeleton-text {
+    @apply h-4 bg-gray-200 rounded animate-pulse;
+}
+
+.skeleton-avatar {
+    @apply h-10 w-10 bg-gray-200 rounded-full animate-pulse;
+}
+
+/* Responsive text sizes */
+.responsive-text {
+    @apply text-sm sm:text-base;
+}
+
+.responsive-title {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+}
+
+/* Hover effects */
+.hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+.hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+}
+
+/* Focus states */
+.focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
+}

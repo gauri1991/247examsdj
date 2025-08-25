@@ -1,0 +1,1030 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ document.title|default:document.filename }} - Questions{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-4">
+                            <li>
+                                <a href="{% url 'pdf_extractor:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="flex-shrink-0 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_list' %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700">Documents</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="flex-shrink-0 h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-4 text-sm text-gray-500">{{ document.title|default:document.filename }}</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                    <h1 class="mt-2 text-2xl font-bold text-gray-900">{{ document.title|default:document.filename }}</h1>
+                    <p class="text-gray-600">Extracted questions and document analysis</p>
+                </div>
+                <div class="flex space-x-3">
+                    <!-- Edit Metadata Button -->
+                    <a href="{% url 'pdf_extractor:edit_metadata' document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Edit Metadata
+                    </a>
+                    
+                    <!-- Interactive Review Button - New Feature -->
+                    <a href="{% url 'pdf_extractor:interactive_review' document.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Interactive Review
+                    </a>
+                    
+                    <a href="{% url 'pdf_extractor:extracted_questions' document.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                        Manage Questions
+                    </a>
+                    {% if total_questions > 0 %}
+                        <a href="{% url 'pdf_extractor:convert_all' document.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                            </svg>
+                            Convert to Question Bank
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Document Status Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Document Processing Status</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <!-- Overall Status -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        {% if document.status == 'completed' %}
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium text-green-800">Ready for Review</span>
+                            </div>
+                        {% elif document.status == 'processing' %}
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2 animate-pulse"></div>
+                                <span class="text-sm font-medium text-yellow-800">Processing</span>
+                            </div>
+                        {% elif document.status == 'failed' %}
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-red-400 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium text-red-800">Processing Failed</span>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
+                                <span class="text-sm font-medium text-gray-800">{{ document.get_status_display }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="text-sm text-gray-500">
+                            Uploaded {{ document.uploaded_at|timesince }} ago
+                        </div>
+                        
+                        {% if document.confidence_score %}
+                            <div class="text-sm text-gray-500">
+                                Confidence: {{ document.confidence_score|floatformat:1 }}%
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        {% if document.status == 'completed' %}
+                            <!-- Region Review Button -->
+                            <a href="{% url 'pdf_extractor:region_review_interface' document.id %}" 
+                               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Review Regions
+                            </a>
+                        {% endif %}
+                        
+                        {% if total_questions > 0 %}
+                            <div class="relative inline-block text-left">
+                                <button type="button" id="export-menu-button" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    Export
+                                    <svg class="ml-2 -mr-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </button>
+                                
+                                <div id="export-menu" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                                    <div class="py-1">
+                                        <a href="{% url 'pdf_extractor:export_questions' document.id 'json' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                            </svg>
+                                            Export as JSON
+                                        </a>
+                                        <a href="{% url 'pdf_extractor:export_questions' document.id 'csv' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                            Export as CSV
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Page Progress Section -->
+                {% if document.page_count and document.page_count > 0 %}
+                <div class="mt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-700">Page Review Progress</h3>
+                        <div class="text-sm text-gray-500">
+                            <span class="font-medium">{{ pages_reviewed|default:0 }}</span> of <span class="font-medium">{{ document.page_count }}</span> pages reviewed
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-3">
+                        <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: {{ progress_percentage|default:0 }}%"></div>
+                    </div>
+                    
+                    <!-- Page Status Grid -->
+                    <div class="grid grid-cols-10 sm:grid-cols-12 md:grid-cols-15 lg:grid-cols-20 xl:grid-cols-24 gap-1">
+                        {% for page_status in page_statuses %}
+                        <div class="group relative">
+                            <a href="{% url 'pdf_extractor:interactive_review' document.id %}?page={{ page_status.page_number }}" 
+                               class="w-6 h-6 rounded-sm flex items-center justify-center text-xs font-medium transition-all duration-200 cursor-pointer hover:scale-110 transform
+                                {% if page_status.status == 'completed' %}
+                                    bg-green-500 text-white hover:bg-green-600
+                                {% elif page_status.status == 'no_questions' %}
+                                    bg-gray-400 text-white hover:bg-gray-500
+                                {% elif page_status.status == 'pending_unsupported' %}
+                                    bg-orange-500 text-white hover:bg-orange-600
+                                {% elif page_status.status == 'in_progress' %}
+                                    bg-yellow-500 text-white animate-pulse hover:bg-yellow-600
+                                {% elif page_status.status == 'error' %}
+                                    bg-red-500 text-white hover:bg-red-600
+                                {% else %}
+                                    bg-gray-200 text-gray-600 hover:bg-gray-300
+                                {% endif %}"
+                                title="Click to open page {{ page_status.page_number }} in interactive review">
+                                {{ page_status.page_number }}
+                            </a>
+                            
+                            <!-- Tooltip -->
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10"
+                                 style="{% if page_status.status == 'pending_unsupported' %}min-width: 200px; white-space: normal;{% else %}white-space: nowrap;{% endif %}">
+                                Page {{ page_status.page_number }}: {{ page_status.get_status_display }}
+                                {% if page_status.questions_found > 0 %}
+                                    <br>{{ page_status.questions_found }} question{{ page_status.questions_found|pluralize }}
+                                {% endif %}
+                                {% if page_status.status == 'pending_unsupported' and page_status.notes %}
+                                    <br><strong>Note:</strong> {{ page_status.notes|truncatewords:20 }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                            {% for page_num in page_range %}
+                            <div class="group relative">
+                                <a href="{% url 'pdf_extractor:interactive_review' document.id %}?page={{ page_num }}" 
+                                   class="w-6 h-6 rounded-sm flex items-center justify-center text-xs font-medium bg-gray-200 text-gray-600 hover:bg-gray-300 transition-all duration-200 cursor-pointer hover:scale-110 transform"
+                                   title="Click to open page {{ page_num }} in interactive review">
+                                    {{ page_num }}
+                                </a>
+                                
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                    Click to open page {{ page_num }} in interactive review
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Legend -->
+                    <div class="mt-3 flex flex-wrap gap-4 text-xs">
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-green-500 rounded-sm mr-1"></div>
+                            <span class="text-gray-600">Completed</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-gray-400 rounded-sm mr-1"></div>
+                            <span class="text-gray-600">No Questions</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-orange-500 rounded-sm mr-1"></div>
+                            <span class="text-gray-600">Unsupported Type</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-yellow-500 rounded-sm mr-1 animate-pulse"></div>
+                            <span class="text-gray-600">In Progress</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-gray-200 rounded-sm mr-1"></div>
+                            <span class="text-gray-600">Pending</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-4 h-4 bg-red-500 rounded-sm mr-1"></div>
+                            <span class="text-gray-600">Error</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Unsupported Question Types Alert -->
+        {% if unsupported_pages %}
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <div class="text-sm text-orange-700">
+                        <p>Unsupported question types 
+                            {% if unsupported_pages.0.reviewed_by %}
+                                (marked by {{ unsupported_pages.0.reviewed_by.get_full_name|default:unsupported_pages.0.reviewed_by.username }})
+                            {% endif %}
+                            on: 
+                            {% for page in unsupported_pages %}Page {{ page.page_number }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        </p>
+                    </div>
+                    <p class="mt-2 text-xs text-orange-600">
+                        These pages will need to be re-processed when support for these question types is added.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Statistics Cards -->
+        {% if stats %}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Total Questions</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{ stats.total_questions_found }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">High Confidence</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{ stats.high_confidence_questions }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Need Review</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{ stats.questions_requiring_review }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-500">Converted</p>
+                            <p class="text-2xl font-semibold text-gray-900">{{ stats.questions_converted }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Questions List -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <h2 class="text-lg font-semibold text-gray-900">Extracted Questions</h2>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <!-- Text Search Box -->
+                            <div class="relative">
+                                <input type="text" 
+                                       id="questionSearchBox" 
+                                       placeholder="Search questions..." 
+                                       class="w-full sm:w-64 px-3 py-1.5 pl-9 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <svg class="absolute left-2.5 top-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                <button type="button" 
+                                        id="clearTextSearchBtn" 
+                                        class="absolute right-2 top-1.5 h-5 w-5 text-gray-400 hover:text-gray-600 hidden"
+                                        title="Clear search">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Page Number Search Box -->
+                            <div class="relative">
+                                <input type="number" 
+                                       id="pageSearchBox" 
+                                       placeholder="Page" 
+                                       min="1" 
+                                       class="w-full sm:w-28 px-3 py-1.5 pl-8 pr-7 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <svg class="absolute left-2.5 top-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <button type="button" 
+                                        id="clearPageSearchBtn" 
+                                        class="absolute right-2 top-1.5 h-5 w-5 text-gray-400 hover:text-gray-600 hidden"
+                                        title="Clear page search">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {% if total_questions > 0 %}
+                            <span id="searchResultCount" class="text-sm text-gray-500">
+                                <span id="visibleCount">{{ total_questions }}</span> of {{ total_questions }} question{{ total_questions|pluralize }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if questions %}
+                <div id="questionsContainer" class="divide-y divide-gray-200">
+                    {% for question in questions %}
+                        <div class="question-item p-6 hover:bg-gray-50 transition-colors duration-150" 
+                             data-search-content="{{ question.question_text|lower|escapejs }} {{ question.get_question_type_display|lower|escapejs }} page {{ question.page_number }} {% for option in question.answer_options %}{{ option.text|lower|escapejs }}{% endfor %} {{ question.correct_answers|join:' '|lower|escapejs }}"
+                             data-page-number="{{ question.page_number }}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-3 mb-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if question.confidence_level == 'high' %}bg-green-100 text-green-800{% elif question.confidence_level == 'medium' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ question.get_confidence_level_display }}
+                                        </span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ question.get_question_type_display }}
+                                        </span>
+                                        <span class="text-xs text-gray-500">Page {{ question.page_number }}</span>
+                                        {% if question.is_converted %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                </svg>
+                                                Converted
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <h3 class="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
+                                        {{ question.question_text|truncatewords:20 }}
+                                    </h3>
+                                    
+                                    {% if question.answer_options %}
+                                        <div class="text-xs text-gray-500 mb-2">
+                                            <strong>Options:</strong>
+                                            {% for option in question.answer_options|slice:":3" %}
+                                                {{ option.letter|default:forloop.counter0|add:"A" }}) {{ option.text|truncatewords:5 }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                            {% if question.answer_options|length > 3 %}...{% endif %}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if question.correct_answers %}
+                                        <div class="text-xs text-gray-500">
+                                            <strong>Answer:</strong> {{ question.correct_answers|join:", " }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="flex-shrink-0 ml-4 flex space-x-2">
+                                    <a href="{% url 'pdf_extractor:review_question' question.id %}" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                        </svg>
+                                        Edit
+                                    </a>
+                                    {% if not question.is_converted %}
+                                        <a href="{% url 'pdf_extractor:convert_question' question.id %}" class="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                            </svg>
+                                            Convert
+                                        </a>
+                                    {% endif %}
+                                    <button type="button" onclick="confirmDeleteQuestion('{{ question.id }}', '{{ question.question_text|truncatewords:8|escapejs }}')" class="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- No Results Message (hidden by default) -->
+                <div id="noResultsMessage" class="p-12 text-center hidden">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No questions found</h3>
+                    <p class="mt-1 text-sm text-gray-500">Try adjusting your search terms</p>
+                </div>
+                
+                <!-- Pagination -->
+                {% if questions.has_other_pages %}
+                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {% if questions.has_previous %}
+                                <a href="?page={{ questions.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+                            {% endif %}
+                            {% if questions.has_next %}
+                                <a href="?page={{ questions.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+                            {% endif %}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Showing <span class="font-medium">{{ questions.start_index }}</span> to <span class="font-medium">{{ questions.end_index }}</span> of <span class="font-medium">{{ questions.paginator.count }}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                    {% if questions.has_previous %}
+                                        <a href="?page={{ questions.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% for num in questions.paginator.page_range %}
+                                        {% if questions.number == num %}
+                                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">{{ num }}</span>
+                                        {% else %}
+                                            <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ num }}</a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if questions.has_next %}
+                                        <a href="?page={{ questions.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        </a>
+                                    {% endif %}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No questions extracted</h3>
+                    <p class="mt-1 text-sm text-gray-500">
+                        {% if document.status == 'processing' %}
+                            The document is still being processed. Please wait...
+                        {% elif document.status == 'failed' %}
+                            Processing failed. Please try uploading the document again.
+                        {% else %}
+                            No questions were found in this document.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Question Search Functionality
+    const searchBox = document.getElementById('questionSearchBox');
+    const pageSearchBox = document.getElementById('pageSearchBox');
+    const clearTextBtn = document.getElementById('clearTextSearchBtn');
+    const clearPageBtn = document.getElementById('clearPageSearchBtn');
+    const questionsContainer = document.getElementById('questionsContainer');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    const visibleCountElement = document.getElementById('visibleCount');
+    const paginationElement = document.querySelector('.bg-white.px-4.py-3.flex.items-center.justify-between.border-t');
+    
+    if (searchBox && pageSearchBox && questionsContainer) {
+        const questionItems = questionsContainer.querySelectorAll('.question-item');
+        const totalQuestions = questionItems.length;
+        
+        // Store original content for restoration
+        const originalQuestionsHTML = questionsContainer.innerHTML;
+        const originalPaginationDisplay = paginationElement ? paginationElement.style.display : '';
+        
+        // Debug: Show all page numbers in current pagination
+        console.log('=== DEBUG: All page numbers in current view ===');
+        questionItems.forEach((item, index) => {
+            const pageNum = item.dataset.pageNumber;
+            console.log(`Question ${index + 1}: Page ${pageNum}`);
+        });
+        console.log('=== End debug ===');
+        
+        // Function to update clear button visibility
+        function updateClearButtons() {
+            // Show/hide text search clear button
+            if (searchBox.value.trim()) {
+                clearTextBtn.classList.remove('hidden');
+            } else {
+                clearTextBtn.classList.add('hidden');
+            }
+            
+            // Show/hide page search clear button
+            if (pageSearchBox.value.trim()) {
+                clearPageBtn.classList.remove('hidden');
+            } else {
+                clearPageBtn.classList.add('hidden');
+            }
+        }
+        
+        // Function to clear text search
+        function clearTextSearch() {
+            searchBox.value = '';
+            updateClearButtons();
+            performSearch();
+        }
+        
+        // Function to clear page search
+        function clearPageSearch() {
+            pageSearchBox.value = '';
+            updateClearButtons();
+            performSearch();
+        }
+        
+        // AJAX Search function - searches ALL questions in database
+        async function performSearch() {
+            const searchTerm = searchBox.value.trim();
+            const pageNumber = pageSearchBox.value.trim();
+            
+            console.log('AJAX Search triggered - Text:', searchTerm, 'Page:', pageNumber);
+            
+            // If both searches are empty, show original pagination
+            if (!searchTerm && !pageNumber) {
+                showOriginalResults();
+                return;
+            }
+            
+            try {
+                // Build API URL with search parameters
+                const documentId = '{{ document.id }}';
+                const url = `/pdf-extractor/api/search-questions/${documentId}/`;
+                const params = new URLSearchParams();
+                if (searchTerm) params.append('text', searchTerm);
+                if (pageNumber) params.append('page', pageNumber);
+                
+                console.log('Calling API:', url + '?' + params.toString());
+                
+                // Make AJAX call to search all questions
+                const response = await fetch(url + '?' + params.toString());
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('API returned', data.total_found, 'questions');
+                    displaySearchResults(data.questions);
+                    
+                    // Update visible count
+                    if (visibleCountElement) {
+                        visibleCountElement.textContent = data.total_found;
+                    }
+                } else {
+                    console.error('Search API error:', data.error);
+                    alert('Search failed: ' + data.error);
+                }
+                
+            } catch (error) {
+                console.error('Search request failed:', error);
+                alert('Search request failed. Please try again.');
+            }
+        }
+        
+        // Function to display search results from API
+        function displaySearchResults(questions) {
+            // Hide original pagination
+            if (paginationElement) {
+                paginationElement.style.display = 'none';
+            }
+            
+            // Clear current questions
+            questionsContainer.innerHTML = '';
+            
+            if (questions.length === 0) {
+                // Show no results message
+                noResultsMessage.classList.remove('hidden');
+            } else {
+                // Hide no results message
+                noResultsMessage.classList.add('hidden');
+                
+                // Create HTML for each question
+                questions.forEach(question => {
+                    const questionHTML = createQuestionHTML(question);
+                    questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+                });
+            }
+        }
+        
+        // Function to restore original paginated results
+        function showOriginalResults() {
+            console.log('Restoring original paginated view...');
+            
+            // Check if we need to redirect to page 1
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentPage = urlParams.get('page');
+            
+            if (currentPage && currentPage !== '1') {
+                // Redirect to page 1 to show default pagination
+                console.log('Redirecting to page 1 from page', currentPage);
+                const newUrl = window.location.pathname + '?page=1';
+                window.location.href = newUrl;
+                return;
+            }
+            
+            // If already on page 1 or no page param, just restore content
+            questionsContainer.innerHTML = originalQuestionsHTML;
+            
+            // Show original pagination
+            if (paginationElement) {
+                paginationElement.style.display = originalPaginationDisplay;
+            }
+            
+            // Hide no results message
+            noResultsMessage.classList.add('hidden');
+            
+            // Reset count to original
+            if (visibleCountElement) {
+                visibleCountElement.textContent = totalQuestions;
+            }
+            
+            console.log('Original view restored - showing', totalQuestions, 'questions');
+        }
+        
+        // Function to create HTML for a question (from API data)
+        function createQuestionHTML(question) {
+            const confidenceClass = question.confidence_level === 'High' ? 'bg-green-100 text-green-800' : 
+                                   question.confidence_level === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+            
+            const convertedBadge = question.is_converted ? 
+                `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    Converted
+                </span>` : '';
+            
+            const optionsHTML = question.answer_options && question.answer_options.length > 0 ? 
+                `<div class="text-xs text-gray-500 mb-2">
+                    <strong>Options:</strong>
+                    ${question.answer_options.slice(0, 3).map((option, index) => 
+                        `${String.fromCharCode(65 + index)}) ${option.text || option}`).join(', ')}
+                    ${question.answer_options.length > 3 ? '...' : ''}
+                </div>` : '';
+            
+            const answersHTML = question.correct_answers && question.correct_answers.length > 0 ? 
+                `<div class="text-xs text-gray-500">
+                    <strong>Answer:</strong> ${question.correct_answers.join(', ')}
+                </div>` : '';
+            
+            const convertButton = !question.is_converted ? 
+                `<a href="/pdf-extractor/question/${question.id}/convert/" class="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                    </svg>
+                    Convert
+                </a>` : '';
+            
+            const deleteButton = `<button type="button" onclick="confirmDeleteQuestion('${question.id}', '${question.question_text.substring(0, 50).replace(/'/g, "\\'").replace(/"/g, '\\"')}...')" class="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Delete
+            </button>`;
+            
+            return `
+                <div class="question-item p-6 hover:bg-gray-50 transition-colors duration-150 border-b border-gray-200">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${confidenceClass}">
+                                    ${question.confidence_level}
+                                </span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    ${question.question_type}
+                                </span>
+                                <span class="text-xs text-gray-500">Page ${question.page_number}</span>
+                                ${convertedBadge}
+                            </div>
+                            
+                            <h3 class="text-sm font-medium text-gray-900 mb-2 line-clamp-2">
+                                ${question.question_text.substring(0, 100)}${question.question_text.length > 100 ? '...' : ''}
+                            </h3>
+                            
+                            ${optionsHTML}
+                            ${answersHTML}
+                        </div>
+                        
+                        <div class="flex-shrink-0 ml-4 flex space-x-2">
+                            <a href="/pdf-extractor/question/${question.id}/review/" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                </svg>
+                                Edit
+                            </a>
+                            ${convertButton}
+                            ${deleteButton}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Highlight search terms in visible questions (safer version)
+        function highlightSearchTerms(term) {
+            removeHighlights(); // First remove existing highlights
+            
+            if (!term) return;
+            
+            questionItems.forEach(item => {
+                if (!item.classList.contains('hidden')) {
+                    // Only highlight in safe text elements
+                    const textElements = item.querySelectorAll('h3');
+                    textElements.forEach(element => {
+                        const originalText = element.textContent;
+                        if (originalText.toLowerCase().includes(term.toLowerCase())) {
+                            // Create safe regex that escapes special characters
+                            const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            const regex = new RegExp(`(${escapedTerm})`, 'gi');
+                            element.innerHTML = originalText.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Remove all highlights
+        function removeHighlights() {
+            const marks = questionsContainer.querySelectorAll('mark');
+            marks.forEach(mark => {
+                const parent = mark.parentNode;
+                parent.replaceChild(document.createTextNode(mark.textContent), mark);
+                parent.normalize();
+            });
+        }
+        
+        // Add event listeners for both search boxes
+        searchBox.addEventListener('input', function() {
+            updateClearButtons();
+            performSearch();
+        });
+        searchBox.addEventListener('keyup', function() {
+            updateClearButtons();
+            performSearch();
+        });
+        
+        pageSearchBox.addEventListener('input', function() {
+            updateClearButtons();
+            performSearch();
+        });
+        pageSearchBox.addEventListener('keyup', function() {
+            updateClearButtons();
+            performSearch();
+        });
+        
+        // Clear button event listeners
+        clearTextBtn.addEventListener('click', clearTextSearch);
+        clearPageBtn.addEventListener('click', clearPageSearch);
+        
+        // Clear search on Escape key
+        searchBox.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearTextSearch();
+            }
+        });
+        
+        pageSearchBox.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                clearPageSearch();
+            }
+        });
+        
+        // Initialize clear button visibility on page load
+        updateClearButtons();
+    }
+    
+    // Export menu toggle
+    const exportButton = document.getElementById('export-menu-button');
+    const exportMenu = document.getElementById('export-menu');
+    
+    if (exportButton && exportMenu) {
+        exportButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            exportMenu.classList.toggle('hidden');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!exportButton.contains(e.target) && !exportMenu.contains(e.target)) {
+                exportMenu.classList.add('hidden');
+            }
+        });
+    }
+});
+
+// Delete individual question confirmation
+function confirmDeleteQuestion(questionId, questionText) {
+    const message = `Are you sure you want to delete this question?\n\n"${questionText}..."\n\nThis action cannot be undone.`;
+    
+    if (confirm(message)) {
+        deleteQuestion(questionId);
+    }
+}
+
+// Delete individual question API call
+function deleteQuestion(questionId) {
+    const deleteButton = document.querySelector(`[onclick*="${questionId}"]`);
+    const originalText = deleteButton.innerHTML;
+    
+    // Show loading state
+    deleteButton.disabled = true;
+    deleteButton.innerHTML = `
+        <svg class="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Deleting...
+    `;
+    
+    fetch(`/pdf-extractor/api/question/${questionId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the question item from the DOM
+            const questionItem = deleteButton.closest('.question-item');
+            if (questionItem) {
+                questionItem.style.transition = 'all 0.3s ease';
+                questionItem.style.transform = 'translateX(-100%)';
+                questionItem.style.opacity = '0';
+                setTimeout(() => {
+                    questionItem.remove();
+                    // Update question count if displayed
+                    updateQuestionCountOnPage();
+                }, 300);
+            }
+            
+            // Show success message briefly
+            const successMsg = document.createElement('div');
+            successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg z-50';
+            successMsg.textContent = 'Question deleted successfully';
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 3000);
+            
+        } else {
+            alert('Error deleting question: ' + (data.error || 'Unknown error'));
+            // Restore button
+            deleteButton.disabled = false;
+            deleteButton.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting question. Please try again.');
+        // Restore button
+        deleteButton.disabled = false;
+        deleteButton.innerHTML = originalText;
+    });
+}
+
+// Helper function to get CSRF token from cookie
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Update question count after deletion
+function updateQuestionCountOnPage() {
+    const questionItems = document.querySelectorAll('.question-item');
+    const count = questionItems.length;
+    
+    // Update various count displays on the page
+    const visibleCountElement = document.getElementById('visibleCount');
+    if (visibleCountElement) {
+        visibleCountElement.textContent = count;
+    }
+    
+    // Update other question count displays
+    const countElements = document.querySelectorAll('[data-question-count]');
+    countElements.forEach(el => {
+        el.textContent = count;
+    });
+    
+    // If no questions left, show empty state
+    if (count === 0) {
+        const questionsContainer = document.getElementById('questionsContainer');
+        const noQuestionsMessage = document.querySelector('.text-center h3');
+        if (questionsContainer && !noQuestionsMessage) {
+            questionsContainer.innerHTML = `
+                <div class="p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">No questions extracted</h3>
+                    <p class="mt-1 text-sm text-gray-500">All questions have been deleted from this document.</p>
+                </div>
+            `;
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,47 @@
+# Production requirements
+# Install with: pip install -r requirements-production.txt
+
+# Include base requirements
+-r requirements.txt
+
+# Production web server
+gunicorn==21.2.0
+gevent==24.2.1
+
+# PostgreSQL adapter
+psycopg2-binary==2.9.9
+
+# AWS S3 storage (optional)
+boto3==1.34.20
+django-storages==1.14.2
+
+# Monitoring and logging
+sentry-sdk==1.40.0
+psutil==5.9.8
+prometheus-client==0.19.0
+
+# Security
+django-defender==0.9.7
+django-axes==6.1.1
+django-security==0.17.2
+
+# Performance
+django-cachalot==2.6.1
+django-silk==5.0.4
+
+# Backup utilities
+python-crontab==3.0.0
+
+# Email backend
+django-ses==3.5.2
+
+# Task monitoring
+flower==2.0.1
+
+# Additional security
+python-decouple==3.8
+cryptography==41.0.7
+
+# Health checks
+django-health-check==3.18.1
+django-watchman==1.3.0

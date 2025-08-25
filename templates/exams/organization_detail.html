@@ -1,0 +1,186 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ organization.name }} - Organization Details{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <a href="{% url 'exam-management' %}" class="hover:text-gray-700">Manage Exams</a>
+        <span class="text-gray-400">/</span>
+        <span class="text-gray-900 font-medium">{{ organization.name }}</span>
+    </nav>
+
+    <!-- Organization Header -->
+    <div class="bg-white shadow rounded-lg mb-8">
+        <div class="px-6 py-8">
+            <div class="flex items-start justify-between">
+                <div class="flex items-start space-x-6">
+                    {% if organization.logo %}
+                    <img src="{{ organization.logo.url }}" alt="{{ organization.name }}" class="w-20 h-20 rounded-lg object-cover">
+                    {% else %}
+                    <div class="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                        </svg>
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">{{ organization.name }}</h1>
+                        {% if organization.short_name %}
+                        <p class="text-lg text-gray-600 mt-1">{{ organization.short_name }}</p>
+                        {% endif %}
+                        <div class="flex items-center space-x-4 mt-3">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                       {% if organization.organization_type == 'government' %}bg-green-100 text-green-800
+                                       {% elif organization.organization_type == 'private' %}bg-blue-100 text-blue-800
+                                       {% elif organization.organization_type == 'university' %}bg-purple-100 text-purple-800
+                                       {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ organization.get_organization_type_display }}
+                            </span>
+                            <span class="text-sm text-gray-500">{{ exams.count }} exam{{ exams.count|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex space-x-3">
+                    <a href="{% url 'create-exam' %}?organization={{ organization.id }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Exam
+                    </a>
+                    {% if organization.website %}
+                    <a href="{{ organization.website }}" target="_blank" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                        </svg>
+                        Visit Website
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if organization.description %}
+            <div class="mt-6">
+                <p class="text-gray-700">{{ organization.description }}</p>
+            </div>
+            {% endif %}
+            
+            <!-- Contact Information -->
+            {% if organization.email or organization.phone or organization.address %}
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                {% if organization.email %}
+                <div class="flex items-center text-sm text-gray-600">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    {{ organization.email }}
+                </div>
+                {% endif %}
+                {% if organization.phone %}
+                <div class="flex items-center text-sm text-gray-600">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    {{ organization.phone }}
+                </div>
+                {% endif %}
+                {% if organization.address %}
+                <div class="flex items-start text-sm text-gray-600">
+                    <svg class="w-4 h-4 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    {{ organization.address }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Exams by Year -->
+    {% if exams_by_year %}
+    {% for year, year_exams in exams_by_year.items %}
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">
+                {% if year == 'Other' %}Unspecified Year{% else %}{{ year }}{% endif %}
+                <span class="text-sm font-normal text-gray-500 ml-2">({{ year_exams|length }} exam{{ year_exams|length|pluralize }})</span>
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for exam in year_exams %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            <a href="{% url 'exam-detail' exam.id %}" class="hover:text-blue-600">{{ exam.name }}</a>
+                        </h3>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {% if exam.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if exam.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if exam.description %}
+                    <p class="text-sm text-gray-600 mb-3">{{ exam.description|truncatewords:20 }}</p>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between text-sm text-gray-500">
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            {{ exam.tests_count }} test{{ exam.tests_count|pluralize }}
+                        </span>
+                        <span class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            {{ exam.total_attempts }} attempt{{ exam.total_attempts|pluralize }}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'exam-detail' exam.id %}" class="text-xs text-blue-600 hover:text-blue-800">View Details</a>
+                            {% if user.role in 'teacher,admin' %}
+                            <span class="text-gray-300">•</span>
+                            <a href="{% url 'edit-exam' exam.id %}" class="text-xs text-gray-600 hover:text-gray-800">Edit</a>
+                            <span class="text-gray-300">•</span>
+                            <a href="{% url 'exam-metadata-edit' exam.id %}" class="text-xs text-gray-600 hover:text-gray-800">Metadata</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white shadow rounded-lg">
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No exams found</h3>
+            <p class="mt-1 text-sm text-gray-500">This organization doesn't have any exams yet. Get started by creating the first exam.</p>
+            <div class="mt-6">
+                <a href="{% url 'create-exam' %}?organization={{ organization.id }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Create First Exam
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

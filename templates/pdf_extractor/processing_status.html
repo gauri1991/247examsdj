@@ -1,0 +1,519 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Processing {{ document.filename }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Processing PDF Document</h1>
+                    <p class="mt-1 text-gray-600">{{ document.filename }}</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'pdf_extractor:home' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        ← Back to Upload
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Processing Status Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Processing Status</h2>
+            </div>
+            
+            <div class="p-6">
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700" id="current-step-text">{{ job.current_step_display|default:job.get_current_step_display }}</span>
+                        <span class="text-sm text-gray-500" id="progress-percentage">{{ job.progress_percentage|default:0 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: {{ job.progress_percentage|default:0 }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Status Icon and Message -->
+                <div class="flex items-center justify-center mb-6">
+                    <div id="status-icon" class="w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                        {% if job.status == 'completed' %}
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        {% elif job.status == 'failed' %}
+                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                        {% else %}
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg class="animate-spin w-8 h-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="text-center mb-6">
+                    <h3 id="status-title" class="text-lg font-medium text-gray-900 mb-2">
+                        {% if job.status == 'completed' %}
+                            Processing Complete!
+                        {% elif job.status == 'failed' %}
+                            Processing Failed
+                        {% else %}
+                            Processing in Progress...
+                        {% endif %}
+                    </h3>
+                    <p id="status-message" class="text-gray-600">
+                        {% if job.status == 'completed' %}
+                            Your PDF has been successfully processed and questions have been extracted.
+                        {% elif job.status == 'failed' %}
+                            There was an error processing your PDF. Please try again or contact support.
+                        {% else %}
+                            Please wait while we extract questions from your PDF document.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Processing Steps -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-gray-900 mb-3">Processing Steps</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center step-item" data-step="upload_validation">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center step-icon">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">File Upload & Validation</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="text_detection">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Text Content Detection</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="ocr_processing">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">OCR Processing (if needed)</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="layout_analysis">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Layout Analysis</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="text_extraction">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Text Extraction</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="qa_detection">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Question & Answer Detection</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="answer_extraction">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Answer Option Extraction</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="confidence_scoring">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Quality Assessment</span>
+                        </div>
+
+                        <div class="flex items-center step-item" data-step="finalization">
+                            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <span class="ml-3 text-sm text-gray-600">Finalization</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section (shown when completed) -->
+                <div id="results-section" class="{% if job.status != 'completed' %}hidden{% endif %}">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-green-800">Processing Summary</h3>
+                                <div class="mt-2 text-sm text-green-700" id="results-summary">
+                                    <!-- Results will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Section (shown when failed) -->
+                <div id="error-section" class="{% if job.status != 'failed' %}hidden{% endif %}">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800">Processing Error</h3>
+                                <div class="mt-2 text-sm text-red-700" id="error-details">
+                                    {{ job.error_details.error|default:"An unknown error occurred during processing." }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center space-x-4">
+                    {% if job.status == 'completed' %}
+                        <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            View Extracted Questions
+                        </a>
+                    {% elif job.status == 'failed' %}
+                        <a href="{% url 'pdf_extractor:home' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Try Again
+                        </a>
+                    {% else %}
+                        <button id="refresh-status" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Refresh Status
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Info Card -->
+        <div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Document Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Filename</dt>
+                    <dd class="text-sm text-gray-900">{{ document.filename }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">File Size</dt>
+                    <dd class="text-sm text-gray-900">{{ document.file_size|filesizeformat }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Pages</dt>
+                    <dd class="text-sm text-gray-900">{{ document.page_count|default:"Unknown" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Uploaded</dt>
+                    <dd class="text-sm text-gray-900">{{ document.uploaded_at|date:"M d, Y H:i" }}</dd>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const jobId = '{{ job.id }}';
+    const progressBar = document.getElementById('progress-bar');
+    const progressPercentage = document.getElementById('progress-percentage');
+    const currentStepText = document.getElementById('current-step-text');
+    const statusIcon = document.getElementById('status-icon');
+    const statusTitle = document.getElementById('status-title');
+    const statusMessage = document.getElementById('status-message');
+    const resultsSection = document.getElementById('results-section');
+    const resultsSummary = document.getElementById('results-summary');
+    const errorSection = document.getElementById('error-section');
+    const errorDetails = document.getElementById('error-details');
+    const refreshButton = document.getElementById('refresh-status');
+
+    let statusCheckInterval;
+    let websocket = null;
+    let useWebSocket = false;
+
+    // Try to establish WebSocket connection, fallback to polling
+    if ('{{ job.status }}' === 'in_progress' || '{{ job.status }}' === 'pending') {
+        initializeStatusUpdates();
+    }
+
+    if (refreshButton) {
+        refreshButton.addEventListener('click', function() {
+            if (useWebSocket && websocket) {
+                requestWebSocketStatus();
+            } else {
+                checkStatus();
+            }
+        });
+    }
+
+    function initializeStatusUpdates() {
+        // WebSocket support disabled for now, use polling directly
+        console.log('Using polling for status updates');
+        startStatusPolling();
+    }
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/pdf-extractor/processing/${jobId}/`;
+        
+        websocket = new WebSocket(wsUrl);
+        
+        websocket.onopen = function(event) {
+            console.log('WebSocket connected');
+            useWebSocket = true;
+            // Request current status
+            requestWebSocketStatus();
+        };
+        
+        websocket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+            }
+        };
+        
+        websocket.onclose = function(event) {
+            console.log('WebSocket disconnected, falling back to polling');
+            useWebSocket = false;
+            websocket = null;
+            // Fallback to polling
+            if (event.code !== 1000) { // Not a normal closure
+                startStatusPolling();
+            }
+        };
+        
+        websocket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            useWebSocket = false;
+            websocket = null;
+            startStatusPolling();
+        };
+    }
+
+    function requestWebSocketStatus() {
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+            websocket.send(JSON.stringify({
+                'type': 'request_status'
+            }));
+        }
+    }
+
+    function handleWebSocketMessage(message) {
+        if (message.type === 'progress_update') {
+            updateProgress(message.data);
+            
+            if (message.data.status === 'completed' || message.data.status === 'failed') {
+                updateFinalStatus(message.data);
+                if (websocket) {
+                    websocket.close();
+                }
+            }
+        } else if (message.type === 'processing_complete') {
+            updateFinalStatus(message.data);
+            if (websocket) {
+                websocket.close();
+            }
+        } else if (message.type === 'processing_failed') {
+            updateFinalStatus(message.data);
+            if (websocket) {
+                websocket.close();
+            }
+        }
+    }
+
+    function startStatusPolling() {
+        if (!statusCheckInterval) {
+            statusCheckInterval = setInterval(checkStatus, 2000); // Check every 2 seconds
+        }
+    }
+
+    function stopStatusPolling() {
+        if (statusCheckInterval) {
+            clearInterval(statusCheckInterval);
+            statusCheckInterval = null;
+        }
+    }
+
+    function checkStatus() {
+        fetch(`/pdf-extractor/processing/${jobId}/progress/`)
+            .then(response => response.json())
+            .then(data => {
+                updateProgress(data);
+                
+                if (data.status === 'completed' || data.status === 'failed') {
+                    stopStatusPolling();
+                    updateFinalStatus(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+            });
+    }
+
+    function updateProgress(data) {
+        // Update progress bar
+        progressBar.style.width = data.progress_percentage + '%';
+        progressPercentage.textContent = data.progress_percentage + '%';
+        
+        // Update current step
+        currentStepText.textContent = data.current_step_display;
+        
+        // Update step indicators
+        updateStepIndicators(data.current_step);
+    }
+
+    function updateStepIndicators(currentStep) {
+        const steps = [
+            'upload_validation', 'text_detection', 'ocr_processing', 
+            'layout_analysis', 'text_extraction', 'qa_detection', 
+            'answer_extraction', 'confidence_scoring', 'finalization'
+        ];
+        
+        const currentIndex = steps.indexOf(currentStep);
+        
+        steps.forEach((step, index) => {
+            const stepElement = document.querySelector(`[data-step="${step}"]`);
+            if (!stepElement) {
+                console.warn(`Step element not found: ${step}`);
+                return;
+            }
+            
+            const iconElement = stepElement.querySelector('.step-icon');
+            if (!iconElement) {
+                console.warn(`Icon element not found for step: ${step}`);
+                return;
+            }
+            
+            if (index <= currentIndex) {
+                // Completed step
+                iconElement.innerHTML = `
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                iconElement.className = 'flex-shrink-0 w-6 h-6 rounded-full bg-green-100 flex items-center justify-center step-icon';
+            } else if (index === currentIndex + 1) {
+                // Current step
+                iconElement.innerHTML = `
+                    <svg class="animate-spin w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                `;
+                iconElement.className = 'flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center step-icon';
+            } else {
+                // Pending step
+                iconElement.innerHTML = '<div class="w-2 h-2 bg-gray-400 rounded-full"></div>';
+                iconElement.className = 'flex-shrink-0 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center step-icon';
+            }
+        });
+    }
+
+    function updateFinalStatus(data) {
+        if (data.status === 'completed') {
+            // Update status icon and message
+            statusIcon.innerHTML = `
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            `;
+            statusTitle.textContent = 'Processing Complete!';
+            statusMessage.textContent = 'Your PDF has been successfully processed and questions have been extracted.';
+            
+            // Show results
+            resultsSection.classList.remove('hidden');
+            if (data.results) {
+                resultsSummary.innerHTML = `
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>${data.results.total_questions}</strong> questions extracted</li>
+                        <li><strong>${data.results.high_confidence}</strong> high-confidence questions</li>
+                        <li><strong>${data.results.needs_review}</strong> questions need review</li>
+                    </ul>
+                `;
+            }
+            
+            // Update action button
+            const actionContainer = document.querySelector('.flex.justify-center.space-x-4');
+            actionContainer.innerHTML = `
+                <a href="/pdf-extractor/document/{{ document.id }}/" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    View Extracted Questions
+                </a>
+            `;
+            
+        } else if (data.status === 'failed') {
+            // Update status icon and message
+            statusIcon.innerHTML = `
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </div>
+            `;
+            statusTitle.textContent = 'Processing Failed';
+            statusMessage.textContent = 'There was an error processing your PDF. Please try again or contact support.';
+            
+            // Show error details
+            errorSection.classList.remove('hidden');
+            if (data.error_details && data.error_details.error) {
+                errorDetails.textContent = data.error_details.error;
+            }
+            
+            // Update action button
+            const actionContainer = document.querySelector('.flex.justify-center.space-x-4');
+            actionContainer.innerHTML = `
+                <a href="/pdf-extractor/" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Try Again
+                </a>
+            `;
+        }
+    }
+
+    // Initialize step indicators based on current step
+    updateStepIndicators('{{ job.current_step }}');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,867 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Review Regions - {{ document.filename }}{% endblock %}
+
+{% block extra_css %}
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf_viewer.min.css">
+
+<style>
+/* Custom styles for region review interface */
+.region-overlay {
+    position: absolute;
+    border: 2px solid;
+    cursor: move;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(1px);
+}
+
+.region-overlay.question {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.region-overlay.answer_options {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.region-overlay.needs-review {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    animation: pulse 2s infinite;
+}
+
+.region-overlay.error {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.region-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: white;
+    border: 2px solid;
+    border-radius: 50%;
+    cursor: nw-resize;
+}
+
+.region-handle.nw-resize { top: -4px; left: -4px; cursor: nw-resize; }
+.region-handle.ne-resize { top: -4px; right: -4px; cursor: ne-resize; }
+.region-handle.sw-resize { bottom: -4px; left: -4px; cursor: sw-resize; }
+.region-handle.se-resize { bottom: -4px; right: -4px; cursor: se-resize; }
+.region-handle.n-resize { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.region-handle.s-resize { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.region-handle.w-resize { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+.region-handle.e-resize { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+
+.region-label {
+    position: absolute;
+    top: -25px;
+    left: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.pdf-container {
+    position: relative;
+    overflow: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+
+.pdf-page {
+    position: relative;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-panel {
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.tool-button {
+    transition: all 0.2s ease;
+}
+
+.tool-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tool-button.active {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.confidence-bar {
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.confidence-high { background-color: #10b981; }
+.confidence-medium { background-color: #f59e0b; }
+.confidence-low { background-color: #ef4444; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50" x-data="regionReviewApp()">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <!-- Breadcrumb -->
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-4">
+                            <li>
+                                <a href="{% url 'pdf_extractor:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" class="ml-4 text-sm text-gray-500 hover:text-gray-700">{{ document.filename|truncatechars:30 }}</a>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-4 text-sm text-gray-500">Review Regions</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex items-center space-x-3">
+                    <!-- Progress -->
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <span>Page <span x-text="currentPage"></span> of {{ total_pages }}</span>
+                        <div class="w-32 bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" :style="`width: ${(session.pages_reviewed / {{ total_pages }}) * 100}%`"></div>
+                        </div>
+                        <span x-text="`${Math.round((session.pages_reviewed / {{ total_pages }}) * 100)}%`"></span>
+                    </div>
+                    
+                    <!-- Complete Session -->
+                    <a href="{% url 'pdf_extractor:complete_review_session' document.id %}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                        Complete Review
+                    </a>
+                    
+                    <!-- Back Button -->
+                    <a href="{% url 'pdf_extractor:document_detail' document.id %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        ← Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-12 gap-6">
+            <!-- Sidebar - Tools and Region List -->
+            <div class="col-span-3">
+                <!-- Tools Panel -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Tools</h3>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <!-- Tool Buttons -->
+                        <button @click="setTool('select')" 
+                                :class="{'active': currentTool === 'select'}"
+                                class="tool-button w-full flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path>
+                            </svg>
+                            Select & Edit
+                        </button>
+                        
+                        <button @click="setTool('create')" 
+                                :class="{'active': currentTool === 'create'}"
+                                class="tool-button w-full flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Create Region
+                        </button>
+                        
+                        <button @click="setTool('split')" 
+                                :class="{'active': currentTool === 'split'}"
+                                class="tool-button w-full flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+                            </svg>
+                            Split Region
+                        </button>
+                        
+                        <button @click="setTool('merge')" 
+                                :class="{'active': currentTool === 'merge'}"
+                                class="tool-button w-full flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                            </svg>
+                            Merge Regions
+                        </button>
+                        
+                        <hr class="my-3">
+                        
+                        <!-- Batch Actions -->
+                        <button @click="approveAllRegions()" 
+                                class="w-full flex items-center px-3 py-2 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Approve All
+                        </button>
+                        
+                        <button @click="autoFixRegions()" 
+                                class="w-full flex items-center px-3 py-2 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Auto Fix
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Regions List -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 sidebar-panel">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Detected Regions</h3>
+                        <p class="text-sm text-gray-500 mt-1" x-text="`${regions.length} regions on this page`"></p>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <template x-for="(region, index) in regions" :key="region.id">
+                            <div class="p-4 hover:bg-gray-50 cursor-pointer" 
+                                 @click="selectRegion(region)"
+                                 :class="{'bg-blue-50': selectedRegion && selectedRegion.id === region.id}">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium"
+                                                  :class="{
+                                                      'bg-blue-100 text-blue-800': region.type === 'question',
+                                                      'bg-green-100 text-green-800': region.type === 'answer_options',
+                                                      'bg-gray-100 text-gray-800': region.type === 'text_block'
+                                                  }"
+                                                  x-text="region.type.replace('_', ' ')"></span>
+                                            <span class="text-xs text-gray-500" x-text="`${Math.round(region.confidence * 100)}%`"></span>
+                                        </div>
+                                        <p class="text-sm text-gray-900 mt-1 truncate" x-text="region.text"></p>
+                                        <div class="confidence-bar mt-2"
+                                             :class="{
+                                                 'confidence-high': region.confidence >= 0.8,
+                                                 'confidence-medium': region.confidence >= 0.6 && region.confidence < 0.8,
+                                                 'confidence-low': region.confidence < 0.6
+                                             }"></div>
+                                    </div>
+                                    <div class="flex items-center space-x-1 ml-2">
+                                        <button @click.stop="editRegion(region)" class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                        </button>
+                                        <button @click.stop="deleteRegion(region)" class="text-red-400 hover:text-red-600">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main PDF Viewer -->
+            <div class="col-span-9">
+                <!-- Page Navigation -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <button @click="previousPage()" 
+                                    :disabled="currentPage <= 1"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                                Previous
+                            </button>
+                            
+                            <span class="text-sm text-gray-700">
+                                Page <span x-text="currentPage"></span> of {{ total_pages }}
+                            </span>
+                            
+                            <button @click="nextPage()" 
+                                    :disabled="currentPage >= {{ total_pages }}"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                Next
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <!-- Zoom Controls -->
+                            <div class="flex items-center space-x-2">
+                                <button @click="zoomOut()" class="p-2 text-gray-400 hover:text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                                    </svg>
+                                </button>
+                                <span class="text-sm text-gray-600" x-text="`${Math.round(zoomLevel * 100)}%`"></span>
+                                <button @click="zoomIn()" class="p-2 text-gray-400 hover:text-gray-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- View Options -->
+                            <div class="flex items-center space-x-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" x-model="showConfidenceLabels" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Show Confidence</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" x-model="showRegionBounds" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <span class="ml-2 text-sm text-gray-700">Show Boundaries</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Container -->
+                <div class="pdf-container" style="height: auto; max-height: 800px; overflow: auto;">
+                    <div class="pdf-page" id="pdf-page-container" style="position: relative; display: inline-block;">
+                        <!-- PDF content will be loaded here -->
+                        <img id="pdf-image" style="max-width: 100%; height: auto; display: block;" draggable="false">
+                        
+                        <!-- Region Overlays Container -->
+                        <div id="region-overlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                            <!-- Region Overlays -->
+                            <template x-for="region in regions" :key="region.id">
+                                <div class="region-overlay"
+                                     style="pointer-events: auto;"
+                                     :class="{
+                                         'question': region.type === 'question',
+                                     'answer_options': region.type === 'answer_options',
+                                     'needs-review': region.needs_review,
+                                     'error': region.confidence < 0.5
+                                 }"
+                                 :style="getRegionStyle(region)"
+                                 @click="selectRegion(region)"
+                                 @mousedown="startDrag($event, region)">
+                                
+                                <!-- Region Label -->
+                                <div class="region-label" x-show="showConfidenceLabels">
+                                    <span x-text="region.type"></span>
+                                    <span class="ml-1" x-text="`${Math.round(region.confidence * 100)}%`"></span>
+                                </div>
+                                
+                                <!-- Resize Handles -->
+                                <template x-if="selectedRegion && selectedRegion.id === region.id">
+                                    <div>
+                                        <div class="region-handle nw-resize" @mousedown.stop="startResize($event, region, 'nw')"></div>
+                                        <div class="region-handle ne-resize" @mousedown.stop="startResize($event, region, 'ne')"></div>
+                                        <div class="region-handle sw-resize" @mousedown.stop="startResize($event, region, 'sw')"></div>
+                                        <div class="region-handle se-resize" @mousedown.stop="startResize($event, region, 'se')"></div>
+                                        <div class="region-handle n-resize" @mousedown.stop="startResize($event, region, 'n')"></div>
+                                        <div class="region-handle s-resize" @mousedown.stop="startResize($event, region, 's')"></div>
+                                        <div class="region-handle w-resize" @mousedown.stop="startResize($event, region, 'w')"></div>
+                                        <div class="region-handle e-resize" @mousedown.stop="startResize($event, region, 'e')"></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        </div>
+                        
+                        <!-- Debug Info -->
+                        <div class="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-20">
+                            <div>Regions: <span x-text="regions.length"></span></div>
+                            <div>Page: <span x-text="currentPage"></span>/<span x-text="totalPages"></span></div>
+                            <div>Tool: <span x-text="currentTool"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Region Edit Modal -->
+    <div x-show="showEditModal" 
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Edit Region</h3>
+                <template x-if="editingRegion">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Region Type</label>
+                            <select x-model="editingRegion.type" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="question">Question</option>
+                                <option value="answer_options">Answer Options</option>
+                                <option value="text_block">Text Block</option>
+                                <option value="image">Image</option>
+                                <option value="table">Table</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Extracted Text</label>
+                            <textarea x-model="editingRegion.text" rows="4" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confidence Score</label>
+                            <input type="range" x-model="editingRegion.confidence" min="0" max="1" step="0.01" class="w-full">
+                            <div class="text-sm text-gray-500 mt-1" x-text="`${Math.round(editingRegion.confidence * 100)}%`"></div>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" x-model="editingRegion.needs_review" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <label class="ml-2 text-sm text-gray-700">Needs Review</label>
+                        </div>
+                    </div>
+                </template>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button @click="showEditModal = false" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button @click="saveRegionEdit()" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Django data for JavaScript -->
+{{ page_data.regions|json_script:"page-regions" }}
+
+<script>
+// Get data from Django JSON scripts
+const pageRegions = JSON.parse(document.getElementById('page-regions').textContent || '[]');
+
+function regionReviewApp() {
+    return {
+        // State
+        currentPage: {{ current_page|default:1 }},
+        totalPages: {{ total_pages|default:1 }},
+        regions: pageRegions,
+        selectedRegion: null,
+        editingRegion: null,
+        currentTool: 'select',
+        zoomLevel: 1.0,
+        showConfidenceLabels: true,
+        showRegionBounds: true,
+        showEditModal: false,
+        
+        // Session data
+        session: {
+            pages_reviewed: {{ session.pages_reviewed|default:0 }},
+            regions_corrected: {{ session.regions_corrected|default:0 }},
+            regions_approved: {{ session.regions_approved|default:0 }}
+        },
+        
+        // Drag state
+        isDragging: false,
+        isResizing: false,
+        dragStart: null,
+        resizeHandle: null,
+        
+        init() {
+            console.log('=== Region Review App Init ===');
+            console.log('Initial regions:', this.regions);
+            console.log('Current page:', this.currentPage);
+            console.log('Total pages:', this.totalPages);
+            
+            // Test: Force some regions for debugging
+            if (!this.regions || this.regions.length === 0) {
+                console.log('No initial regions, adding test regions...');
+                this.regions = [
+                    {
+                        id: 'test_region_1',
+                        type: 'question',
+                        coordinates: { x: 50, y: 100, width: 400, height: 60 },
+                        confidence: 0.9,
+                        text: 'Test region 1 - If you see this, the display works!',
+                        needs_review: false
+                    },
+                    {
+                        id: 'test_region_2', 
+                        type: 'answer_options',
+                        coordinates: { x: 70, y: 180, width: 350, height: 80 },
+                        confidence: 0.8,
+                        text: 'A) Test option A\nB) Test option B\nC) Test option C',
+                        needs_review: true
+                    }
+                ];
+                console.log('Added test regions:', this.regions);
+            }
+            
+            this.loadPage(this.currentPage);
+            this.setupEventListeners();
+        },
+        
+        async loadPage(pageNumber) {
+            try {
+                console.log(`=== Loading page ${pageNumber} ===`);
+                const url = `/pdf-extractor/api/regions/{{ document.id }}/${pageNumber}/`;
+                console.log('API URL:', url);
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                if (data.success) {
+                    console.log('Setting regions:', data.regions);
+                    this.regions = data.regions;
+                    this.currentPage = pageNumber;
+                    
+                    // Load PDF page image directly from the same API response
+                    if (data.image_url) {
+                        console.log('Loading PDF image:', data.image_url);
+                        await this.loadPdfPageImage(data.image_url);
+                    } else {
+                        console.warn('No image URL in API response');
+                    }
+                } else {
+                    console.error('API returned success=false:', data);
+                }
+            } catch (error) {
+                console.error('Error loading page:', error);
+            }
+        },
+        
+        async loadPdfPageImage(imageUrl) {
+            console.log('Loading PDF image:', imageUrl);
+            
+            return new Promise((resolve, reject) => {
+                const imgElement = document.getElementById('pdf-image');
+                if (!imgElement) {
+                    reject(new Error('PDF image element not found'));
+                    return;
+                }
+                
+                imgElement.onload = () => {
+                    console.log('PDF image loaded successfully');
+                    console.log(`Image dimensions: ${imgElement.naturalWidth}x${imgElement.naturalHeight}`);
+                    console.log(`Display size: ${imgElement.clientWidth}x${imgElement.clientHeight}`);
+                    resolve();
+                };
+                
+                imgElement.onerror = () => {
+                    console.error('Failed to load PDF image:', imageUrl);
+                    reject(new Error('Failed to load PDF image'));
+                };
+                
+                imgElement.src = imageUrl;
+            });
+        },
+        
+        setTool(tool) {
+            this.currentTool = tool;
+            this.selectedRegion = null;
+        },
+        
+        selectRegion(region) {
+            this.selectedRegion = region;
+        },
+        
+        editRegion(region) {
+            this.editingRegion = { ...region };
+            this.showEditModal = true;
+        },
+        
+        async saveRegionEdit() {
+            if (!this.editingRegion) return;
+            
+            try {
+                const response = await fetch(`/pdf-extractor/api/save-correction/{{ document.id }}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        page_number: this.currentPage,
+                        original_coordinates: this.selectedRegion,
+                        corrected_coordinates: this.editingRegion,
+                        correction_type: 'edit',
+                        confidence_before: this.selectedRegion.confidence,
+                        confidence_after: this.editingRegion.confidence
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Update region in place
+                    const index = this.regions.findIndex(r => r.id === this.editingRegion.id);
+                    if (index !== -1) {
+                        this.regions[index] = { ...this.editingRegion };
+                    }
+                    
+                    this.session.regions_corrected++;
+                    this.showEditModal = false;
+                    this.editingRegion = null;
+                }
+            } catch (error) {
+                console.error('Error saving region edit:', error);
+            }
+        },
+        
+        async deleteRegion(region) {
+            if (!confirm('Are you sure you want to delete this region?')) return;
+            
+            try {
+                const response = await fetch(`/pdf-extractor/api/save-correction/{{ document.id }}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        page_number: this.currentPage,
+                        original_coordinates: region,
+                        corrected_coordinates: null,
+                        correction_type: 'delete'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.regions = this.regions.filter(r => r.id !== region.id);
+                    this.session.regions_corrected++;
+                }
+            } catch (error) {
+                console.error('Error deleting region:', error);
+            }
+        },
+        
+        async approveAllRegions() {
+            const regionIds = this.regions.map(r => r.id);
+            
+            try {
+                const response = await fetch(`/pdf-extractor/api/batch-approve/{{ document.id }}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        page_number: this.currentPage,
+                        region_ids: regionIds,
+                        action: 'approve'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    this.session.regions_approved += data.processed_count;
+                    this.regions.forEach(r => r.needs_review = false);
+                }
+            } catch (error) {
+                console.error('Error approving regions:', error);
+            }
+        },
+        
+        async autoFixRegions() {
+            // Auto-fix implementation would go here
+            console.log('Auto-fixing regions...');
+        },
+        
+        previousPage() {
+            if (this.currentPage > 1) {
+                this.loadPage(this.currentPage - 1);
+            }
+        },
+        
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.loadPage(this.currentPage + 1);
+            }
+        },
+        
+        zoomIn() {
+            this.zoomLevel = Math.min(this.zoomLevel * 1.2, 3.0);
+        },
+        
+        zoomOut() {
+            this.zoomLevel = Math.max(this.zoomLevel / 1.2, 0.3);
+        },
+        
+        startDrag(event, region) {
+            if (this.currentTool !== 'select') return;
+            
+            this.isDragging = true;
+            this.selectedRegion = region;
+            this.dragStart = {
+                x: event.clientX - region.coordinates.x,
+                y: event.clientY - region.coordinates.y
+            };
+        },
+        
+        startResize(event, region, handle) {
+            event.stopPropagation();
+            this.isResizing = true;
+            this.selectedRegion = region;
+            this.resizeHandle = handle;
+            this.dragStart = { x: event.clientX, y: event.clientY };
+        },
+        
+        setupEventListeners() {
+            document.addEventListener('mousemove', (event) => {
+                if (this.isDragging && this.selectedRegion) {
+                    this.selectedRegion.coordinates.x = event.clientX - this.dragStart.x;
+                    this.selectedRegion.coordinates.y = event.clientY - this.dragStart.y;
+                } else if (this.isResizing && this.selectedRegion) {
+                    this.handleResize(event);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (this.isDragging || this.isResizing) {
+                    this.saveRegionChanges();
+                }
+                this.isDragging = false;
+                this.isResizing = false;
+                this.dragStart = null;
+                this.resizeHandle = null;
+            });
+        },
+        
+        handleResize(event) {
+            if (!this.selectedRegion || !this.resizeHandle) return;
+            
+            const deltaX = event.clientX - this.dragStart.x;
+            const deltaY = event.clientY - this.dragStart.y;
+            const coords = this.selectedRegion.coordinates;
+            
+            switch (this.resizeHandle) {
+                case 'nw':
+                    coords.x += deltaX;
+                    coords.y += deltaY;
+                    coords.width -= deltaX;
+                    coords.height -= deltaY;
+                    break;
+                case 'ne':
+                    coords.y += deltaY;
+                    coords.width += deltaX;
+                    coords.height -= deltaY;
+                    break;
+                case 'sw':
+                    coords.x += deltaX;
+                    coords.width -= deltaX;
+                    coords.height += deltaY;
+                    break;
+                case 'se':
+                    coords.width += deltaX;
+                    coords.height += deltaY;
+                    break;
+                case 'n':
+                    coords.y += deltaY;
+                    coords.height -= deltaY;
+                    break;
+                case 's':
+                    coords.height += deltaY;
+                    break;
+                case 'w':
+                    coords.x += deltaX;
+                    coords.width -= deltaX;
+                    break;
+                case 'e':
+                    coords.width += deltaX;
+                    break;
+            }
+            
+            // Ensure minimum size
+            coords.width = Math.max(coords.width, 10);
+            coords.height = Math.max(coords.height, 10);
+            
+            this.dragStart = { x: event.clientX, y: event.clientY };
+        },
+        
+        async saveRegionChanges() {
+            if (!this.selectedRegion) return;
+            
+            // This would save the changes to the server
+            console.log('Saving region changes:', this.selectedRegion);
+        },
+        
+        getRegionStyle(region) {
+            // Get image element to determine scaling
+            const pdfImage = document.getElementById('pdf-image');
+            if (!pdfImage || !region.coordinates) {
+                return `left: 0px; top: 0px; width: 0px; height: 0px;`;
+            }
+            
+            // Get actual and display dimensions
+            const actualWidth = pdfImage.naturalWidth;
+            const actualHeight = pdfImage.naturalHeight;
+            const displayWidth = pdfImage.clientWidth;
+            const displayHeight = pdfImage.clientHeight;
+            
+            if (actualWidth === 0 || actualHeight === 0) {
+                return `left: 0px; top: 0px; width: 0px; height: 0px;`;
+            }
+            
+            // Calculate scaling ratios (inverse of what was used in coordinate storage)
+            const scaleX = displayWidth / actualWidth;
+            const scaleY = displayHeight / actualHeight;
+            
+            // Convert actual coordinates to display coordinates
+            const displayCoords = {
+                x: Math.round(region.coordinates.x * scaleX),
+                y: Math.round(region.coordinates.y * scaleY),
+                width: Math.round(region.coordinates.width * scaleX),
+                height: Math.round(region.coordinates.height * scaleY)
+            };
+            
+            return `left: ${displayCoords.x}px; top: ${displayCoords.y}px; width: ${displayCoords.width}px; height: ${displayCoords.height}px;`;
+        }
+    }
+}
+</script>
+{% endblock %}

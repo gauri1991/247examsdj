@@ -1,0 +1,45 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+*.egg-info/
+dist/
+build/
+
+# Node modules (if any)
+node_modules/
+
+# Static files (collected)
+staticfiles/
+
+# Secret keys and sensitive data
+.secret
+*.key
+.env.local
+.env.production
+
+# Temporary files
+*.tmp
+*.temp

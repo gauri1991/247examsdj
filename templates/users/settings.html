@@ -1,0 +1,859 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Settings - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Settings
+            </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Manage your account preferences and security settings
+            </p>
+        </div>
+        <div class="mt-4 md:mt-0 md:ml-4">
+            <a href="{% url 'profile' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                View Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Settings Cards -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul class="divide-y divide-gray-200">
+            <!-- Account Security -->
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="flex items-center">
+                                    <p class="text-sm font-medium text-red-600 truncate">
+                                        Account Security
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <span class="mr-4">Password: <span class="font-medium text-gray-900">Last updated {{ user.password_changed|default:"Never" }}</span></span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
+                                        2FA: Coming Soon
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openChangePasswordModal()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <!-- Privacy & Notifications -->
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                                    <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 19h4a2 2 0 002-2v-2a2 2 0 00-2-2H4a2 2 0 00-2 2v2a2 2 0 002 2zM4 7h4a2 2 0 002-2V3a2 2 0 00-2-2H4a2 2 0 00-2 2v2a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="flex items-center">
+                                    <p class="text-sm font-medium text-purple-600 truncate">
+                                        Privacy & Notifications
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <span class="mr-4">Email Notifications: <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Enabled</span></span>
+                                    <span>Profile: <span class="font-medium text-gray-900">Public</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openPrivacyModal()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Manage Privacy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <!-- Exam Preferences -->
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="flex items-center">
+                                    <p class="text-sm font-medium text-blue-600 truncate">
+                                        Exam Preferences
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <span class="mr-4">Auto-save: <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Enabled</span></span>
+                                    <span class="mr-4">Timer: <span class="font-medium text-gray-900">Always Show</span></span>
+                                    <span>Navigation: <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Enabled</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openExamPreferencesModal()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Configure Exams
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            
+            <!-- System Settings -->
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                                    <svg class="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573C7.487 6.53 8.259 4.763 9.802 5.703a1.724 1.724 0 002.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="flex items-center">
+                                    <p class="text-sm font-medium text-gray-600 truncate">
+                                        System Settings
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <span class="mr-4">Theme: <span class="font-medium text-gray-900">Light</span></span>
+                                    <span class="mr-4">Language: <span class="font-medium text-gray-900">English</span></span>
+                                    <span>Timezone: <span class="font-medium text-gray-900">UTC +05:30 (IST)</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openSystemSettingsModal()" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                System Preferences
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-md border border-red-200">
+        <div class="px-4 py-4 sm:px-6 bg-red-50">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
+                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <div class="flex items-center">
+                        <p class="text-sm font-medium text-red-600 truncate">
+                            Danger Zone
+                        </p>
+                    </div>
+                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                        <span>Permanently delete your account and all associated data</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="px-4 py-4 sm:px-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h4 class="text-sm font-medium text-gray-900">Delete Account</h4>
+                    <p class="text-sm text-gray-500">This action cannot be undone. All your data will be permanently removed.</p>
+                </div>
+                <button onclick="openDeleteAccountModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-6 flex space-x-4">
+        <a href="{% url 'dashboard' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 10 2 2 4-4"></path>
+            </svg>
+            Back to Dashboard
+        </a>
+        <!-- Debug: username={{ user.username }}, is_superuser={{ user.is_superuser }}, role={{ user.role }} -->
+        {% if user.role == 'admin' %}
+        <a href="{% url 'admin-management' %}" 
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573C7.487 6.53 8.259 4.763 9.802 5.703a1.724 1.724 0 002.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Admin Panel
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Change Password</h3>
+                <button onclick="closeChangePasswordModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="changePasswordForm" onsubmit="changePassword(event)">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                        <input type="password" id="currentPassword" name="current_password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        <input type="password" id="newPassword" name="new_password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirm_password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeChangePasswordModal()" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" id="changePasswordBtn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+                        Change Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Settings Modal -->
+<div id="privacyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Privacy & Notifications</h3>
+                <button onclick="closePrivacyModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="privacyForm" onsubmit="updatePrivacySettings(event)">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email Notifications</label>
+                            <p class="text-xs text-gray-500">Receive updates via email</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="emailNotifications" name="email_notifications" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Profile Visibility</label>
+                        <select id="profileVisibility" name="profile_visibility" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="public" selected>Public</option>
+                            <option value="private">Private</option>
+                            <option value="friends">Friends Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closePrivacyModal()" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" id="privacyBtn" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700">
+                        Update Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Preferences Modal -->
+<div id="examPreferencesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Exam Preferences</h3>
+                <button onclick="closeExamPreferencesModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="examPreferencesForm" onsubmit="updateExamPreferences(event)">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Auto-save Answers</label>
+                            <p class="text-xs text-gray-500">Automatically save answers while taking exams</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="autoSave" name="auto_save" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Timer Display</label>
+                        <select id="timerDisplay" name="timer_display" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="always" selected>Always Show</option>
+                            <option value="last_5_min">Last 5 Minutes Only</option>
+                            <option value="never">Never Show</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Question Navigation</label>
+                            <p class="text-xs text-gray-500">Allow jumping between questions</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="navigationEnabled" name="navigation_enabled" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeExamPreferencesModal()" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" id="examPreferencesBtn" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
+                        Update Preferences
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- System Settings Modal -->
+<div id="systemSettingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">System Settings</h3>
+                <button onclick="closeSystemSettingsModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="systemSettingsForm" onsubmit="updateSystemSettings(event)">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Theme</label>
+                        <select id="theme" name="theme" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="light" selected>Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="auto">System Default</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                        <select id="language" name="language" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="en" selected>English</option>
+                            <option value="hi">Hindi</option>
+                            <option value="bn">Bengali</option>
+                            <option value="ta">Tamil</option>
+                            <option value="te">Telugu</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                        <select id="timezone" name="timezone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="Asia/Kolkata" selected>UTC +05:30 (IST)</option>
+                            <option value="UTC">UTC +00:00</option>
+                            <option value="America/New_York">UTC -05:00 (EST)</option>
+                            <option value="Europe/London">UTC +00:00 (GMT)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeSystemSettingsModal()" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" id="systemSettingsBtn" class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700">
+                        Update Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="deleteAccountModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-red-600">Delete Account</h3>
+                <button onclick="closeDeleteAccountModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Warning: This action cannot be undone</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>All your data, including test results, progress, and personal information will be permanently deleted.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form id="deleteAccountForm" onsubmit="deleteAccount(event)">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Enter your password to confirm</label>
+                        <input type="password" id="deletePassword" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type <strong>DELETE</strong> to confirm</label>
+                        <input type="text" id="deleteConfirmation" name="confirmation" required placeholder="DELETE" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeDeleteAccountModal()" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" id="deleteAccountBtn" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700">
+                        Delete Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal management functions
+function openChangePasswordModal() {
+    document.getElementById('changePasswordModal').classList.remove('hidden');
+}
+
+function closeChangePasswordModal() {
+    document.getElementById('changePasswordModal').classList.add('hidden');
+    document.getElementById('changePasswordForm').reset();
+}
+
+function openPrivacyModal() {
+    document.getElementById('privacyModal').classList.remove('hidden');
+}
+
+function closePrivacyModal() {
+    document.getElementById('privacyModal').classList.add('hidden');
+}
+
+function openExamPreferencesModal() {
+    document.getElementById('examPreferencesModal').classList.remove('hidden');
+}
+
+function closeExamPreferencesModal() {
+    document.getElementById('examPreferencesModal').classList.add('hidden');
+}
+
+function openSystemSettingsModal() {
+    document.getElementById('systemSettingsModal').classList.remove('hidden');
+}
+
+function closeSystemSettingsModal() {
+    document.getElementById('systemSettingsModal').classList.add('hidden');
+}
+
+function openDeleteAccountModal() {
+    document.getElementById('deleteAccountModal').classList.remove('hidden');
+}
+
+function closeDeleteAccountModal() {
+    document.getElementById('deleteAccountModal').classList.add('hidden');
+    document.getElementById('deleteAccountForm').reset();
+}
+
+// API call functions
+function changePassword(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('changePasswordBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Changing...';
+    
+    const formData = new FormData(event.target);
+    
+    fetch('/users/api/change-password/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Password changed successfully!');
+            closeChangePasswordModal();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while changing password');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+function updatePrivacySettings(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('privacyBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    
+    const formData = new FormData(event.target);
+    
+    fetch('/users/api/update-privacy/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Privacy settings updated successfully!');
+            closePrivacyModal();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating privacy settings');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+function updateExamPreferences(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('examPreferencesBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    
+    const formData = new FormData(event.target);
+    
+    fetch('/users/api/update-exam-preferences/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Exam preferences updated successfully!');
+            closeExamPreferencesModal();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating exam preferences');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+function updateSystemSettings(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('systemSettingsBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    
+    const formData = new FormData(event.target);
+    
+    fetch('/users/api/update-system-settings/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('System settings updated successfully!');
+            closeSystemSettingsModal();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating system settings');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+function deleteAccount(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('deleteAccountBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    
+    const formData = new FormData(event.target);
+    
+    fetch('/users/api/delete-account/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Account deleted successfully. You will be redirected to the home page.');
+            window.location.href = '/';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting account');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    const modals = ['changePasswordModal', 'privacyModal', 'examPreferencesModal', 'systemSettingsModal', 'deleteAccountModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+});
+
+// Load user preferences on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserPreferences();
+});
+
+function loadUserPreferences() {
+    fetch('/users/api/get-preferences/')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.preferences) {
+            const prefs = data.preferences;
+            
+            // Update displayed values
+            updateDisplayedSettings(prefs);
+            
+            // Store preferences for form population
+            window.userPreferences = prefs;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading preferences:', error);
+    });
+}
+
+function updateDisplayedSettings(prefs) {
+    // Update theme display in the settings list
+    const themeSpans = document.querySelectorAll('span');
+    themeSpans.forEach(span => {
+        if (span.textContent.includes('Theme:')) {
+            const themeText = prefs.theme === 'light' ? 'Light' : 
+                             prefs.theme === 'dark' ? 'Dark' : 'Auto';
+            span.innerHTML = `Theme: <span class="font-medium text-gray-900">${themeText}</span>`;
+        }
+        if (span.textContent.includes('Language:')) {
+            const langMap = {
+                'en': 'English', 'hi': 'Hindi', 'ta': 'Tamil', 'te': 'Telugu',
+                'mr': 'Marathi', 'gu': 'Gujarati', 'bn': 'Bengali', 
+                'kn': 'Kannada', 'ml': 'Malayalam', 'pa': 'Punjabi'
+            };
+            const langText = langMap[prefs.language] || 'English';
+            span.innerHTML = `Language: <span class="font-medium text-gray-900">${langText}</span>`;
+        }
+        if (span.textContent.includes('Timezone:')) {
+            const tzMap = {
+                'Asia/Kolkata': 'IST',
+                'Asia/Dubai': 'GST',
+                'Asia/Singapore': 'SGT',
+                'Europe/London': 'GMT/BST',
+                'America/New_York': 'EST/EDT',
+                'America/Los_Angeles': 'PST/PDT'
+            };
+            const tzText = tzMap[prefs.timezone] || 'IST';
+            span.innerHTML = `Timezone: <span class="font-medium text-gray-900">${tzText}</span>`;
+        }
+    });
+}
+
+// Override modal open functions to populate with current preferences
+const originalOpenPrivacyModal = openPrivacyModal;
+openPrivacyModal = function() {
+    if (window.userPreferences) {
+        const prefs = window.userPreferences;
+        document.getElementById('emailNotifications').checked = prefs.email_notifications;
+        // Add more privacy fields as needed
+    }
+    originalOpenPrivacyModal();
+}
+
+const originalOpenSystemSettingsModal = openSystemSettingsModal;
+openSystemSettingsModal = function() {
+    if (window.userPreferences) {
+        const prefs = window.userPreferences;
+        document.getElementById('theme').value = prefs.theme || 'light';
+        document.getElementById('language').value = prefs.language || 'en';
+        document.getElementById('timezone').value = prefs.timezone || 'Asia/Kolkata';
+    }
+    originalOpenSystemSettingsModal();
+}
+
+const originalOpenExamPreferencesModal = openExamPreferencesModal;
+openExamPreferencesModal = function() {
+    if (window.userPreferences) {
+        const prefs = window.userPreferences;
+        document.getElementById('autoSave').checked = prefs.auto_save;
+        document.getElementById('timerDisplay').value = prefs.show_timer ? 'always' : 'never';
+        document.getElementById('navigationEnabled').checked = prefs.confirm_navigation;
+    }
+    originalOpenExamPreferencesModal();
+}
+
+// Override updateSystemSettings to apply theme immediately
+const originalUpdateSystemSettings = updateSystemSettings;
+updateSystemSettings = function(event) {
+    event.preventDefault();
+    
+    const btn = document.getElementById('systemSettingsBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Updating...';
+    
+    const formData = new FormData(event.target);
+    const theme = formData.get('theme');
+    
+    // Apply theme immediately using ThemeSwitcher
+    if (window.themeSwitcher) {
+        window.themeSwitcher.setTheme(theme);
+    }
+    
+    fetch('/users/api/update-system-settings/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('System settings updated successfully!');
+            closeSystemSettingsModal();
+            // Update displayed settings
+            loadUserPreferences();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating system settings');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
+}
+</script>
+{% endblock %}

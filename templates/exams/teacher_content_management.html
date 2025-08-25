@@ -1,0 +1,424 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Teacher Content Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-management-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-value {
+        font-size: 36px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #718096;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        font-size: 24px;
+    }
+
+    .icon-nodes { background: #edf2ff; color: #667eea; }
+    .icon-content { background: #e6fffa; color: #319795; }
+    .icon-created { background: #fef5e7; color: #d69e2e; }
+
+    .exam-filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .nodes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .node-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .node-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .node-header {
+        display: flex;
+        justify-content: between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .node-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+
+    .node-exam {
+        font-size: 14px;
+        color: #667eea;
+        font-weight: 500;
+    }
+
+    .content-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .status-no-content { background: #e53e3e; }
+    .status-has-content { background: #38a169; }
+    .status-partial { background: #d69e2e; }
+
+    .status-text {
+        font-size: 14px;
+        color: #4a5568;
+    }
+
+    .node-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a67d8;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+
+    .btn-success {
+        background: #38a169;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #2f855a;
+    }
+
+    .recent-content-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+
+    .recent-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+
+    .recent-meta {
+        font-size: 14px;
+        color: #718096;
+    }
+
+    .level-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .level-basic { background: #d1fae5; color: #065f46; }
+    .level-intermediate { background: #fef3c7; color: #92400e; }
+    .level-advanced { background: #fee2e2; color: #991b1b; }
+    .level-expert { background: #f3e8ff; color: #6b21a8; }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-management-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 style="margin: 0; font-size: 32px; font-weight: 700;">
+            📚 Teacher Content Management
+        </h1>
+        <p style="margin-top: 10px; opacity: 0.95; font-size: 18px;">
+            Create and manage learning content for syllabus concepts
+        </p>
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon icon-nodes">📖</div>
+            <div class="stat-value">{{ total_nodes }}</div>
+            <div class="stat-label">Available Concepts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-content">✅</div>
+            <div class="stat-value">{{ nodes_with_content }}</div>
+            <div class="stat-label">With Content</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-created">👨‍🏫</div>
+            <div class="stat-value">{{ teacher_created }}</div>
+            <div class="stat-label">Your Content</div>
+        </div>
+    </div>
+
+    <!-- Exam Filter -->
+    <div class="exam-filter-card">
+        <h3 style="margin-top: 0; color: #2d3748;">Filter by Exam</h3>
+        <form method="GET" style="margin-top: 15px;">
+            <select name="exam_id" class="filter-select" onchange="this.form.submit()">
+                <option value="">-- All Exams --</option>
+                {% for exam in exams_with_syllabus %}
+                <option value="{{ exam.id }}" {% if selected_exam_id == exam.id|stringformat:"s" %}selected{% endif %}>
+                    {{ exam.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+        <!-- Available Nodes -->
+        <div>
+            <h3 style="color: #2d3748; margin-bottom: 20px;">
+                📝 Syllabus Concepts ({{ available_nodes.count }})
+            </h3>
+            
+            {% if available_nodes %}
+            <div class="nodes-grid">
+                {% for node in available_nodes %}
+                <div class="node-card">
+                    <div class="node-header">
+                        <div>
+                            <div class="node-title">{{ node.title }}</div>
+                            <div class="node-exam">{{ node.syllabus.exam.name }}</div>
+                        </div>
+                    </div>
+                    
+                    {% if node.description %}
+                    <p style="color: #4a5568; font-size: 14px; margin: 10px 0;">
+                        {{ node.description|truncatechars:100 }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="content-status">
+                        {% if node.learning_content.count == 0 %}
+                        <div class="status-indicator status-no-content"></div>
+                        <span class="status-text">No content created</span>
+                        {% elif node.learning_content.count < 3 %}
+                        <div class="status-indicator status-partial"></div>
+                        <span class="status-text">{{ node.learning_content.count }} content piece(s)</span>
+                        {% else %}
+                        <div class="status-indicator status-has-content"></div>
+                        <span class="status-text">{{ node.learning_content.count }} content pieces</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; margin: 10px 0;">
+                        <span class="level-badge level-{{ node.difficulty }}">{{ node.get_difficulty_display }}</span>
+                        <span style="background: #f0f4f8; color: #4a5568; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            {{ node.estimated_hours }}h
+                        </span>
+                    </div>
+                    
+                    <div class="node-actions">
+                        <a href="{% url 'create-learning-content' node.id %}" class="btn btn-primary">
+                            ➕ Create Content
+                        </a>
+                        {% if node.learning_content.exists %}
+                        <a href="{% url 'learning-page' node.id %}" class="btn btn-secondary">
+                            👁️ View
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <h3>No Concepts Available</h3>
+                <p>No syllabus concepts found for the selected criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Content Sidebar -->
+        <div>
+            <h3 style="color: #2d3748; margin-bottom: 20px;">
+                🕒 Your Recent Content
+            </h3>
+            
+            <div class="recent-content-card">
+                {% if recent_content %}
+                {% for content in recent_content %}
+                <div class="recent-item">
+                    <div>
+                        <div class="recent-title">{{ content.title }}</div>
+                        <div class="recent-meta">
+                            {{ content.node.title }} • 
+                            <span class="level-badge level-{{ content.level }}">{{ content.get_level_display }}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{% url 'edit-learning-content' content.id %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                            ✏️ Edit
+                        </a>
+                        <a href="{% url 'content-analytics' content.id %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                            📊 Stats
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state" style="padding: 30px 20px;">
+                    <div style="font-size: 32px; margin-bottom: 15px; opacity: 0.3;">📝</div>
+                    <h4>No Content Yet</h4>
+                    <p style="font-size: 14px;">Start creating content for syllabus concepts!</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Actions -->
+            <div style="margin-top: 20px;">
+                <h4 style="color: #2d3748; margin-bottom: 15px;">⚡ Quick Actions</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="{% url 'teacher-content-management' %}" class="btn btn-secondary">
+                        🔄 Refresh Data
+                    </a>
+                    <a href="{% url 'syllabus-tracker' %}" class="btn btn-secondary">
+                        📊 View Syllabus Tracker
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

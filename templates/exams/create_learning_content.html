@@ -1,0 +1,623 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Create Learning Content - {{ node.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-creation-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .breadcrumb {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #4a5568;
+    }
+
+    .breadcrumb a {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .form-section h3 {
+        color: #2d3748;
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #2d3748;
+    }
+
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-textarea {
+        min-height: 200px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        resize: vertical;
+    }
+
+    .content-editor {
+        min-height: 400px;
+        font-family: inherit;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #5a67d8;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+
+    .btn-success {
+        background: #38a169;
+        color: white;
+    }
+
+    .btn-danger {
+        background: #e53e3e;
+        color: white;
+    }
+
+    .existing-content {
+        background: #f7fafc;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .content-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .level-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .level-basic { background: #d1fae5; color: #065f46; }
+    .level-intermediate { background: #fef3c7; color: #92400e; }
+    .level-advanced { background: #fee2e2; color: #991b1b; }
+    .level-expert { background: #f3e8ff; color: #6b21a8; }
+
+    .interactive-section, .assessment-section {
+        border: 2px dashed #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .add-btn {
+        background: #38a169;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .element-item, .assessment-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .remove-btn {
+        background: #e53e3e;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        float: right;
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+
+    .preview-mode {
+        background: #edf2ff;
+        border: 2px solid #667eea;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include MathJax for LaTeX preview -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+    };
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="content-creation-container">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'teacher-content-management' %}">Content Management</a> →
+        <span>{{ node.syllabus.exam.name }}</span> →
+        <strong>{{ node.title }}</strong>
+    </div>
+
+    <!-- Header -->
+    <div class="header-section">
+        <h1 style="margin: 0; font-size: 28px; font-weight: 700;">
+            ✍️ Create Learning Content
+        </h1>
+        <p style="margin-top: 10px; opacity: 0.95;">
+            {{ node.title }} • {{ node.syllabus.exam.name }}
+        </p>
+    </div>
+
+    <!-- Existing Content -->
+    {% if existing_content %}
+    <div class="form-card">
+        <h3>📚 Existing Content for this Concept</h3>
+        <div class="existing-content">
+            {% for content in existing_content %}
+            <div class="content-item">
+                <div>
+                    <strong>{{ content.title }}</strong>
+                    <span class="level-badge level-{{ content.level }}">{{ content.get_level_display }}</span>
+                    <small style="color: #718096; margin-left: 10px;">
+                        {{ content.get_content_type_display }} • {{ content.estimated_read_time }}min
+                    </small>
+                </div>
+                <div>
+                    <a href="{% url 'edit-learning-content' content.id %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 14px;">
+                        Edit
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Content Creation Form -->
+    <form id="contentForm">
+        {% csrf_token %}
+        
+        <!-- Basic Information -->
+        <div class="form-card">
+            <div class="form-section">
+                <h3>📝 Basic Information</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Content Title*</label>
+                        <input type="text" name="title" class="form-input" required
+                               placeholder="e.g., Introduction to Fourier Transform">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Difficulty Level*</label>
+                        <select name="level" class="form-select" required>
+                            {% for value, label in level_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Content Type*</label>
+                        <select name="content_type" class="form-select" required>
+                            {% for value, label in content_type_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Estimated Read Time (minutes)</label>
+                        <input type="number" name="estimated_read_time" class="form-input" 
+                               value="5" min="1" max="120">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Difficulty Rating (1-5)</label>
+                        <input type="number" name="difficulty_rating" class="form-input" 
+                               value="3" min="1" max="5" step="0.1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="form-card">
+            <div class="form-section">
+                <h3>📄 Content Body</h3>
+                <div class="form-group">
+                    <label class="form-label">HTML Content (with LaTeX support)*</label>
+                    <textarea name="content" class="form-textarea content-editor" required
+                              placeholder="Enter your content here. Use $$ for LaTeX equations, HTML for formatting.">
+<div class="learning-section">
+    <h2>🎯 Learning Objectives</h2>
+    <ul>
+        <li>Understand the main concept</li>
+        <li>Apply the concept to solve problems</li>
+        <li>Connect to real-world applications</li>
+    </ul>
+    
+    <h2>📖 Introduction</h2>
+    <p>Start your explanation here...</p>
+    
+    <div class="math-box">
+        <h3>📐 Mathematical Definition</h3>
+        <div class="equation-center">
+            $$f(x) = \int_{-\infty}^{\infty} g(t) e^{-ixt} dt$$
+        </div>
+    </div>
+    
+    <h2>🌍 Real-World Applications</h2>
+    <p>Explain practical applications...</p>
+    
+    <h2>🎯 Summary</h2>
+    <p>Summarize key points...</p>
+</div>
+                    </textarea>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button type="button" onclick="previewContent()" class="btn btn-secondary">
+                        👁️ Preview Content
+                    </button>
+                </div>
+                
+                <div id="contentPreview" class="preview-mode" style="display: none;">
+                    <h4>📋 Content Preview</h4>
+                    <div id="previewArea"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Elements -->
+        <div class="form-card">
+            <div class="interactive-section">
+                <div class="section-header">
+                    <h3>🎮 Interactive Elements (Optional)</h3>
+                    <button type="button" onclick="addInteractiveElement()" class="add-btn">
+                        + Add Element
+                    </button>
+                </div>
+                <div id="interactiveElements"></div>
+            </div>
+        </div>
+
+        <!-- Assessments -->
+        <div class="form-card">
+            <div class="assessment-section">
+                <div class="section-header">
+                    <h3>❓ Assessments (Optional)</h3>
+                    <button type="button" onclick="addAssessment()" class="add-btn">
+                        + Add Assessment
+                    </button>
+                </div>
+                <div id="assessments"></div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="toolbar">
+            <button type="button" onclick="saveContent()" class="btn btn-primary">
+                💾 Save Content
+            </button>
+            <button type="button" onclick="previewContent()" class="btn btn-secondary">
+                👁️ Preview
+            </button>
+            <a href="{% url 'teacher-content-management' %}" class="btn btn-secondary">
+                ❌ Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+let interactiveElementCount = 0;
+let assessmentCount = 0;
+
+function addInteractiveElement() {
+    const container = document.getElementById('interactiveElements');
+    const elementId = `element_${interactiveElementCount++}`;
+    
+    const elementHtml = `
+        <div class="element-item" id="${elementId}">
+            <button type="button" onclick="removeElement('${elementId}')" class="remove-btn">Remove</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label class="form-label">Element Type</label>
+                    <select name="element_type" class="form-select">
+                        {% for value, label in element_type_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Title</label>
+                    <input type="text" name="element_title" class="form-input" placeholder="Element title">
+                </div>
+            </div>
+            <div>
+                <label class="form-label">Description</label>
+                <input type="text" name="element_description" class="form-input" placeholder="Brief description">
+            </div>
+            <div style="margin-top: 15px;">
+                <label class="form-label">JavaScript Code (Optional)</label>
+                <textarea name="javascript_code" class="form-textarea" style="height: 100px;" 
+                          placeholder="// Interactive JavaScript code here"></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', elementHtml);
+}
+
+function addAssessment() {
+    const container = document.getElementById('assessments');
+    const assessmentId = `assessment_${assessmentCount++}`;
+    
+    const assessmentHtml = `
+        <div class="assessment-item" id="${assessmentId}">
+            <button type="button" onclick="removeElement('${assessmentId}')" class="remove-btn">Remove</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label class="form-label">Question Type</label>
+                    <select name="question_type" class="form-select">
+                        {% for value, label in question_type_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Schedule Type</label>
+                    <select name="schedule_type" class="form-select">
+                        {% for value, label in schedule_type_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="form-label">Question Text</label>
+                <textarea name="question_text" class="form-textarea" style="height: 80px;" 
+                          placeholder="Enter your question here..."></textarea>
+            </div>
+            <div style="margin-top: 15px;">
+                <label class="form-label">Question Data (JSON format for options, correct answers, etc.)</label>
+                <textarea name="question_data" class="form-textarea" style="height: 100px;" 
+                          placeholder='{"options": ["A", "B", "C", "D"], "correct_answer": 0}'></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', assessmentHtml);
+}
+
+function removeElement(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.remove();
+    }
+}
+
+function previewContent() {
+    const content = document.querySelector('[name="content"]').value;
+    const previewArea = document.getElementById('previewArea');
+    const previewContainer = document.getElementById('contentPreview');
+    
+    previewArea.innerHTML = content;
+    previewContainer.style.display = 'block';
+    
+    // Re-render MathJax
+    if (window.MathJax) {
+        MathJax.typesetPromise([previewArea]).catch(function (err) {
+            console.log('MathJax error:', err);
+        });
+    }
+    
+    previewContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+function collectFormData() {
+    const formData = {
+        title: document.querySelector('[name="title"]').value,
+        level: document.querySelector('[name="level"]').value,
+        content_type: document.querySelector('[name="content_type"]').value,
+        content: document.querySelector('[name="content"]').value,
+        estimated_read_time: document.querySelector('[name="estimated_read_time"]').value,
+        difficulty_rating: document.querySelector('[name="difficulty_rating"]').value,
+        interactive_elements: [],
+        assessments: []
+    };
+    
+    // Collect interactive elements
+    document.querySelectorAll('.element-item').forEach(element => {
+        const elementData = {
+            element_type: element.querySelector('[name="element_type"]').value,
+            title: element.querySelector('[name="element_title"]').value,
+            description: element.querySelector('[name="element_description"]').value,
+            javascript_code: element.querySelector('[name="javascript_code"]').value,
+            config_data: {}
+        };
+        formData.interactive_elements.push(elementData);
+    });
+    
+    // Collect assessments
+    document.querySelectorAll('.assessment-item').forEach(assessment => {
+        const questionData = assessment.querySelector('[name="question_data"]').value;
+        let parsedQuestionData = {};
+        
+        try {
+            parsedQuestionData = JSON.parse(questionData || '{}');
+        } catch (e) {
+            console.warn('Invalid JSON in question data:', e);
+        }
+        
+        const assessmentData = {
+            question_type: assessment.querySelector('[name="question_type"]').value,
+            schedule_type: assessment.querySelector('[name="schedule_type"]').value,
+            question_text: assessment.querySelector('[name="question_text"]').value,
+            question_data: parsedQuestionData,
+            max_points: 1,
+            difficulty_weight: 1.0
+        };
+        formData.assessments.push(assessmentData);
+    });
+    
+    return formData;
+}
+
+function saveContent() {
+    const formData = collectFormData();
+    
+    // Validate required fields
+    if (!formData.title || !formData.content) {
+        alert('Please fill in all required fields (Title and Content)');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.querySelector('button[onclick="saveContent()"]');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '⏳ Saving...';
+    saveBtn.disabled = true;
+    
+    fetch('{% url "create-learning-content" node.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Content saved successfully!');
+            window.location.href = '{% url "teacher-content-management" %}';
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Failed to save content. Please try again.');
+    })
+    .finally(() => {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

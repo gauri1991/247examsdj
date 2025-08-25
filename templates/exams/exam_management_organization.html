@@ -1,0 +1,261 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Exams - Organizations{% endblock %}
+
+{% block extra_css %}
+<style>
+    .organization-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .organization-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    .view-toggle {
+        border-radius: 8px;
+        background: #f1f5f9;
+        padding: 4px;
+    }
+    .view-toggle.active {
+        background: #3b82f6;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header with View Toggles -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Manage Exams</h1>
+                <p class="mt-1 text-sm text-gray-500">Organize and manage exams by conducting organizations</p>
+            </div>
+            
+            <!-- View Mode Toggles -->
+            <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <a href="?view=organization" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'organization' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Organizations
+                </a>
+                <a href="?view=list" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'list' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    List
+                </a>
+                <a href="?view=grid" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'grid' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zM14 15a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z"></path>
+                    </svg>
+                    Grid
+                </a>
+                <a href="?view=calendar" class="px-4 py-2 text-sm font-medium rounded-md {% if view_mode == 'calendar' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-200{% endif %}">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Calendar
+                </a>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex space-x-3 mt-4">
+            <a href="{% url 'create-exam' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Exam
+            </a>
+            <a href="{% url 'create-organization' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                </svg>
+                Add Organization
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-6">
+        <div class="relative max-w-md">
+            <input type="text" id="examSearch" placeholder="Search exams, organizations..." 
+                   class="block w-full px-4 py-2 pl-10 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <div id="searchResults" class="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 hidden max-h-64 overflow-y-auto">
+            </div>
+        </div>
+    </div>
+
+    <!-- Organizations Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for org in organizations %}
+        <div class="organization-card bg-white rounded-lg shadow-md p-6 border border-gray-200" 
+             onclick="window.location.href='{% url 'organization-detail' org.id %}'">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    {% if org.logo %}
+                    <img src="{{ org.logo.url }}" alt="{{ org.name }}" class="w-12 h-12 rounded-lg object-cover">
+                    {% else %}
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                             {% if org.organization_type == 'government' %}bg-green-100 text-green-800
+                             {% elif org.organization_type == 'private' %}bg-blue-100 text-blue-800
+                             {% elif org.organization_type == 'university' %}bg-purple-100 text-purple-800
+                             {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ org.get_organization_type_display }}
+                </span>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ org.name }}</h3>
+            {% if org.short_name %}
+            <p class="text-sm text-gray-500 mb-2">{{ org.short_name }}</p>
+            {% endif %}
+            
+            {% if org.description %}
+            <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ org.description|truncatewords:15 }}</p>
+            {% endif %}
+            
+            <div class="flex items-center justify-between">
+                <div class="flex items-center text-sm text-gray-500">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    {{ org.exams_count }} exam{{ org.exams_count|pluralize }}
+                </div>
+                <div class="flex items-center text-sm text-green-600">
+                    <div class="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                    {{ org.active_exams_count }} active
+                </div>
+            </div>
+            
+            {% if org.website %}
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <a href="{{ org.website }}" target="_blank" class="text-xs text-blue-600 hover:text-blue-800" onclick="event.stopPropagation();">
+                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Visit Website
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No organizations found</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating your first organization.</p>
+            <div class="mt-6">
+                <a href="{% url 'create-organization' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Organization
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// AJAX Search functionality
+let searchTimeout;
+const searchInput = document.getElementById('examSearch');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        searchResults.classList.add('hidden');
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        fetch(`{% url 'ajax-exam-search' %}?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                displaySearchResults(data.results);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+            });
+    }, 300);
+});
+
+function displaySearchResults(results) {
+    if (results.length === 0) {
+        searchResults.classList.add('hidden');
+        return;
+    }
+    
+    let html = '';
+    results.forEach(result => {
+        if (result.type === 'organization') {
+            html += `
+                <div class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100" onclick="window.location.href='${result.url}'">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${result.text}</div>
+                            <div class="text-xs text-gray-500">${result.exams_count} exams</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100" onclick="window.location.href='${result.url}'">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${result.text}</div>
+                            <div class="text-xs text-gray-500">${result.organization} • ${result.category} • ${result.year}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    searchResults.innerHTML = html;
+    searchResults.classList.remove('hidden');
+}
+
+// Hide search results when clicking outside
+document.addEventListener('click', function(e) {
+    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

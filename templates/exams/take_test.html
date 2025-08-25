@@ -1,0 +1,696 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ attempt.test.title }} - Taking Test{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { overflow-x: hidden; }
+    .test-container { min-height: 100vh; }
+    .question-nav-grid { 
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+        gap: 8px;
+    }
+    .timer-warning { animation: pulse 2s infinite; }
+    .timer-critical { animation: pulse 1s infinite; color: #dc2626; }
+    
+    /* Question navigation button styles */
+    .question-nav-item {
+        position: relative;
+        min-width: 42px;
+        min-height: 42px;
+        border-radius: 6px;
+        border: 2px solid;
+        background: white;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Current question (blue) */
+    .question-nav-item.current {
+        border-color: #3b82f6;
+        background-color: #dbeafe;
+        color: #1e40af;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    
+    /* Answered question (green) */
+    .question-nav-item.answered {
+        border-color: #10b981;
+        background-color: #d1fae5;
+        color: #065f46;
+        position: relative;
+    }
+    .question-nav-item.answered::after {
+        content: '✓';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #10b981;
+        color: white;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    /* Marked for review (yellow) */
+    .question-nav-item.marked {
+        border-color: #f59e0b;
+        background-color: #fef3c7;
+        color: #92400e;
+        position: relative;
+    }
+    .question-nav-item.marked::after {
+        content: '⚠';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #f59e0b;
+        color: white;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    /* Both answered AND marked for review */
+    .question-nav-item.answered.marked {
+        border-color: #10b981;
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    .question-nav-item.answered.marked::after {
+        content: '✓';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #10b981;
+        color: white;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .question-nav-item.answered.marked::before {
+        content: '⚠';
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        background: #f59e0b;
+        color: white;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    /* Not answered (gray) */
+    .question-nav-item.not-answered {
+        border-color: #d1d5db;
+        background-color: #f9fafb;
+        color: #6b7280;
+    }
+    
+    /* Hover effects */
+    .question-nav-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Prevent text selection for security */
+    .question-content { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+    
+    /* Two-column layout enhancements */
+    @media (max-width: 1024px) {
+        .question-content .grid-cols-1 {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Option styling improvements */
+    .question-content .option-label {
+        transition: all 0.2s ease;
+    }
+    .question-content .option-label:hover {
+        background-color: #f9fafb;
+        border-color: #d1d5db;
+    }
+    
+    /* Custom scrollbar for question navigation */
+    .question-nav-container::-webkit-scrollbar { width: 6px; }
+    .question-nav-container::-webkit-scrollbar-track { background: #f1f1f1; }
+    .question-nav-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="test-container bg-gray-50" 
+     x-data="testInterface()" 
+     x-init="initTest()"
+     @beforeunload.window="handleBeforeUnload($event)">
+    
+    <!-- Test Header -->
+    <div class="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-lg font-semibold text-gray-900">{{ attempt.test.title }}</h1>
+                    <span class="text-sm text-gray-500">{{ attempt.test.exam.name }}</span>
+                </div>
+                
+                <!-- Timer -->
+                <div class="flex items-center space-x-6">
+                    <div class="text-sm text-gray-600">
+                        Question <span x-text="currentQuestion + 1"></span> of {{ attempt.total_questions }}
+                    </div>
+                    <div class="timer text-lg font-mono font-bold"
+                         :class="timeRemaining < 300 ? 'timer-critical' : (timeRemaining < 900 ? 'timer-warning' : 'text-gray-900')">
+                        <span x-text="formatTime(timeRemaining)"></span>
+                    </div>
+                    <button @click="showSubmitModal = true" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Submit Test
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="pb-2">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                         :style="`width: ${progress}%`"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span x-text="`${answeredCount} answered`"></span>
+                    <span x-text="`${progress.toFixed(1)}% complete`"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Question Navigation Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow p-4 sticky top-24">
+                    <h3 class="text-sm font-medium text-gray-900 mb-4">Question Navigation</h3>
+                    
+                    <div class="question-nav-container max-h-96 overflow-y-auto">
+                        <div class="question-nav-grid">
+                            {% for test_question in test_questions %}
+                            <button @click="goToQuestion({{ forloop.counter0 }})"
+                                    class="question-nav-item"
+                                    :class="getQuestionNavClass({{ forloop.counter0 }})">
+                                {{ forloop.counter }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Legend -->
+                    <div class="mt-4 space-y-3 text-xs">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded border-2 border-blue-500 bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-xs">1</div>
+                            <span class="text-gray-700">Current</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded border-2 border-green-500 bg-green-100 flex items-center justify-center text-green-700 font-semibold text-xs relative">
+                                2
+                                <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white" style="font-size: 8px;">✓</div>
+                            </div>
+                            <span class="text-gray-700">Answered</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded border-2 border-yellow-500 bg-yellow-100 flex items-center justify-center text-yellow-700 font-semibold text-xs relative">
+                                3
+                                <div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center text-white" style="font-size: 8px;">⚠</div>
+                            </div>
+                            <span class="text-gray-700">Marked for Review</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded border-2 border-green-500 bg-green-100 flex items-center justify-center text-green-700 font-semibold text-xs relative">
+                                4
+                                <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white" style="font-size: 8px;">✓</div>
+                                <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center text-white" style="font-size: 8px;">⚠</div>
+                            </div>
+                            <span class="text-gray-700">Answered + Review</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded border-2 border-gray-300 bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-xs">5</div>
+                            <span class="text-gray-700">Not Answered</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Question Area -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-lg shadow">
+                    {% for test_question in test_questions %}
+                    <div x-show="currentQuestion === {{ forloop.counter0 }}" 
+                         class="question-content p-6">
+                        
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-500">{{ test_question.marks }} marks</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Two Column Layout: Question + Options -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Left Column: Question Text -->
+                            <div class="space-y-4">
+                                <h2 class="text-lg font-medium text-gray-900">
+                                    Question {{ forloop.counter }}
+                                </h2>
+                                <div class="prose prose-sm max-w-none">
+                                    {{ test_question.question.question_text|linebreaks }}
+                                </div>
+                                
+                                {% if test_question.question.image %}
+                                <div class="mt-4">
+                                    <img src="{{ test_question.question.image.url }}" 
+                                         alt="Question image" 
+                                         class="max-w-full h-auto rounded-lg shadow-sm">
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Right Column: Answer Options -->
+                            <div class="space-y-4">
+                                <h3 class="text-base font-medium text-gray-700">Select your answer:</h3>
+                                <form x-data="{ selectedAnswer: getSelectedAnswer('{{ test_question.question.id }}') }"
+                                      @change="saveAnswer($event, '{{ test_question.question.id }}')"
+                                      hx-post="{% url 'save-answer' attempt.id %}"
+                                      hx-trigger="change"
+                                      hx-swap="none">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="question_id" value="{{ test_question.question.id }}">
+                            
+                            {% if test_question.question.question_type == 'mcq' %}
+                            <!-- Multiple Choice Question -->
+                            <div class="space-y-3">
+                                {% for option in test_question.question.options.all %}
+                                <label class="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" 
+                                           name="selected_option" 
+                                           value="{{ option.id }}"
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1"
+                                           :checked="selectedAnswer === '{{ option.id }}'"
+                                           @change="markQuestionAnswered(currentQuestion)">
+                                    <span class="flex-1">{{ option.option_text }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            
+                            {% elif test_question.question.question_type == 'multi_select' %}
+                            <!-- Multiple Select Question -->
+                            <div class="space-y-3">
+                                {% for option in test_question.question.options.all %}
+                                <label class="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                                    <input type="checkbox" 
+                                           name="selected_options" 
+                                           value="{{ option.id }}"
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                                           @change="markQuestionAnswered(currentQuestion)">
+                                    <span class="flex-1">{{ option.option_text }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            
+                            {% elif test_question.question.question_type == 'true_false' %}
+                            <!-- True/False Question -->
+                            <div class="space-y-3">
+                                <label class="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" 
+                                           name="boolean_answer" 
+                                           value="true"
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1">
+                                    <span class="flex-1">True</span>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" 
+                                           name="boolean_answer" 
+                                           value="false"
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 mt-1">
+                                    <span class="flex-1">False</span>
+                                </label>
+                            </div>
+                            
+                            {% elif test_question.question.question_type == 'fill_blank' %}
+                            <!-- Fill in the Blank -->
+                            <div>
+                                <textarea name="text_answer" 
+                                         rows="3" 
+                                         class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                         placeholder="Enter your answer..."></textarea>
+                            </div>
+                            
+                            {% elif test_question.question.question_type == 'essay' %}
+                            <!-- Essay Question -->
+                            <div>
+                                <textarea name="text_answer" 
+                                         rows="8" 
+                                         class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                         placeholder="Write your essay here..."></textarea>
+                            </div>
+                            {% endif %}
+                            
+                                    <!-- Mark for Review -->
+                                    <div class="mt-4 flex items-center">
+                                        <input type="checkbox" 
+                                               name="mark_for_review" 
+                                               id="mark_review_{{ test_question.question.id }}"
+                                               value="true"
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                               :checked="isQuestionMarkedForReview({{ forloop.counter0 }})"
+                                               @change="$event.target.checked ? markForReview({{ forloop.counter0 }}) : unmarkForReview({{ forloop.counter0 }})">
+                                        <label for="mark_review_{{ test_question.question.id }}" 
+                                               class="ml-2 text-sm text-gray-600">
+                                            Mark for review
+                                        </label>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Navigation Buttons -->
+                        <div class="flex justify-between items-center mt-8 pt-6 border-t">
+                            <button @click="previousQuestion()" 
+                                    :disabled="currentQuestion === 0"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    :class="{ 'opacity-50 cursor-not-allowed': currentQuestion === 0 }">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                                Previous
+                            </button>
+                            
+                            <div class="flex items-center space-x-2">
+                                <button @click="clearAnswer('{{ test_question.question.id }}')" 
+                                        class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">
+                                    Clear Answer
+                                </button>
+                                <button @click="saveAndNext('{{ test_question.question.id }}')" 
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Save & Next
+                                </button>
+                            </div>
+                            
+                            <button @click="nextQuestion()" 
+                                    :disabled="currentQuestion === {{ test_questions|length|add:'-1' }}"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    :class="{ 'opacity-50 cursor-not-allowed': currentQuestion === {{ test_questions|length|add:'-1' }} }">
+                                Next
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit Confirmation Modal -->
+    <div x-show="showSubmitModal" 
+         class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center"
+         style="display: none;">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Submit Test</h3>
+            <p class="text-sm text-gray-600 mb-6">
+                Are you sure you want to submit your test? You have answered 
+                <span x-text="answeredCount"></span> out of {{ attempt.total_questions }} questions.
+                
+                <span x-show="answeredCount < {{ attempt.total_questions }}">
+                    <br><br>
+                    <strong>Warning:</strong> You have <span x-text="{{ attempt.total_questions }} - answeredCount"></span> 
+                    unanswered questions. Once submitted, you cannot make any changes.
+                </span>
+            </p>
+            
+            <div class="flex justify-end space-x-3">
+                <button @click="showSubmitModal = false" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancel
+                </button>
+                <button @click="submitTest()" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Submit Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function testInterface() {
+    return {
+        currentQuestion: {{ current_question_index|default:0 }},
+        timeRemaining: {{ remaining_seconds|default:0 }},
+        answeredCount: {{ answered_count|default:0 }},
+        progress: {{ progress_percentage|default:0 }},
+        showSubmitModal: false,
+        answers: {},
+        markedForReview: new Set(),
+        questionStates: {}, // Track question states
+        timer: null,
+        
+        initTest() {
+            this.startTimer();
+            this.loadExistingAnswers();
+            
+            // Prevent right-click context menu
+            document.addEventListener('contextmenu', (e) => e.preventDefault());
+            
+            // Prevent common keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'p')) {
+                    e.preventDefault();
+                }
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                }
+            });
+        },
+        
+        startTimer() {
+            this.timer = setInterval(() => {
+                this.timeRemaining--;
+                
+                if (this.timeRemaining <= 0) {
+                    this.timeUp();
+                }
+                
+                // Show warnings
+                if (this.timeRemaining === 300) { // 5 minutes
+                    ExamPortal.showNotification('5 minutes remaining!', 'warning');
+                }
+                if (this.timeRemaining === 60) { // 1 minute
+                    ExamPortal.showNotification('1 minute remaining!', 'error');
+                }
+            }, 1000);
+        },
+        
+        timeUp() {
+            clearInterval(this.timer);
+            ExamPortal.showNotification('Time is up! Submitting your test...', 'warning');
+            setTimeout(() => {
+                this.submitTest();
+            }, 2000);
+        },
+        
+        formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+        },
+        
+        goToQuestion(index) {
+            this.currentQuestion = index;
+        },
+        
+        nextQuestion() {
+            if (this.currentQuestion < {{ test_questions|length|add:'-1' }}) {
+                this.currentQuestion++;
+            }
+        },
+        
+        previousQuestion() {
+            if (this.currentQuestion > 0) {
+                this.currentQuestion--;
+            }
+        },
+        
+        getQuestionNavClass(index) {
+            let classes = 'question-nav-item ';
+            
+            if (index === this.currentQuestion) {
+                classes += 'current ';
+            } else {
+                // Check if question is answered
+                if (this.isQuestionAnswered(index)) {
+                    classes += 'answered ';
+                }
+                
+                // Check if question is marked for review (can be combined with answered)
+                if (this.isQuestionMarkedForReview(index)) {
+                    classes += 'marked ';
+                }
+                
+                // If neither answered nor marked, it's not answered
+                if (!this.isQuestionAnswered(index) && !this.isQuestionMarkedForReview(index)) {
+                    classes += 'not-answered ';
+                }
+            }
+            
+            return classes;
+        },
+        
+        isQuestionAnswered(index) {
+            // Check if the question at this index has been answered
+            return this.questionStates[index] === 'answered';
+        },
+        
+        isQuestionMarkedForReview(index) {
+            // Check if the question at this index is marked for review
+            return this.markedForReview.has(index);
+        },
+        
+        markQuestionAnswered(index) {
+            this.questionStates[index] = 'answered';
+            // Don't remove from review - allow both states to coexist
+            this.updateAnsweredCount();
+        },
+        
+        markForReview(index) {
+            this.markedForReview.add(index);
+        },
+        
+        unmarkForReview(index) {
+            this.markedForReview.delete(index);
+        },
+        
+        updateAnsweredCount() {
+            this.answeredCount = Object.values(this.questionStates).filter(state => state === 'answered').length;
+            this.progress = (this.answeredCount / {{ test_questions|length }} * 100);
+        },
+        
+        saveAnswer(event, questionId) {
+            // Answer is automatically saved via HTMX
+            // Update local state if needed
+        },
+        
+        saveAndNext(questionId) {
+            // Save current answer and move to next question
+            this.nextQuestion();
+        },
+        
+        clearAnswer(questionId) {
+            // Clear the current answer
+            const form = document.querySelector(`form input[value="${questionId}"]`).closest('form');
+            form.reset();
+            
+            // Trigger save to clear on server
+            htmx.trigger(form, 'change');
+        },
+        
+        getSelectedAnswer(questionId) {
+            // Get existing answer for the question
+            return this.answers[questionId] || '';
+        },
+        
+        loadExistingAnswers() {
+            // Initialize question states based on existing answers
+            {% for test_question in test_questions %}
+            {% if test_question.question.id in answers_dict %}
+            this.questionStates[{{ forloop.counter0 }}] = 'answered';
+            {% endif %}
+            {% endfor %}
+            
+            // Update answered count
+            this.updateAnsweredCount();
+        },
+        
+        submitTest() {
+            fetch(`/exams/take/{{ attempt.id }}/submit/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    clearInterval(this.timer);
+                    window.location.href = data.redirect_url;
+                } else {
+                    ExamPortal.showNotification('Error submitting test. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                ExamPortal.showNotification('Error submitting test. Please try again.', 'error');
+            });
+        },
+        
+        handleBeforeUnload(event) {
+            event.preventDefault();
+            event.returnValue = 'Are you sure you want to leave? Your test progress will be lost.';
+        }
+    }
+}
+
+// Disable common keyboard shortcuts for security
+document.addEventListener('keydown', function(e) {
+    // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+    if (e.keyCode == 123 || 
+        (e.ctrlKey && e.shiftKey && e.keyCode == 73) || 
+        (e.ctrlKey && e.shiftKey && e.keyCode == 74) || 
+        (e.ctrlKey && e.keyCode == 85)) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+// Disable right-click
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+});
+</script>
+{% endblock %}

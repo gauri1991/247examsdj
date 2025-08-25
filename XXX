@@ -1,0 +1,11 @@
+To run your Django app on a custom port, use:
+
+  python manage.py runserver <port>
+
+  For example:
+  - python manage.py runserver 8080 - runs on port 8080
+  - python manage.py runserver 3000 - runs on port 3000
+  - python manage.py runserver 0.0.0.0:5000 - runs on port 5000 and allows external
+  connections
+
+  The default port is 8000 if not specified.

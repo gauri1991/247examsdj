@@ -1,0 +1,74 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Django
+*.log
+*.pot
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+docs/
+LICENSE
+
+# Testing
+tests/
+test_*.py
+*_test.py
+
+# Backups
+*.bak
+*.backup
+backups/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node (if any frontend build tools)
+node_modules/
+npm-debug.log
+yarn-error.log

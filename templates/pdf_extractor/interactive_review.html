@@ -1,0 +1,477 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% csrf_token %}
+
+{% block title %}Interactive PDF Review - {{ document.filename }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pdf-viewer-container {
+        position: relative;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+        overflow: hidden;
+    }
+    
+    .pdf-image {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        cursor: crosshair;
+    }
+    
+    .region-overlay {
+        position: absolute;
+        border: 2px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+        cursor: move;
+        z-index: 10;
+    }
+    
+    .region-overlay.selected {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .region-overlay.question {
+        border-color: #8b5cf6;
+        background: rgba(139, 92, 246, 0.1);
+    }
+    
+    .region-overlay.answer {
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.1);
+    }
+    
+    .region-label {
+        position: absolute;
+        top: -25px;
+        left: 0;
+        background: #374151;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    .control-panel {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .page-navigation {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    .region-info {
+        background: #f3f4f6;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid #6b7280;
+    }
+    
+    .region-info.question {
+        border-left-color: #8b5cf6;
+    }
+    
+    .region-info.answer {
+        border-left-color: #f59e0b;
+    }
+    
+    /* Checkbox styling for region selection */
+    .region-checkbox {
+        accent-color: #3b82f6;
+    }
+    
+    .region-checkbox:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+    
+    .region-info input[type="checkbox"]:checked + label {
+        font-weight: 600;
+        color: #1e40af;
+    }
+    
+    .text-preview {
+        font-family: monospace;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+    
+    .question-editor {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .option-input {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .option-letter {
+        width: 30px;
+        text-align: center;
+        font-weight: bold;
+    }
+    
+    /* Button Styles */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.25rem;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+        white-space: nowrap;
+    }
+    
+    .btn:focus {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    }
+    
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
+    
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+        border-color: #6b7280;
+    }
+    
+    .btn-secondary:hover:not(:disabled) {
+        background-color: #4b5563;
+        border-color: #4b5563;
+    }
+    
+    .btn-success {
+        background-color: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+        background-color: #059669;
+        border-color: #059669;
+    }
+    
+    .btn-warning {
+        background-color: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+    }
+    
+    .btn-warning:hover:not(:disabled) {
+        background-color: #d97706;
+        border-color: #d97706;
+    }
+    
+    .btn-outline {
+        background-color: transparent;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+    
+    .btn-outline:hover:not(:disabled) {
+        background-color: #f3f4f6;
+        border-color: #9ca3af;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    /* Go to Top Button Styles */
+    #goToTopBtn {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+    
+    #goToTopBtn.show {
+        opacity: 1;
+    }
+    
+    #goToTopBtn:hover {
+        transform: translateY(-5px) scale(1.1);
+    }
+    
+    /* Add smooth scrolling to the page */
+    html {
+        scroll-behavior: smooth;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Interactive PDF Review</h1>
+            <p class="text-gray-600">{{ document.filename }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'pdf_extractor:document_detail' document.id %}" 
+               class="btn btn-secondary">Back to Document</a>
+            <button id="saveAndFinish" class="btn btn-success" style="display: none;">
+                Save & Finish Review
+            </button>
+        </div>
+    </div>
+
+    <!-- Page Navigation -->
+    <div class="page-navigation control-panel">
+        <button id="prevPage" class="btn btn-secondary" {% if not has_previous %}disabled{% endif %}>
+            ← Previous
+        </button>
+        
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Page</span>
+            <input type="number" id="pageInput" value="{{ current_page }}" 
+                   min="1" max="{{ total_pages }}" 
+                   class="w-16 px-2 py-1 border border-gray-300 rounded text-center">
+            <span class="text-sm text-gray-600">of {{ total_pages }}</span>
+        </div>
+        
+        <button id="nextPage" class="btn btn-secondary" {% if not has_next %}disabled{% endif %}>
+            Next →
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- PDF Viewer -->
+        <div class="lg:col-span-2">
+            <div class="control-panel">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium">PDF Page {{ current_page }}</h3>
+                    <div class="btn-group">
+                        <button id="autoDetectBtn" class="btn btn-primary">
+                            Auto Detect Regions
+                        </button>
+                        <button id="manualSelectBtn" class="btn btn-secondary">
+                            Manual Selection
+                        </button>
+                        <button id="clearRegionsBtn" class="btn btn-outline">
+                            Clear All
+                        </button>
+                        <button id="debugBtn" class="btn btn-outline" onclick="reviewer.debugRegions()">
+                            Debug
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="pdf-viewer-container" id="pdfViewer">
+                    {% if current_image_url %}
+                        <img id="pdfImage" src="{{ current_image_url }}" alt="PDF Page {{ current_page }}" 
+                             class="pdf-image" draggable="false">
+                        <div id="regionOverlays"></div>
+                    {% else %}
+                        <div class="p-8 text-center text-gray-500">
+                            <p>Unable to load PDF page image</p>
+                            <p class="text-sm mt-2">Please try refreshing the page</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="space-y-4">
+            <!-- Region Management -->
+            <div class="control-panel">
+                <h3 class="text-lg font-medium mb-4">Detected Regions</h3>
+                <div id="regionsList" class="space-y-2">
+                    <p class="text-gray-500 text-sm">Click "Auto Detect Regions" to find question areas</p>
+                </div>
+                
+                <!-- Select All / Deselect All buttons -->
+                <div id="selectAllButtons" class="mt-3 flex space-x-2" style="display: none;">
+                    <button id="selectAllBtn" class="btn btn-sm btn-outline flex-1">
+                        ✓ Select All
+                    </button>
+                    <button id="deselectAllBtn" class="btn btn-sm btn-outline flex-1">
+                        ✗ Deselect All
+                    </button>
+                </div>
+                
+                <div class="mt-4 space-y-2">
+                    <button id="processRegionsBtn" class="btn btn-success w-full" disabled>
+                        Process & Extract Text
+                    </button>
+                    <button id="markSelectedUnsupportedBtn" class="btn btn-warning w-full" disabled>
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Mark Selected as Unsupported
+                    </button>
+                    <div class="border-t border-gray-200 pt-2 space-y-2">
+                        <button id="markPageCompleteBtn" class="btn btn-success w-full">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Mark Page as Complete
+                        </button>
+                        <button id="markNoQuestionsBtn" class="btn btn-secondary w-full">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Mark Page as "No Questions"
+                        </button>
+                        <button id="markForLaterBtn" class="btn btn-warning w-full">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Mark Entire Page as Unsupported
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Editor -->
+            <div id="questionEditor" class="control-panel" style="display: none;">
+                <h3 class="text-lg font-medium mb-4">Edit Questions</h3>
+                <div id="questionsContainer">
+                    <!-- Questions will be populated here -->
+                </div>
+                
+                <div class="mt-4">
+                    <button id="saveQuestionsBtn" class="btn btn-success w-full">
+                        Save Questions for This Page
+                    </button>
+                </div>
+            </div>
+
+            <!-- Saved Questions Display -->
+            {% if page_questions.count > 0 %}
+            <div class="control-panel">
+                <h3 class="text-lg font-medium mb-4">Saved Questions for Page {{ current_page }}</h3>
+                <div class="space-y-3">
+                    {% for question in page_questions %}
+                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <div class="mb-2">
+                            <span class="text-sm font-medium text-gray-500">Question {{ forloop.counter }}:</span>
+                            <p class="mt-1">{{ question.question_text }}</p>
+                        </div>
+                        
+                        {% if question.answer_options %}
+                        <div class="mt-3">
+                            <span class="text-sm font-medium text-gray-500">Options:</span>
+                            <ul class="mt-1 space-y-1">
+                                {% for option in question.answer_options %}
+                                <li class="text-sm {% if option.letter in question.correct_answers %}text-green-700 font-medium{% endif %}">
+                                    {{ option.letter }}) {{ option.text }}
+                                    {% if option.letter in question.correct_answers %}
+                                        <span class="text-xs bg-green-100 px-1 rounded">✓ Correct</span>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                            <span>Type: {{ question.get_question_type_display }}</span>
+                            <span>Confidence: {{ question.confidence_percentage }}%</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Progress Info -->
+            <div class="control-panel">
+                <h3 class="text-lg font-medium mb-2">Session Progress</h3>
+                <div class="text-sm text-gray-600">
+                    <p>Current Page: {{ current_page }} / {{ total_pages }}</p>
+                    <p>Status: {{ review_session.status|title }}</p>
+                    {% if page_questions.count > 0 %}
+                        <p class="text-green-600 mt-2">
+                            ✓ {{ page_questions.count }} question(s) saved for this page
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Go to Top Button -->
+<button id="goToTopBtn" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 z-40 hidden hover:scale-110">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+    </svg>
+    <span class="sr-only">Go to top</span>
+</button>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p id="loadingMessage" class="text-gray-700">Processing...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Load external fixed JavaScript -->
+<script src="{% static 'js/interactive-review-fixed.js' %}"></script>
+
+<!-- Add template variables as data attributes -->
+<div data-document-id="{{ document.id }}" data-current-page="{{ current_page }}" data-total-pages="{{ document.page_count }}" style="display:none;"></div>
+
+
+<script>
+// All functionality moved to external JS file for better maintainability
+console.log('Interactive review page loaded for document:', '{{ document.id }}', 'page:', {{ current_page }});
+</script>
+{% endblock %}

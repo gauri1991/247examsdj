@@ -1,0 +1,277 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Test - {{ exam.name }} - Exam Portal{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                Create Test
+            </h1>
+            <p class="mt-1 text-sm text-gray-500">
+                Create a new test for "{{ exam.name }}"
+            </p>
+        </div>
+        <div class="mt-4 md:mt-0 md:ml-4">
+            <a href="{% url 'exam-detail' exam.id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Exam
+            </a>
+        </div>
+    </div>
+
+    <!-- Compatible Question Banks -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Compatible Question Banks</h3>
+            <button type="button" id="refreshBanks" class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Refresh
+            </button>
+        </div>
+        
+        <div id="compatibleBanks" class="space-y-4">
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">Loading compatible question banks...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Test Form -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label for="title" class="block text-sm font-medium text-gray-700">Test Title *</label>
+                    <input type="text" name="title" id="title" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="Enter test name">
+                </div>
+                
+                <div class="sm:col-span-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="description" rows="3"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                              placeholder="Enter test description"></textarea>
+                </div>
+                
+                <div>
+                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700">Duration (minutes) *</label>
+                    <input type="number" name="duration_minutes" id="duration_minutes" value="60" min="1" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="total_marks" class="block text-sm font-medium text-gray-700">Total Marks *</label>
+                    <input type="number" name="total_marks" id="total_marks" value="100" min="1" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="pass_percentage" class="block text-sm font-medium text-gray-700">Pass Percentage *</label>
+                    <input type="number" name="pass_percentage" id="pass_percentage" value="60" min="0" max="100" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="max_attempts" class="block text-sm font-medium text-gray-700">Max Attempts *</label>
+                    <input type="number" name="max_attempts" id="max_attempts" value="1" min="1" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+                
+                <div class="sm:col-span-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_published" id="is_published"
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="is_published" class="ml-2 block text-sm text-gray-900">
+                            Publish test (make it available to students)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'exam-detail' exam.id %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Create Test
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const examId = '{{ exam.id }}';
+    
+    function loadCompatibleBanks() {
+        const container = document.getElementById('compatibleBanks');
+        container.innerHTML = `
+            <div class="text-center py-8">
+                <svg class="mx-auto h-12 w-12 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <p class="mt-2 text-sm text-gray-500">Loading compatible question banks...</p>
+            </div>
+        `;
+        
+        fetch(`/exams/${examId}/compatible-banks/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <p class="mt-2 text-sm text-red-500">Error: ${data.error}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                if (data.suggestions.total_count === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">No compatible question banks found.</p>
+                            <p class="text-xs text-gray-400 mt-1">Try creating question banks with similar tags and categories.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `<div class="mb-4">
+                    <p class="text-sm text-gray-600">Found <span class="font-semibold">${data.suggestions.total_count}</span> compatible question banks for this exam.</p>
+                </div>`;
+                
+                // Exact matches
+                if (data.suggestions.exact_matches.length > 0) {
+                    html += `
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-green-800 mb-3 flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                Exact Matches (${data.suggestions.exact_matches.length})
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    `;
+                    
+                    data.suggestions.exact_matches.forEach(match => {
+                        html += createBankCard(match, 'green');
+                    });
+                    
+                    html += `</div></div>`;
+                }
+                
+                // Good matches
+                if (data.suggestions.good_matches.length > 0) {
+                    html += `
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-blue-800 mb-3 flex items-center">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                                Good Matches (${data.suggestions.good_matches.length})
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    `;
+                    
+                    data.suggestions.good_matches.forEach(match => {
+                        html += createBankCard(match, 'blue');
+                    });
+                    
+                    html += `</div></div>`;
+                }
+                
+                // Partial matches
+                if (data.suggestions.partial_matches.length > 0) {
+                    html += `
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-yellow-800 mb-3 flex items-center">
+                                <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                                Partial Matches (${data.suggestions.partial_matches.length})
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    `;
+                    
+                    data.suggestions.partial_matches.forEach(match => {
+                        html += createBankCard(match, 'yellow');
+                    });
+                    
+                    html += `</div></div>`;
+                }
+                
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error loading compatible banks:', error);
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        <p class="mt-2 text-sm text-red-500">Failed to load compatible question banks.</p>
+                    </div>
+                `;
+            });
+    }
+    
+    function createBankCard(match, color) {
+        const borderColor = color === 'green' ? 'border-green-200' : 
+                          color === 'blue' ? 'border-blue-200' : 'border-yellow-200';
+        const bgColor = color === 'green' ? 'bg-green-50' : 
+                       color === 'blue' ? 'bg-blue-50' : 'bg-yellow-50';
+        const scoreColor = color === 'green' ? 'text-green-700 bg-green-100' : 
+                          color === 'blue' ? 'text-blue-700 bg-blue-100' : 'text-yellow-700 bg-yellow-100';
+        
+        return `
+            <div class="border-2 ${borderColor} ${bgColor} rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between mb-2">
+                    <h5 class="font-medium text-gray-900 text-sm">${match.name}</h5>
+                    <span class="text-xs px-2 py-1 rounded-full ${scoreColor}">${Math.round(match.score * 100)}%</span>
+                </div>
+                <p class="text-xs text-gray-600 mb-3 line-clamp-2">${match.description}</p>
+                <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>${match.questions_count} questions</span>
+                    <a href="/questions/bank/${match.id}/" class="text-blue-600 hover:text-blue-800">View Bank →</a>
+                </div>
+                ${match.reasons.length > 0 ? `
+                <div class="border-t border-gray-200 pt-2">
+                    <p class="text-xs text-gray-500 mb-1">Match reasons:</p>
+                    <ul class="text-xs text-gray-600 space-y-1">
+                        ${match.reasons.slice(0, 3).map(reason => `<li>• ${reason}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+    
+    // Load banks on page load
+    loadCompatibleBanks();
+    
+    // Refresh button
+    document.getElementById('refreshBanks').addEventListener('click', loadCompatibleBanks);
+});
+</script>
+
+{% endblock %}
