@@ -272,4 +272,4 @@ scripts/*_server.sh
 # 3. Use .env.example for documentation, not .env
 # 4. Production .env files should only exist on production servers
 # 5. Use environment variables for all sensitive configuration
-# ==============================================================================
+# ==============================================================================.env.production.generated
