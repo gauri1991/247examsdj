@@ -30,22 +30,6 @@ services:
     expose:
       - "8000"
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=dokploy-network"
-      # Service definition
-      - "traefik.http.services.examportal-service.loadbalancer.server.port=8000"
-      # HTTPS router
-      - "traefik.http.routers.examportal.rule=Host(`247exams.com`) || Host(`www.247exams.com`)"
-      - "traefik.http.routers.examportal.entrypoints=websecure"
-      - "traefik.http.routers.examportal.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.examportal.service=examportal-service"
-      # HTTP to HTTPS redirect
-      - "traefik.http.routers.examportal-http.rule=Host(`247exams.com`) || Host(`www.247exams.com`)"
-      - "traefik.http.routers.examportal-http.entrypoints=web"
-      - "traefik.http.routers.examportal-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
