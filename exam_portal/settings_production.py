@@ -131,7 +131,7 @@ CACHES = {
 # STATIC FILES CONFIGURATION
 # -----------------------------------------------------------------------------
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Compress static files
 COMPRESS_ENABLED = True
@@ -423,6 +423,11 @@ if 'health_check' not in INSTALLED_APPS:
 # Add Django Defender for brute force protection
 if 'defender' not in INSTALLED_APPS:
     INSTALLED_APPS.append('defender')
+
+# Add WhiteNoise middleware for serving static files in production
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    # Insert after SecurityMiddleware
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Add Defender middleware at the beginning
 if 'defender.middleware.FailedLoginMiddleware' not in MIDDLEWARE:
