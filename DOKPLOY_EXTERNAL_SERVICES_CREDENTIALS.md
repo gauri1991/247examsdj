@@ -118,7 +118,8 @@ CSRF_TRUSTED_ORIGINS=http://147.93.102.87,https://147.93.102.87
 DJANGO_LOG_LEVEL=INFO
 
 # ===== DATABASE (EXTERNAL POSTGRESQL) =====
-DATABASE_URL=postgresql://examuser:sS8liZaidpCoFOiYwy33LbdZNC4/Jy8R3YRChd+eXio=@resnovate247exams-examportalpostgres-hsexln:5432/exam_portal_db
+# IMPORTANT: Password is URL-encoded in DATABASE_URL (/ = %2F, + = %2B, = = %3D)
+DATABASE_URL=postgresql://examuser:sS8liZaidpCoFOiYwy33LbdZNC4%2FJy8R3YRChd%2BeXio%3D@resnovate247exams-examportalpostgres-hsexln:5432/exam_portal_db
 DB_HOST=resnovate247exams-examportalpostgres-hsexln
 DB_PORT=5432
 DB_USER=examuser
@@ -126,10 +127,11 @@ DB_PASSWORD=sS8liZaidpCoFOiYwy33LbdZNC4/Jy8R3YRChd+eXio=
 DB_NAME=exam_portal_db
 
 # ===== REDIS (EXTERNAL REDIS) =====
-REDIS_URL=redis://default:Hm/rYtzPAgQUX/w0F3FjzyjsAMxuT9hX1UNGBjPbdhY=@resnovate247exams-examportalredis-8megq1:6379/0
+# IMPORTANT: Password is URL-encoded in REDIS URLs (/ = %2F, + = %2B, = = %3D)
+REDIS_URL=redis://default:Hm%2FrYtzPAgQUX%2Fw0F3FjzyjsAMxuT9hX1UNGBjPbdhY%3D@resnovate247exams-examportalredis-8megq1:6379/0
 REDIS_PASSWORD=Hm/rYtzPAgQUX/w0F3FjzyjsAMxuT9hX1UNGBjPbdhY=
-CELERY_BROKER_URL=redis://default:Hm/rYtzPAgQUX/w0F3FjzyjsAMxuT9hX1UNGBjPbdhY=@resnovate247exams-examportalredis-8megq1:6379/1
-CELERY_RESULT_BACKEND=redis://default:Hm/rYtzPAgQUX/w0F3FjzyjsAMxuT9hX1UNGBjPbdhY=@resnovate247exams-examportalredis-8megq1:6379/1
+CELERY_BROKER_URL=redis://default:Hm%2FrYtzPAgQUX%2Fw0F3FjzyjsAMxuT9hX1UNGBjPbdhY%3D@resnovate247exams-examportalredis-8megq1:6379/1
+CELERY_RESULT_BACKEND=redis://default:Hm%2FrYtzPAgQUX%2Fw0F3FjzyjsAMxuT9hX1UNGBjPbdhY%3D@resnovate247exams-examportalredis-8megq1:6379/1
 
 # ===== EMAIL (UPDATE WITH YOUR CREDENTIALS) =====
 EMAIL_HOST=smtp.gmail.com
