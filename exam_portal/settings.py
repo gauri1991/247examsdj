@@ -304,11 +304,15 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# Email Configuration
+# Email Configuration - Handle empty environment variables gracefully
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = env('EMAIL_HOST', default='')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+# Handle EMAIL_PORT: if empty string, use default 587
+_email_port = env('EMAIL_PORT', default='587')
+EMAIL_PORT = int(_email_port) if _email_port else 587
+# Handle EMAIL_USE_TLS: if empty string, use default True
+_email_tls = env('EMAIL_USE_TLS', default='True')
+EMAIL_USE_TLS = _email_tls.lower() in ('true', '1', 'yes') if _email_tls else True
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@examportal.com')
@@ -386,28 +390,28 @@ DEBUG_TOOLBAR_PANELS = [
 ]
 
 # Content Security Policy (disabled in development)
+# Correct django-csp configuration format
 if not DEBUG:
-    CONTENT_SECURITY_POLICY = {
-        'DIRECTIVES': {
-            'default-src': ("'self'",),
-            'script-src': (
-                "'self'",
-                "'unsafe-inline'",  # Required for Alpine.js
-                "https://unpkg.com",  # Alpine.js CDN
-                "https://cdn.jsdelivr.net",  # Tailwind CDN
-            ),
-            'style-src': (
-                "'self'",
-                "'unsafe-inline'",  # Required for Tailwind CSS
-                "https://cdn.jsdelivr.net",
-            ),
-            'img-src': ("'self'", "data:", "https:"),
-            'font-src': ("'self'", "data:", "https:"),
-            'connect-src': ("'self'",),
-            'frame-src': ("'none'",),
-            'object-src': ("'none'",),
-        }
-    }
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_SCRIPT_SRC = (
+        "'self'",
+        "'unsafe-inline'",  # Required for inline scripts
+        "https://cdn.jsdelivr.net",  # CDN for libraries
+        "https://unpkg.com",  # Alpine.js CDN
+        "https://cdnjs.cloudflare.com",  # Cloudflare CDN
+    )
+    CSP_STYLE_SRC = (
+        "'self'",
+        "'unsafe-inline'",  # Required for Tailwind CSS
+        "https://cdn.jsdelivr.net",
+        "https://fonts.googleapis.com",
+    )
+    CSP_IMG_SRC = ("'self'", "data:", "https:")
+    CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "data:")
+    CSP_CONNECT_SRC = ("'self'",)
+    CSP_FORM_ACTION = ("'self'",)
+    CSP_BASE_URI = ("'self'",)
+    CSP_FRAME_ANCESTORS = ("'none'",)
 
 # Rate Limiting Configuration
 RATELIMIT_ENABLE = not DEBUG  # Disable rate limiting in development
