@@ -1,0 +1,67 @@
+# Docker Compose for Dokploy with External PostgreSQL and Redis
+# Use this if you want to manage PostgreSQL and Redis separately in Dokploy
+#
+# To use this file:
+# 1. Create PostgreSQL service in Dokploy
+# 2. Create Redis service in Dokploy
+# 3. Rename this file to docker-compose.yml
+# 4. Update environment variables with external service connections
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # These will point to Dokploy-managed services
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-exam_portal.settings_production}
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    expose:
+      - "80"
+    # No depends_on because services are external
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A exam_portal worker -l info --concurrency=2
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-exam_portal.settings_production}
+    volumes:
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A exam_portal beat -l info
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-exam_portal.settings_production}
+    restart: unless-stopped
+
+volumes:
+  static_volume:
+  media_volume:
+  logs_volume:
