@@ -2,8 +2,8 @@
 # These are needed for production deployment
 # ==============================================================================
 
-# Django and core framework
-Django==5.2.4
+# Django and core framework (using 4.2 LTS for production stability)
+Django==4.2.17
 django-environ==0.12.0
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.1
