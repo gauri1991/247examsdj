@@ -47,7 +47,7 @@ prometheus-client==0.21.0
 django-defender==0.9.7
 
 # Additional security headers and checks
-django-security==0.18.0
+django-security==1.1.3
 
 # ==============================================================================
 # PERFORMANCE OPTIMIZATION
