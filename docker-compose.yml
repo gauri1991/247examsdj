@@ -30,12 +30,6 @@ services:
     expose:
       - "8000"
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.examportal.rule=Host(`247exams.com`) || Host(`www.247exams.com`)"
-      - "traefik.http.routers.examportal.entrypoints=websecure"
-      - "traefik.http.routers.examportal.tls.certresolver=letsencrypt"
-      - "traefik.http.services.examportal.loadbalancer.server.port=8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
