@@ -41,29 +41,34 @@ class ThemeSwitcher {
      */
     async fetchUserPreferences() {
         try {
-            const response = await fetch('/users/api/get-preferences/', {
+            const response = await fetch('/api/preferences/', {
                 method: 'GET',
                 headers: {
                     'X-CSRFToken': this.getCsrfToken(),
+                    'Accept': 'application/json'
                 }
             });
 
-            if (response.ok) {
+            // Check if response is JSON before parsing
+            const contentType = response.headers.get('content-type');
+            if (response.ok && contentType && contentType.includes('application/json')) {
                 const data = await response.json();
                 if (data.success && data.preferences) {
                     const prefs = data.preferences;
-                    
+
                     // Apply theme
                     this.setTheme(prefs.theme || 'light');
-                    
+
                     // Apply other visual preferences
                     this.applyPreferences(prefs);
                 }
+            } else {
+                // API endpoint doesn't exist or returns HTML - use fallback
+                this.setTheme('light');
             }
         } catch (error) {
-            console.error('Error fetching preferences:', error);
-            // Fall back to system preference or light theme
-            this.setTheme('auto');
+            // Silently fall back to light theme - API might not be implemented yet
+            this.setTheme('light');
         }
     }
 
