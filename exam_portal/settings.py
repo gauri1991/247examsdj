@@ -28,17 +28,19 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+# Provide a default only for Docker build (collectstatic), will be overridden in production
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-build-only-key-DO-NOT-USE-IN-PRODUCTION')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG', default=False)
 
 # In production, ALLOWED_HOSTS must be explicitly set via environment variable
 # In development, allow all hosts for convenience
 if DEBUG:
     ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', 'testserver', '192.168.29.81', '192.168.29.214', '*'])
 else:
-    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+    # Provide default for Docker build, will be overridden by environment variable at runtime
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost'])
 
 # Feature Flags Configuration
 # Control feature availability via environment variables
@@ -329,8 +331,8 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=n
 SECURE_HSTS_PRELOAD = env('SECURE_HSTS_PRELOAD', default=not DEBUG)
 
 # Celery Configuration
-CELERY_BROKER_URL = env('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL')
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

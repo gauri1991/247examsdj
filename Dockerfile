@@ -34,8 +34,16 @@ COPY --chown=django:django . .
 RUN mkdir -p staticfiles media logs && \
     chown -R django:django staticfiles media logs
 
-# Collect static files
+# Collect static files with build-time environment variables
+# SECRET_KEY default is set in settings.py for build time
+ENV SECRET_KEY=django-insecure-build-only-key-DO-NOT-USE-IN-PRODUCTION \
+    DEBUG=False \
+    DATABASE_URL=sqlite:///tmp/build.db
 RUN python manage.py collectstatic --noinput || true
+# Unset build-time variables (runtime env vars will override)
+ENV SECRET_KEY="" \
+    DEBUG="" \
+    DATABASE_URL=""
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
