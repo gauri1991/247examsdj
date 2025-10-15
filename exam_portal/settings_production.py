@@ -33,10 +33,12 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Cookie Security
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Strict'
-CSRF_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_NAME = '__Host-sessionid'
-CSRF_COOKIE_NAME = '__Host-csrftoken'
+SESSION_COOKIE_SAMESITE = 'Lax'  # Changed from Strict for better compatibility
+CSRF_COOKIE_SAMESITE = 'Lax'
+# Note: __Host- prefix requires secure context and no Domain attribute
+# Uncomment these when using HTTPS with proper domain
+# SESSION_COOKIE_NAME = '__Host-sessionid'
+# CSRF_COOKIE_NAME = '__Host-csrftoken'
 
 # Session Security
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
@@ -393,3 +395,55 @@ MAX_CONCURRENT_TESTS = 3
 # User Limits
 MAX_LOGIN_ATTEMPTS = 5
 ACCOUNT_LOCKOUT_DURATION = 3600  # 1 hour in seconds
+
+# HEALTH CHECKS AND MONITORING
+# -----------------------------------------------------------------------------
+# Add health check apps to INSTALLED_APPS
+if 'health_check' not in INSTALLED_APPS:
+    INSTALLED_APPS += [
+        'health_check',
+        'health_check.db',
+        'health_check.cache',
+        'health_check.storage',
+        'health_check.contrib.migrations',
+        'health_check.contrib.celery',
+        'health_check.contrib.redis',
+    ]
+
+# Add Django Defender for brute force protection
+if 'defender' not in INSTALLED_APPS:
+    INSTALLED_APPS.append('defender')
+
+# Add Defender middleware at the beginning
+if 'defender.middleware.FailedLoginMiddleware' not in MIDDLEWARE:
+    MIDDLEWARE.insert(0, 'defender.middleware.FailedLoginMiddleware')
+
+# Defender Configuration
+DEFENDER_LOGIN_FAILURE_LIMIT = 5
+DEFENDER_COOLOFF_TIME = 300  # 5 minutes
+DEFENDER_STORE_ACCESS_ATTEMPTS = True
+DEFENDER_USE_CELERY = env.bool('DEFENDER_USE_CELERY', default=False)  # Set to True if Celery is configured
+DEFENDER_REDIS_URL = env('REDIS_URL', default=None)
+
+# DOKPLOY SPECIFIC CONFIGURATION
+# -----------------------------------------------------------------------------
+# Trust proxy headers from Dokploy/Traefik
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF trusted origins for Dokploy deployment
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+
+print("=" * 80)
+print("✓ Production settings loaded successfully")
+print("=" * 80)
+print(f"DEBUG: {DEBUG}")
+print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+print(f"Database: {DATABASES['default']['ENGINE']}")
+print(f"Cache: Redis")
+print(f"Sentry: {'Enabled' if env('SENTRY_DSN', default=None) else 'Disabled'}")
+print(f"S3 Storage: {'Enabled' if env.bool('USE_S3', default=False) else 'Disabled (Local)'}")
+print(f"Health Checks: Enabled")
+print(f"Security: Maximum")
+print("=" * 80)

@@ -97,17 +97,19 @@
                            class="{% if 'management' in request.resolver_match.url_name and 'admin-management' not in request.resolver_match.url_name %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Manage Exams
                         </a>
-                        <a href="{% url 'question-bank' %}" 
+                        <a href="{% url 'question-bank' %}"
                            class="{% if 'question' in request.resolver_match.url_name and 'pdf_extractor' not in request.resolver_match.app_name %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Question Bank
                         </a>
-                        <a href="{% url 'pdf_extractor:home' %}" 
+                        {% if features.PDF_EXTRACTOR_ENABLED %}
+                        <a href="{% url 'pdf_extractor:home' %}"
                            class="{% if request.resolver_match.app_name == 'pdf_extractor' %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             Extract Questions
                         </a>
+                        {% endif %}
                         <a href="{% url 'analytics' %}" 
                            class="{% if 'analytics' in request.resolver_match.url_name %}border-primary-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Analytics
@@ -220,6 +222,7 @@
                 <a href="{% url 'question-bank' %}" class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {% if 'question' in request.resolver_match.url_name and 'pdf_extractor' not in request.resolver_match.app_name %}bg-primary-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %}">
                     Question Bank
                 </a>
+                {% if features.PDF_EXTRACTOR_ENABLED %}
                 <a href="{% url 'pdf_extractor:home' %}" class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {% if request.resolver_match.app_name == 'pdf_extractor' %}bg-primary-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %}">
                     <div class="flex items-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,6 +231,7 @@
                         Extract Questions
                     </div>
                 </a>
+                {% endif %}
                 <a href="{% url 'analytics' %}" class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {% if 'analytics' in request.resolver_match.url_name %}bg-primary-50 border-primary-500 text-primary-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %}">
                     Analytics
                 </a>

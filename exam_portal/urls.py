@@ -22,24 +22,29 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
-    
+
     # Health and monitoring endpoints
     path('health/', include('core.monitoring_urls')),
-    
+
     # Template views (no namespaces to maintain existing URL names)
     path('users/', include('users.urls')),
     path('exams/', include('exams.urls')),
     path('questions/', include('questions.urls')),
     path('analytics/', include('analytics.urls')),
-    path('pdf-extractor/', include('pdf_extractor.urls')),
-    path('payments/', include('payments.urls')),
     path('knowledge/', include('knowledge.urls')),
-    
+
     # Centralized API endpoints
     path('api/users/', include('users.api_urls')),
     path('api/exams/', include('exams.api_urls')),
     path('api/questions/', include('questions.api_urls')),
 ]
+
+# Conditionally include feature-dependent URLs
+if settings.FEATURES.get('PDF_EXTRACTOR_ENABLED', False):
+    urlpatterns.append(path('pdf-extractor/', include('pdf_extractor.urls')))
+
+if settings.FEATURES.get('PAYMENT_SYSTEM_ENABLED', False):
+    urlpatterns.append(path('payments/', include('payments.urls')))
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

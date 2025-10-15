@@ -1175,16 +1175,25 @@ class InteractivePDFReviewer {
     }
     
     async markPageAsUnsupported() {
-        console.log('Marking entire page as unsupported...');
+        console.log('markPageAsUnsupported called - Page:', this.currentPage, 'Document:', this.documentId);
         
         const comment = prompt(`Mark entire page ${this.currentPage} as unsupported.\n\nPlease provide a reason or comment:`, 'Complex formatting or unsupported question type');
         if (!comment) {
             console.log('Mark page unsupported cancelled by user');
             return;
         }
+        console.log('User provided comment:', comment);
         
         try {
             this.showLoading('Marking page as unsupported...');
+            
+            const requestBody = {
+                page_number: this.currentPage,
+                status: 'pending_unsupported',
+                notes: comment  // Changed from 'comment' to 'notes' to match API
+            };
+            console.log('Sending request to:', `/pdf-extractor/api/mark-page-for-later/${this.documentId}/`);
+            console.log('Request body:', requestBody);
             
             const response = await fetch(`/pdf-extractor/api/mark-page-for-later/${this.documentId}/`, {
                 method: 'POST',
@@ -1192,14 +1201,12 @@ class InteractivePDFReviewer {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': this.getCSRFToken()
                 },
-                body: JSON.stringify({
-                    page_number: this.currentPage,
-                    status: 'pending_unsupported',
-                    comment: comment
-                })
+                body: JSON.stringify(requestBody)
             });
             
+            console.log('Response status:', response.status);
             const data = await response.json();
+            console.log('Response data:', data);
             this.hideLoading();
             
             if (data.success) {

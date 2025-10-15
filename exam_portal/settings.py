@@ -33,8 +33,26 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', 'testserver', '247exams', '247exams.com'])
+# In production, ALLOWED_HOSTS must be explicitly set via environment variable
+# In development, allow all hosts for convenience
+if DEBUG:
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', 'testserver', '192.168.29.81', '192.168.29.214', '*'])
+else:
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
+# Feature Flags Configuration
+# Control feature availability via environment variables
+FEATURES = {
+    'PDF_EXTRACTOR_ENABLED': env.bool('PDF_EXTRACTOR_ENABLED', default=True),
+    'PDF_UPLOAD_ALLOWED': env.bool('PDF_UPLOAD_ALLOWED', default=True),
+    'AI_GRADING_ENABLED': env.bool('AI_GRADING_ENABLED', default=False),
+    'ADVANCED_ANALYTICS_ENABLED': env.bool('ADVANCED_ANALYTICS_ENABLED', default=True),
+    'PAYMENT_SYSTEM_ENABLED': env.bool('PAYMENT_SYSTEM_ENABLED', default=True),
+    'PROCTORING_ENABLED': env.bool('PROCTORING_ENABLED', default=False),
+    'BULK_OPERATIONS_ENABLED': env.bool('BULK_OPERATIONS_ENABLED', default=True),
+    'EXAM_TEMPLATES_ENABLED': env.bool('EXAM_TEMPLATES_ENABLED', default=True),
+    'COLLABORATIVE_EDITING': env.bool('COLLABORATIVE_EDITING', default=False),
+}
 
 # Application definition
 
@@ -63,10 +81,15 @@ INSTALLED_APPS = [
     'exams',
     'questions',
     'analytics',
-    'pdf_extractor',
-    'payments',
     'knowledge',
 ]
+
+# Conditionally add feature-dependent apps
+if FEATURES['PDF_EXTRACTOR_ENABLED']:
+    INSTALLED_APPS.append('pdf_extractor')
+
+if FEATURES['PAYMENT_SYSTEM_ENABLED']:
+    INSTALLED_APPS.append('payments')
 
 # Temporarily disable debug toolbar to fix JS conflicts
 # if DEBUG:
@@ -75,8 +98,6 @@ if DEBUG:
     pass  # Debug toolbar disabled
 else:
     INSTALLED_APPS += ['django_ratelimit']
-    # Add CSP middleware for production
-    MIDDLEWARE.insert(-1, 'csp.middleware.CSPMiddleware')
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
@@ -98,6 +119,10 @@ MIDDLEWARE = [
 # if DEBUG:
 #     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
 
+# Add CSP middleware for production only
+if not DEBUG:
+    MIDDLEWARE.append('csp.middleware.CSPMiddleware')
+
 ROOT_URLCONF = 'exam_portal.urls'
 
 TEMPLATES = [
@@ -113,6 +138,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
+                'core.context_processors.feature_flags',  # Feature flags context processor
             ],
         },
     },
@@ -228,10 +254,29 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://192.168.29.81:8000",
     "http://192.168.29.81:3000",
+    "http://192.168.29.81:5000",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
 ]
 
 # Allow all hosts in same subnet for development
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Allow credentials to be included in CORS requests
+CORS_ALLOW_CREDENTIALS = True
+
+# Allow all headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -287,8 +332,15 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Conditional Celery Task Routing (based on feature flags)
+if FEATURES['PDF_EXTRACTOR_ENABLED']:
+    CELERY_TASK_ROUTES = {
+        'pdf_extractor.tasks.*': {'queue': 'heavy'},
+        'pdf_extractor.celery.*': {'queue': 'heavy'},
+    }
+
 # Debug Toolbar
-INTERNAL_IPS = ['127.0.0.1', '192.168.29.81', '192.168.29.1']
+INTERNAL_IPS = ['127.0.0.1', '192.168.29.81', '192.168.29.214', '192.168.29.1']
 
 # Allow debug toolbar for entire local network in development
 if DEBUG:
@@ -375,21 +427,84 @@ LOGOUT_REDIRECT_URL = '/'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Strict'
-CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Lax'  # Changed for network access
+CSRF_COOKIE_SAMESITE = 'Lax'  # Changed for network access
+
+# CSRF trusted origins for network access
+CSRF_TRUSTED_ORIGINS = [
+    'http://192.168.29.81:5000',
+    'http://192.168.29.81:8000',
+    'http://192.168.29.214:5000',
+    'http://192.168.29.214:8000',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+]
 
 # File Upload Security
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 
-# Simplified Logging Configuration for Development
+# Logging Configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
     'handlers': {
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'errors.log'),
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': env('DJANGO_LOG_LEVEL', default='INFO'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['error_file', 'console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['error_file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
         },
     },
     'root': {

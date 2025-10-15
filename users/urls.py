@@ -40,7 +40,12 @@ urlpatterns = [
     path('admin/api/question-bank-permissions/', views.question_bank_permissions_api, name='question-bank-permissions-api'),
     path('admin/api/teachers/', views.get_teachers_for_permissions, name='get-teachers-for-permissions'),
     path('admin/api/bulk-permissions/', views.bulk_permission_management, name='bulk-permission-management'),
-    
+
+    # Test Attempts Management APIs
+    path('admin/api/test-attempts/', views.test_attempts_list_api, name='test-attempts-list-api'),
+    path('admin/api/test-attempts/update/', views.update_test_max_attempts_api, name='update-test-max-attempts-api'),
+    path('admin/api/test-attempts/bulk-update/', views.bulk_update_test_attempts_api, name='bulk-update-test-attempts-api'),
+
     # User Settings API endpoints
     path('api/change-password/', views.change_password_api, name='change-password-api'),
     path('api/update-privacy/', views.update_privacy_settings_api, name='update-privacy-api'),

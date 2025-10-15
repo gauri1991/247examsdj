@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserSerializer, UserProfileSerializer, CustomTokenObtainPairSerializer
-from core.decorators import login_rate_limit, security_check, log_user_action
+from core.decorators import login_rate_limit, security_check
 from core.security import sanitize_user_input, log_security_event
 
 User = get_user_model()
@@ -59,6 +59,9 @@ def register_view(request):
         password = request.POST.get('password', '')
         password2 = request.POST.get('password2', '')
         
+        # Debug logging
+        print(f"Registration attempt - Username: {username}, Email: {email}")
+        
         # Validation
         errors = []
         
@@ -90,10 +93,12 @@ def register_view(request):
                     phone=phone,
                     role=role
                 )
+                print(f"User created successfully: {user.username} ({user.email})")
                 login(request, user)
                 messages.success(request, 'Account created successfully! Welcome to ExamPortal.')
                 return redirect('dashboard')
             except Exception as e:
+                print(f"Error creating user: {str(e)}")
                 errors.append('An error occurred while creating your account.')
         
         for error in errors:
@@ -1251,10 +1256,9 @@ def question_bank_permissions_api(request):
                     'is_active': True,
                 }
             )
-            
+
             action = 'granted' if created else 'updated'
-            log_user_action(request.user, f"Permission {action} for {user.username} on question bank '{bank.name}'", 'admin')
-            
+
             return JsonResponse({
                 'success': True,
                 'message': f'Permission {action} successfully',
@@ -1279,11 +1283,9 @@ def question_bank_permissions_api(request):
             permission = get_object_or_404(QuestionBankPermission, id=permission_id)
             user_name = permission.user.get_full_name() or permission.user.username
             bank_name = permission.question_bank.name
-            
+
             permission.delete()
-            
-            log_user_action(request.user, f"Permission revoked for {user_name} on question bank '{bank_name}'", 'admin')
-            
+
             return JsonResponse({
                 'success': True,
                 'message': 'Permission revoked successfully'
@@ -1324,28 +1326,28 @@ def bulk_permission_management(request):
     """Bulk grant/revoke permissions"""
     if request.user.role != 'admin':
         return JsonResponse({'error': 'Admin access required'}, status=403)
-    
+
     if request.method == 'POST':
         try:
             action = request.POST.get('action')  # 'grant' or 'revoke'
             bank_ids = request.POST.getlist('bank_ids[]')
             user_ids = request.POST.getlist('user_ids[]')
             permission_type = request.POST.get('permission_type', 'view')
-            
+
             if action not in ['grant', 'revoke']:
                 return JsonResponse({'error': 'Invalid action'}, status=400)
-            
+
             if not bank_ids or not user_ids:
                 return JsonResponse({'error': 'Banks and users are required'}, status=400)
-            
+
             from questions.models import QuestionBank, QuestionBankPermission
-            
+
             banks = QuestionBank.objects.filter(id__in=bank_ids)
             users = User.objects.filter(id__in=user_ids, role='teacher')
-            
+
             success_count = 0
             error_count = 0
-            
+
             for bank in banks:
                 for user in users:
                     try:
@@ -1368,18 +1370,151 @@ def bulk_permission_management(request):
                             success_count += 1
                     except Exception:
                         error_count += 1
-            
-            log_user_action(request.user, f"Bulk {action} permissions: {success_count} successful, {error_count} errors", 'admin')
-            
+
             return JsonResponse({
                 'success': True,
                 'message': f'Bulk {action}: {success_count} successful, {error_count} errors',
                 'success_count': success_count,
                 'error_count': error_count,
             })
-            
+
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-    
+
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# Test Attempts Management APIs
+@login_required
+def test_attempts_list_api(request):
+    """API to list all tests with their max_attempts setting"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Admin access required'}, status=403)
+
+    from exams.models import Test, Exam
+    from django.db.models import Count
+
+    # Get all tests with related exam and attempt counts
+    tests = Test.objects.select_related('exam').annotate(
+        attempt_count=Count('attempts')
+    ).order_by('-created_at')
+
+    # Search functionality
+    search = request.GET.get('search', '')
+    if search:
+        tests = tests.filter(
+            Q(title__icontains=search) |
+            Q(exam__name__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    tests_data = []
+    for test in tests:
+        tests_data.append({
+            'id': str(test.id),
+            'title': test.title,
+            'exam_name': test.exam.name if test.exam else 'N/A',
+            'exam_id': str(test.exam.id) if test.exam else None,
+            'max_attempts': test.max_attempts,
+            'total_attempts': test.attempt_count,
+            'duration_minutes': test.duration_minutes,
+            'total_marks': test.total_marks,
+            'is_published': test.is_published,
+            'created_at': test.created_at.isoformat() if hasattr(test, 'created_at') else None,
+        })
+
+    return JsonResponse({
+        'success': True,
+        'tests': tests_data,
+        'count': len(tests_data)
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def update_test_max_attempts_api(request):
+    """API to update max_attempts for a specific test"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Admin access required'}, status=403)
+
+    try:
+        import json
+        data = json.loads(request.body) if request.body else {}
+
+        test_id = data.get('test_id') or request.POST.get('test_id')
+        max_attempts = data.get('max_attempts') or request.POST.get('max_attempts')
+
+        if not test_id:
+            return JsonResponse({'error': 'Test ID is required'}, status=400)
+
+        if not max_attempts:
+            return JsonResponse({'error': 'Max attempts value is required'}, status=400)
+
+        try:
+            max_attempts = int(max_attempts)
+            if max_attempts < 1:
+                return JsonResponse({'error': 'Max attempts must be at least 1'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Max attempts must be a valid number'}, status=400)
+
+        from exams.models import Test
+        test = get_object_or_404(Test, id=test_id)
+
+        old_max_attempts = test.max_attempts
+        test.max_attempts = max_attempts
+        test.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Max attempts updated successfully to {max_attempts}',
+            'test_id': str(test.id),
+            'test_title': test.title,
+            'old_max_attempts': old_max_attempts,
+            'new_max_attempts': max_attempts
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def bulk_update_test_attempts_api(request):
+    """API to bulk update max_attempts for multiple tests"""
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Admin access required'}, status=403)
+
+    try:
+        import json
+        data = json.loads(request.body) if request.body else {}
+
+        test_ids = data.get('test_ids', [])
+        max_attempts = data.get('max_attempts')
+
+        if not test_ids:
+            return JsonResponse({'error': 'No tests selected'}, status=400)
+
+        if not max_attempts:
+            return JsonResponse({'error': 'Max attempts value is required'}, status=400)
+
+        try:
+            max_attempts = int(max_attempts)
+            if max_attempts < 1:
+                return JsonResponse({'error': 'Max attempts must be at least 1'}, status=400)
+        except ValueError:
+            return JsonResponse({'error': 'Max attempts must be a valid number'}, status=400)
+
+        from exams.models import Test
+
+        tests_updated = Test.objects.filter(id__in=test_ids).update(max_attempts=max_attempts)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully updated {tests_updated} test(s) to {max_attempts} max attempts',
+            'tests_updated': tests_updated,
+            'max_attempts': max_attempts
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
 

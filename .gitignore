@@ -1,4 +1,6 @@
+# ==============================================================================
 # Django
+# ==============================================================================
 *.log
 *.pot
 *.pyc
@@ -6,40 +8,268 @@ __pycache__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-media/
 
+# Django media files (user uploads)
+media/
+!media/.gitkeep
+
+# Django static files (collected)
+staticfiles/
+!staticfiles/.gitkeep
+
+# Django migrations (keep in version control, but ignore local test migrations)
+# !*/migrations/
+# !*/migrations/__init__.py
+
+# ==============================================================================
+# Environment Variables and Secrets
+# ==============================================================================
+# CRITICAL: Never commit these files!
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.env
+.secret
+*.key
+*.pem
+*.crt
+*.csr
+
+# Specific environment files
+.env.local
+.env.production
+.env.staging
+.env.development
+
+# ==============================================================================
 # Virtual Environment
+# ==============================================================================
 venv/
 env/
-.env
+ENV/
+.venv/
+.virtualenv/
 
-# IDE
+# ==============================================================================
+# IDE and Editor Files
+# ==============================================================================
 .vscode/
 .idea/
 *.swp
 *.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.code-workspace
 
-# OS
+# ==============================================================================
+# Operating System Files
+# ==============================================================================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
+# ==============================================================================
 # Python
+# ==============================================================================
 *.egg-info/
+*.egg
 dist/
 build/
+*.whl
+.eggs/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Node modules (if any)
+# ==============================================================================
+# Node.js (if using any frontend tools)
+# ==============================================================================
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
 
-# Static files (collected)
-staticfiles/
+# ==============================================================================
+# Logs and Databases
+# ==============================================================================
+logs/
+*.log
+*.sql
+*.sqlite
+*.db
 
-# Secret keys and sensitive data
-.secret
-*.key
-.env.local
-.env.production
+# Keep logs directory but ignore contents
+!logs/.gitkeep
 
-# Temporary files
+# ==============================================================================
+# Backup Files
+# ==============================================================================
+*.bak
+*.backup
+*.old
+*.orig
+*~
+backups/
+!backups/.gitkeep
+
+# ==============================================================================
+# Temporary Files
+# ==============================================================================
 *.tmp
 *.temp
+tmp/
+temp/
+.cache/
+
+# ==============================================================================
+# Security and Credentials
+# ==============================================================================
+# AWS credentials
+.aws/
+credentials
+credentials.json
+
+# SSH keys
+*.pem
+*.ppk
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+
+# SSL certificates
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# ==============================================================================
+# Docker
+# ==============================================================================
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# ==============================================================================
+# Production Specific
+# ==============================================================================
+# Production database dumps
+*.dump
+*.sql.gz
+*.backup.sql
+
+# Production media uploads (use S3 instead)
+# media/uploads/
+
+# Collected static files
+collected_static/
+assets/
+
+# ==============================================================================
+# Monitoring and Performance
+# ==============================================================================
+.profile
+*.prof
+*.lprof
+*.coverage
+
+# Sentry
+.sentryclirc
+
+# ==============================================================================
+# Documentation Build Files
+# ==============================================================================
+docs/_build/
+docs/site/
+.mkdocs/
+
+# ==============================================================================
+# Celery
+# ==============================================================================
+celerybeat-schedule
+celerybeat.pid
+
+# ==============================================================================
+# Testing
+# ==============================================================================
+.pytest_cache/
+.coverage
+htmlcov/
+test-results/
+.test_data/
+
+# ==============================================================================
+# Local Development
+# ==============================================================================
+# Local override settings
+local_settings.py
+dev_settings.py
+
+# Local database
+local.db
+dev.db
+
+# ==============================================================================
+# Misc
+# ==============================================================================
+*.pid
+*.seed
+*.pid.lock
+.vagrant/
+
+# ==============================================================================
+# Test Scripts and Sample Data
+# ==============================================================================
+test_scripts/
+sample_data/
+
+# ==============================================================================
+# Environment-Specific Scripts
+# ==============================================================================
+scripts/git-*.sh
+scripts/start_*.sh
+scripts/*_server.sh
+
+# ==============================================================================
+# IDE Workspace
+# ==============================================================================
+.claude/
+
+# ==============================================================================
+# Additional Backup Files
+# ==============================================================================
+*.orig
+*.backup
+
+# ==============================================================================
+# IMPORTANT NOTES
+# ==============================================================================
+# 1. Always review files before committing
+# 2. Never commit credentials, keys, or secrets
+# 3. Use .env.example for documentation, not .env
+# 4. Production .env files should only exist on production servers
+# 5. Use environment variables for all sensitive configuration
+# ==============================================================================
