@@ -24,7 +24,7 @@ RUN useradd -m -u 1000 django && mkdir -p /app
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements-production.txt .
+COPY requirements-base.txt requirements-production.txt .
 RUN pip install --no-cache-dir -r requirements-production.txt
 
 # Copy application
