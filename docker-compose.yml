@@ -2,6 +2,7 @@
 # DOCKER COMPOSE - External PostgreSQL & Redis
 # ==============================================================================
 # For Dokploy deployment with separate database services
+# Celery services commented out - can be enabled later if needed
 # ==============================================================================
 
 services:
@@ -33,36 +34,41 @@ services:
       retries: 3
       start_period: 40s
 
-  celery:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: celery -A exam_portal worker -l info --concurrency=2
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-      - SECRET_KEY=${SECRET_KEY}
-      - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
-    volumes:
-      - media_volume:/app/media
-      - logs_volume:/app/logs
-    restart: unless-stopped
-
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: celery -A exam_portal beat -l info
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
-      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
-      - SECRET_KEY=${SECRET_KEY}
-      - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
-    restart: unless-stopped
+  # ==============================================================================
+  # CELERY SERVICES (Commented out - enable when needed)
+  # ==============================================================================
+  # Uncomment these services when you need background task processing
+  #
+  # celery:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: celery -A exam_portal worker -l info --concurrency=2
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL}
+  #     - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+  #     - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+  #     - SECRET_KEY=${SECRET_KEY}
+  #     - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
+  #   volumes:
+  #     - media_volume:/app/media
+  #     - logs_volume:/app/logs
+  #   restart: unless-stopped
+  #
+  # celery-beat:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: celery -A exam_portal beat -l info
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - REDIS_URL=${REDIS_URL}
+  #     - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+  #     - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+  #     - SECRET_KEY=${SECRET_KEY}
+  #     - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
+  #   restart: unless-stopped
 
 volumes:
   static_volume:
