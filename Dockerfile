@@ -38,12 +38,18 @@ RUN mkdir -p staticfiles media logs && \
 # SECRET_KEY default is set in settings.py for build time
 ENV SECRET_KEY=django-insecure-build-only-key-DO-NOT-USE-IN-PRODUCTION \
     DEBUG=False \
-    DATABASE_URL=sqlite:///tmp/build.db
+    DATABASE_URL=sqlite:///tmp/build.db \
+    REDIS_URL=redis://localhost:6379/0 \
+    CELERY_BROKER_URL=redis://localhost:6379/0 \
+    CELERY_RESULT_BACKEND=redis://localhost:6379/0
 RUN python manage.py collectstatic --noinput || true
 # Unset build-time variables (runtime env vars will override)
 ENV SECRET_KEY="" \
     DEBUG="" \
-    DATABASE_URL=""
+    DATABASE_URL="" \
+    REDIS_URL="" \
+    CELERY_BROKER_URL="" \
+    CELERY_RESULT_BACKEND=""
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

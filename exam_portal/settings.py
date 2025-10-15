@@ -153,7 +153,7 @@ WSGI_APPLICATION = 'exam_portal.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db()
+    'default': env.db(default='sqlite:///db.sqlite3')
 }
 
 # Cache Configuration
@@ -169,7 +169,7 @@ else:
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': env('REDIS_URL'),
+            'LOCATION': env('REDIS_URL', default='redis://localhost:6379/0'),
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             }
