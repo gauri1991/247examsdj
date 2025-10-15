@@ -26,7 +26,9 @@ crispy-tailwind==0.5.0
 
 # Security & CORS
 django-cors-headers==4.3.1
+django-csp==3.8
 cryptography==41.0.7
+django-ratelimit==4.1.0
 
 # Utilities
 django-htmx==1.17.3
