@@ -11,12 +11,16 @@ env = environ.Env()
 
 # SECURITY CONFIGURATION
 # -----------------------------------------------------------------------------
-DEBUG = False
+# ⚠️ TEMPORARY: DEBUG enabled for troubleshooting
+# ⚠️ SECURITY RISK: This exposes sensitive information
+# ⚠️ TODO: Set back to False after debugging
+DEBUG = env.bool('DEBUG', default=True)  # TEMPORARILY TRUE FOR DEBUGGING
 
 # Force HTTPS in production
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# ⚠️ TEMPORARY: SSL redirect disabled for debugging
+SECURE_SSL_REDIRECT = False  # TEMPORARILY FALSE FOR DEBUGGING
+SESSION_COOKIE_SECURE = False  # TEMPORARILY FALSE FOR DEBUGGING
+CSRF_COOKIE_SECURE = False  # TEMPORARILY FALSE FOR DEBUGGING
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
