@@ -62,7 +62,7 @@
       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200" x-data="{ mobileMenuOpen: false }">
+    <nav class="relative bg-white shadow-sm border-b border-gray-200" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex">
@@ -197,9 +197,15 @@
         </div>
         
         <!-- Mobile menu -->
-        <div x-show="mobileMenuOpen" 
+        <div x-show="mobileMenuOpen"
              @click.away="mobileMenuOpen = false"
-             class="sm:hidden"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform -translate-y-2"
+             class="absolute top-16 left-0 right-0 z-50 sm:hidden bg-white shadow-lg border-t border-gray-200 max-h-[calc(100vh-4rem)] overflow-y-auto"
              style="display: none;">
             <div class="pt-2 pb-3 space-y-1">
                 {% if user.is_authenticated %}
