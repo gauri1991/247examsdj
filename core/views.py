@@ -241,12 +241,10 @@ def recent_activity(request):
 
 
 def home(request):
-    """Landing page - Temporarily redirecting to login"""
+    """Landing page"""
     if request.user.is_authenticated:
         return redirect('dashboard')
-    # TEMPORARY: Redirect to login instead of rendering home template
-    # TODO: Fix home.html template rendering issue
-    return redirect('login')
+    return render(request, 'home.html')
 
 
 @require_http_methods(["POST"])
