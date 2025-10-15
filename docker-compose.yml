@@ -24,8 +24,11 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - logs_volume:/app/logs
-    ports:
-      - "8000:8000"
+    # Port exposed via Traefik, not directly
+    # ports:
+    #   - "8000:8000"
+    expose:
+      - "8000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
