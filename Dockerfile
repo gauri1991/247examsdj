@@ -21,9 +21,10 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy and install Python dependencies
-COPY requirements.txt .
+# Using requirements-production.txt (NO GPU/CUDA packages - saves ~4.5GB and deployment time)
+COPY requirements-base.txt requirements-production.txt ./
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt
+    pip install -r requirements-production.txt
 
 # Production stage
 FROM python:3.12-slim

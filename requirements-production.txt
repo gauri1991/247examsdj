@@ -1,9 +1,12 @@
 # Production requirements for Exam Management Platform
 # Install with: pip install -r requirements-production.txt
 # ==============================================================================
+# IMPORTANT: Uses requirements-base.txt (NO GPU/CUDA packages)
+# This keeps production deployment fast and lightweight
+# ==============================================================================
 
-# Include base requirements
--r requirements.txt
+# Include base requirements (NO OCR/GPU packages)
+-r requirements-base.txt
 
 # ==============================================================================
 # PRODUCTION WEB SERVER

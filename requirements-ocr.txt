@@ -1,0 +1,39 @@
+# OCR and GPU Requirements (OPTIONAL)
+# ==============================================================================
+# ONLY install if you need PDF OCR processing with GPU acceleration
+# These packages are LARGE (3-5 GB) and require GPU
+#
+# Install with: pip install -r requirements-ocr.txt
+# ==============================================================================
+
+# Base requirements first
+-r requirements-base.txt
+
+# OCR Engines (with GPU support)
+pytesseract==0.3.13      # Tesseract OCR wrapper (lightweight)
+easyocr==1.7.2           # Deep learning OCR (requires PyTorch + CUDA)
+
+# Image processing for OCR
+opencv-python==4.12.0.88
+opencv-python-headless==4.12.0.88
+imageio==2.37.0
+scikit-image==0.25.2
+scipy==1.16.1
+networkx==3.5
+lazy_loader==0.4
+tifffile==2025.6.11
+
+# Math/geometry for layout analysis
+numpy==2.2.6
+shapely==2.1.1
+python-bidi==0.6.6
+
+# WARNING: Installing this file will also install:
+# - PyTorch with CUDA support (~2GB)
+# - 12 NVIDIA CUDA packages (~3GB)
+# - Total: ~5GB additional packages
+#
+# ONLY needed if:
+# - You have a GPU
+# - You enable PDF_EXTRACTOR_ENABLED=true
+# - You need deep learning OCR

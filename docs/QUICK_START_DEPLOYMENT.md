@@ -51,8 +51,8 @@ For Gmail:
 3. Fill in:
    - **Name**: `exam-portal`
    - **Type**: Docker Compose
-   - **Repository**: `https://github.com/your-username/your-repo.git`
-   - **Branch**: `main`
+   - **Repository**: `https://github.com/gauri1991/247examsdj.git`
+   - **Branch**: `master`
 
 ### 2.2 Set Environment Variables
 
