@@ -33,6 +33,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - dokploy-network
 
   # ==============================================================================
   # CELERY SERVICES (Commented out - enable when needed)
@@ -74,3 +76,8 @@ volumes:
   static_volume:
   media_volume:
   logs_volume:
+
+networks:
+  dokploy-network:
+    external: true
+    name: dokploy-network
