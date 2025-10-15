@@ -93,8 +93,8 @@ Ensure your repository is accessible to Dokploy:
 3. Choose "Docker Compose" as deployment method
 4. Fill in application details:
    - **Name**: `exam-portal`
-   - **Repository**: Your Git repository URL
-   - **Branch**: `main` or `master`
+   - **Repository**: `https://github.com/gauri1991/247examsdj.git`
+   - **Branch**: `master`
 
 ### 2. Configure Build Settings
 
