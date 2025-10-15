@@ -98,35 +98,28 @@ DATABASES['default']['OPTIONS'] = {
 
 # CACHE CONFIGURATION
 # -----------------------------------------------------------------------------
-# Temporarily disabled Redis cache - using dummy cache
+# Redis cache with graceful fallback
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': env('REDIS_URL', default='redis://127.0.0.1:6379/0'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True,
+                'socket_keepalive': True,
+                'socket_keepalive_options': {
+                    1: 3,  # TCP_KEEPIDLE
+                    2: 3,  # TCP_KEEPINTVL
+                    3: 3,  # TCP_KEEPCNT
+                }
+            },
+            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+            'IGNORE_EXCEPTIONS': True,  # Don't crash if Redis is down
+        }
     }
 }
-
-# Original Redis configuration (disabled temporarily)
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': env('REDIS_URL'),
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#             'CONNECTION_POOL_KWARGS': {
-#                 'max_connections': 50,
-#                 'retry_on_timeout': True,
-#                 'socket_keepalive': True,
-#                 'socket_keepalive_options': {
-#                     1: 3,  # TCP_KEEPIDLE
-#                     2: 3,  # TCP_KEEPINTVL
-#                     3: 3,  # TCP_KEEPCNT
-#                 }
-#             },
-#             'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
-#             'IGNORE_EXCEPTIONS': True,
-#         }
-#     }
-# }
 
 # STATIC FILES CONFIGURATION
 # -----------------------------------------------------------------------------
