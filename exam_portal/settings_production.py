@@ -263,7 +263,8 @@ LOGS_DIR.mkdir(exist_ok=True)
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = (
     "'self'",
-    "'unsafe-inline'",  # Required for inline scripts (should be removed if possible)
+    "'unsafe-inline'",  # Required for inline scripts
+    "'unsafe-eval'",  # Required for Alpine.js to work
     "https://cdn.jsdelivr.net",
     "https://unpkg.com",
     "https://cdnjs.cloudflare.com",

@@ -398,6 +398,7 @@ if not DEBUG:
     CSP_SCRIPT_SRC = (
         "'self'",
         "'unsafe-inline'",  # Required for inline scripts
+        "'unsafe-eval'",  # Required for Alpine.js to work
         "https://cdn.jsdelivr.net",  # CDN for libraries
         "https://unpkg.com",  # Alpine.js CDN
         "https://cdnjs.cloudflare.com",  # Cloudflare CDN
