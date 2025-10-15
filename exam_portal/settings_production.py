@@ -41,8 +41,10 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 # CSRF_COOKIE_NAME = '__Host-csrftoken'
 
 # Session Security
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# Temporarily using database sessions instead of cache
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
@@ -96,27 +98,35 @@ DATABASES['default']['OPTIONS'] = {
 
 # CACHE CONFIGURATION
 # -----------------------------------------------------------------------------
+# Temporarily disabled Redis cache - using dummy cache
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': env('REDIS_URL'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'CONNECTION_POOL_KWARGS': {
-                'max_connections': 50,
-                'retry_on_timeout': True,
-                'socket_keepalive': True,
-                'socket_keepalive_options': {
-                    1: 3,  # TCP_KEEPIDLE
-                    2: 3,  # TCP_KEEPINTVL
-                    3: 3,  # TCP_KEEPCNT
-                }
-            },
-            'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
-            'IGNORE_EXCEPTIONS': True,
-        }
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
+
+# Original Redis configuration (disabled temporarily)
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': env('REDIS_URL'),
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             'CONNECTION_POOL_KWARGS': {
+#                 'max_connections': 50,
+#                 'retry_on_timeout': True,
+#                 'socket_keepalive': True,
+#                 'socket_keepalive_options': {
+#                     1: 3,  # TCP_KEEPIDLE
+#                     2: 3,  # TCP_KEEPINTVL
+#                     3: 3,  # TCP_KEEPCNT
+#                 }
+#             },
+#             'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+#             'IGNORE_EXCEPTIONS': True,
+#         }
+#     }
+# }
 
 # STATIC FILES CONFIGURATION
 # -----------------------------------------------------------------------------
