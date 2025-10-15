@@ -1,10 +1,10 @@
 # ==============================================================================
 # BASE REQUIREMENTS - Django Exam Management Platform
 # ==============================================================================
-# Complete requirements based on backup - NO GPU/CUDA PACKAGES
+# Compatible versions without conflicts - NO GPU/CUDA PACKAGES
 # ==============================================================================
 
-# Django and core framework (using 4.2 LTS for production stability)
+# Django and core framework
 Django==4.2.17
 django-environ==0.11.2
 djangorestframework==3.14.0
@@ -17,99 +17,46 @@ django-redis==5.4.0
 
 # Task queue
 celery==5.3.4
-amqp==5.3.1
-billiard==4.2.1
-kombu==5.5.4
-vine==5.1.0
 
 # Security
 cryptography==41.0.7
 django-ratelimit==4.1.0
+django-csp==3.8
 
 # Forms and UI
 crispy-tailwind==0.5.0
 django-crispy-forms==2.1
-
-# CORS and API
 django-cors-headers==4.3.1
-
-# Templates and frontend
 django-htmx==1.17.3
 
 # Static files
 django-compressor==4.4
-django-appconf==1.1.0
 rcssmin==1.1.2
 rjsmin==1.2.2
 
 # Content Security
-django-csp==3.8
 bleach==6.1.0
 
 # Development tools
 django-extensions==3.2.3
 
-# CLI utilities
-click==8.2.1
-click-didyoumean==0.3.1
-click-plugins==1.1.1.2
-click-repl==0.3.0
-
-# File handling (NO OCR)
+# File handling
 PyPDF2==3.0.1
 python-magic==0.4.27
 Pillow==10.1.0
 
-# Excel/Data
+# Excel/Data handling
 openpyxl==3.1.5
-pandas==2.2.0
 
-# Date/Time
+# Date/Time utilities
 python-dateutil==2.8.2
-pytz==2025.2
 
-# HTTP
-charset-normalizer==3.4.0
-
-# Async/networking
-asgiref==3.8.1
-filelock==3.13.1
-
-# Utilities
-six==1.17.0
-sqlparse==0.5.3
-typing_extensions==4.9.0
-tzdata==2025.2
-wcwidth==0.2.13
-webencodings==0.5.1
-packaging==25.0
-MarkupSafe==3.0.0
-prompt_toolkit==3.0.51
-
-# JWT
-PyJWT==2.10.1
-
-# YAML support
-PyYAML==6.0.2
-
-# Math and scientific (lightweight)
-sympy==1.13.0
-mpmath==1.3.0
-
-# PDF utilities (lightweight)
-pdfminer.six==20231228
-pdfplumber==0.11.0
-pypdfium2==4.28.0
-pyclipper==1.3.0.post5
-pycparser==2.22
-
-# XML
-et_xmlfile==2.0.0
-
-# System
-cffi==1.17.1
+# System utilities
 psutil==5.9.6
 
-# Numeric dependencies for pandas
-numpy==1.26.0
-pyarrow==15.0.0
+# Configuration
+PyYAML==6.0.2
+
+# PDF utilities (lightweight versions)
+pdfminer.six==20231228
+pdfplumber==0.11.0
