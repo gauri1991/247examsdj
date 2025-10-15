@@ -6,7 +6,8 @@ import os
 
 def load_fixture_data(apps, schema_editor):
     """Load data from fixtures in correct order"""
-    fixture_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'fixtures')
+    # Path is: users/migrations/0007_xxx.py -> users/fixtures/
+    fixture_dir = os.path.join(os.path.dirname(__file__), '..', 'fixtures')
 
     # Order matters - respects foreign key dependencies
     fixture_order = [
@@ -18,13 +19,15 @@ def load_fixture_data(apps, schema_editor):
         'analytics.json',
     ]
 
+    print(f"Looking for fixtures in: {fixture_dir}")
+
     for fixture_file in fixture_order:
         fixture_path = os.path.join(fixture_dir, fixture_file)
         if os.path.exists(fixture_path):
             print(f"Loading {fixture_file}...")
             call_command('loaddata', fixture_path, verbosity=1)
         else:
-            print(f"Skipping {fixture_file} (not found)")
+            print(f"Skipping {fixture_file} (not found at {fixture_path})")
 
 def reverse_data(apps, schema_editor):
     """Reverse migration - delete imported data"""
