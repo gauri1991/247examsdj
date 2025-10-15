@@ -1,5 +1,8 @@
-# Docker Compose for External PostgreSQL and Redis (Dokploy-managed)
-# PostgreSQL and Redis are created separately in Dokploy as services
+# ==============================================================================
+# DOCKER COMPOSE - External PostgreSQL & Redis
+# ==============================================================================
+# For Dokploy deployment with separate database services
+# ==============================================================================
 
 services:
   web:
@@ -7,7 +10,6 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      # External database connections (set in Dokploy environment variables)
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
@@ -16,34 +18,16 @@ services:
       - DEBUG=${DEBUG:-False}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-exam_portal.settings_production}
-      - DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL:-INFO}
-      # Email settings
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_USE_TLS=${EMAIL_USE_TLS}
-      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
-      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
-      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
-      # Admin settings
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_URL=${ADMIN_URL}
-      # Feature flags
-      - PDF_EXTRACTOR_ENABLED=${PDF_EXTRACTOR_ENABLED:-false}
-      - PDF_UPLOAD_ALLOWED=${PDF_UPLOAD_ALLOWED:-false}
-      - AI_GRADING_ENABLED=${AI_GRADING_ENABLED:-false}
-      - PAYMENT_SYSTEM_ENABLED=${PAYMENT_SYSTEM_ENABLED:-true}
+      - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - logs_volume:/app/logs
-    restart: unless-stopped
     ports:
-      - "8000:80"
-    expose:
-      - "80"
+      - "8000:8000"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -60,7 +44,7 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - SECRET_KEY=${SECRET_KEY}
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-exam_portal.settings_production}
+      - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
     volumes:
       - media_volume:/app/media
       - logs_volume:/app/logs
@@ -77,7 +61,7 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - SECRET_KEY=${SECRET_KEY}
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-exam_portal.settings_production}
+      - DJANGO_SETTINGS_MODULE=exam_portal.settings_production
     restart: unless-stopped
 
 volumes:
