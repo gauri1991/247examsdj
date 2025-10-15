@@ -278,6 +278,7 @@ CSP_SCRIPT_SRC = (
     "https://cdn.jsdelivr.net",
     "https://unpkg.com",
     "https://cdnjs.cloudflare.com",
+    "https://cdn.tailwindcss.com",  # Tailwind CSS CDN
 )
 CSP_STYLE_SRC = (
     "'self'",

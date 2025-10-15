@@ -401,6 +401,7 @@ if not DEBUG:
         "https://cdn.jsdelivr.net",  # CDN for libraries
         "https://unpkg.com",  # Alpine.js CDN
         "https://cdnjs.cloudflare.com",  # Cloudflare CDN
+        "https://cdn.tailwindcss.com",  # Tailwind CSS CDN
     )
     CSP_STYLE_SRC = (
         "'self'",
