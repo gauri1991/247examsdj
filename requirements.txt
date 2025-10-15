@@ -11,7 +11,7 @@ click-plugins==1.1.1.2
 click-repl==0.3.0
 crispy-tailwind==1.0.3
 cryptography==45.0.5
-Django==5.2.4
+Django==4.2.17
 django-appconf==1.1.0
 django-compressor==4.5.1
 django-cors-headers==4.7.0
