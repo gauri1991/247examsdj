@@ -1,0 +1,175 @@
+[
+  {
+    "model": "payments.subscriptionplan",
+    "pk": "7548288a-b060-4c6f-b254-0f41da2cfcc4",
+    "fields": {
+      "name": "Pro Plan",
+      "plan_type": "pro",
+      "description": "Advanced features for professionals",
+      "price": "29.99",
+      "billing_cycle": "monthly",
+      "max_tests": 100,
+      "max_questions": 500,
+      "pdf_extraction": true,
+      "analytics_access": true,
+      "priority_support": false,
+      "custom_branding": false,
+      "api_access": true,
+      "is_active": true,
+      "is_popular": true,
+      "trial_days": 14,
+      "created_at": "2025-08-01T21:06:03.922Z",
+      "updated_at": "2025-08-01T21:06:03.922Z"
+    }
+  },
+  {
+    "model": "payments.subscriptionplan",
+    "pk": "897b0e00-2ddb-49b8-a5ad-0a10a04b5fcb",
+    "fields": {
+      "name": "Enterprise Plan",
+      "plan_type": "enterprise",
+      "description": "Full features for organizations",
+      "price": "99.99",
+      "billing_cycle": "monthly",
+      "max_tests": -1,
+      "max_questions": -1,
+      "pdf_extraction": true,
+      "analytics_access": true,
+      "priority_support": true,
+      "custom_branding": true,
+      "api_access": true,
+      "is_active": true,
+      "is_popular": false,
+      "trial_days": 30,
+      "created_at": "2025-08-01T21:06:03.929Z",
+      "updated_at": "2025-08-01T21:06:03.929Z"
+    }
+  },
+  {
+    "model": "payments.subscriptionplan",
+    "pk": "b6b98c07-a49a-4a6e-840e-cbb15ea3113f",
+    "fields": {
+      "name": "Basic Plan",
+      "plan_type": "basic",
+      "description": "Basic features for individual users",
+      "price": "9.99",
+      "billing_cycle": "monthly",
+      "max_tests": 10,
+      "max_questions": 50,
+      "pdf_extraction": false,
+      "analytics_access": false,
+      "priority_support": false,
+      "custom_branding": false,
+      "api_access": false,
+      "is_active": true,
+      "is_popular": false,
+      "trial_days": 7,
+      "created_at": "2025-08-01T21:06:03.906Z",
+      "updated_at": "2025-08-01T21:06:03.906Z"
+    }
+  },
+  {
+    "model": "payments.usersubscription",
+    "pk": "91dd8b8d-0551-4966-9ce2-6f7439a506ef",
+    "fields": {
+      "user": "97939240-5fe3-46be-a84b-d85e1bf721eb",
+      "plan": "7548288a-b060-4c6f-b254-0f41da2cfcc4",
+      "status": "active",
+      "start_date": "2025-08-01T21:06:03.959Z",
+      "end_date": "2025-08-31T21:06:03.959Z",
+      "next_billing_date": null,
+      "stripe_subscription_id": null,
+      "stripe_customer_id": null,
+      "tests_used": 0,
+      "questions_used": 0,
+      "auto_renew": true,
+      "cancelled_at": null,
+      "created_at": "2025-08-01T21:06:03.960Z",
+      "updated_at": "2025-08-01T21:06:03.960Z"
+    }
+  },
+  {
+    "model": "payments.payment",
+    "pk": "4109843a-418e-4e53-b2b5-ba8a5ce29ebf",
+    "fields": {
+      "user": "256cc1e1-5a43-4fe3-8846-2645b584801d",
+      "subscription": null,
+      "plan": "b6b98c07-a49a-4a6e-840e-cbb15ea3113f",
+      "amount": "299.00",
+      "currency": "INR",
+      "status": "completed",
+      "gateway": "razorpay",
+      "gateway_transaction_id": "test_cd9af98ca005",
+      "gateway_payment_intent_id": null,
+      "description": "Test subscription to Basic Plan",
+      "metadata": {
+        "invoice_generated": true,
+        "invoice_path": "invoices/256cc1e1-5a43-4fe3-8846-2645b584801d/invoice_INV_4109843a-418e-4e53-b2b5-ba8a5ce29ebf.pdf",
+        "invoice_generated_at": "2025-08-24T06:04:58.061703+00:00"
+      },
+      "paid_at": null,
+      "refunded_at": null,
+      "created_at": "2025-08-24T06:03:15.403Z",
+      "updated_at": "2025-08-24T06:04:58.062Z"
+    }
+  },
+  {
+    "model": "payments.payment",
+    "pk": "9552b0e7-8a3d-4c49-8943-c61c8d517f3d",
+    "fields": {
+      "user": "97939240-5fe3-46be-a84b-d85e1bf721eb",
+      "subscription": "91dd8b8d-0551-4966-9ce2-6f7439a506ef",
+      "plan": "7548288a-b060-4c6f-b254-0f41da2cfcc4",
+      "amount": "29.99",
+      "currency": "USD",
+      "status": "completed",
+      "gateway": "stripe",
+      "gateway_transaction_id": null,
+      "gateway_payment_intent_id": null,
+      "description": "Subscription to Pro Plan",
+      "metadata": {},
+      "paid_at": "2025-08-01T21:06:03.971Z",
+      "refunded_at": null,
+      "created_at": "2025-08-01T21:06:03.972Z",
+      "updated_at": "2025-08-01T21:06:03.972Z"
+    }
+  },
+  {
+    "model": "payments.discount",
+    "pk": "97ecb65f-9129-4b29-a90a-d226034d5c54",
+    "fields": {
+      "code": "SAVE10",
+      "name": "Save $10",
+      "description": "$10 off any plan",
+      "discount_type": "fixed",
+      "value": "10.00",
+      "max_uses": 50,
+      "used_count": 0,
+      "valid_from": "2025-08-01T21:06:03.948Z",
+      "valid_until": "2025-09-30T21:06:03.948Z",
+      "is_active": true,
+      "created_at": "2025-08-01T21:06:03.951Z",
+      "updated_at": "2025-08-01T21:06:03.951Z",
+      "applicable_plans": []
+    }
+  },
+  {
+    "model": "payments.discount",
+    "pk": "f04d1472-4948-4ac9-87f6-23bc2fa9a2bf",
+    "fields": {
+      "code": "WELCOME20",
+      "name": "Welcome Discount",
+      "description": "20% off for new users",
+      "discount_type": "percentage",
+      "value": "20.00",
+      "max_uses": 100,
+      "used_count": 0,
+      "valid_from": "2025-08-01T21:06:03.934Z",
+      "valid_until": "2025-08-31T21:06:03.934Z",
+      "is_active": true,
+      "created_at": "2025-08-01T21:06:03.936Z",
+      "updated_at": "2025-08-01T21:06:03.936Z",
+      "applicable_plans": []
+    }
+  }
+]
